@@ -10,11 +10,20 @@ OUTPUT_DIR_PATH = os.getenv("OUTPUT_DIR_PATH", "output")
 # Dedicated test directory
 TEST_OUTPUT_DIR_PATH = os.getenv("TEST_OUTPUT_DIR_PATH", "tests_output")
 
-CROSSREF_API_DELAY = os.getenv("CROSSREF_API_DELAY", "0.5")
+# Crossref Rest API
+CROSSREF_API_DELAY = float(os.getenv("CROSSREF_API_DELAY", 0.5))
 CROSSREF_API_EMAIL = os.getenv("CROSSREF_EMAIL", "default@example.com")
 CROSSREF_API_JOURNALS_URL = os.getenv("CROSSREF_API_JOURNALS_URL", "")
+CROSSREF_API_JOURNALS_ISSN_URL = os.getenv("CROSSREF_API_JOURNALS_ISSN_URL", "")
+CROSSREF_API_STYLES_URL = os.getenv("CROSSREF_API_STYLES_URL", "")
 CROSSREF_API_WORKS_URL = os.getenv("CROSSREF_API_WORKS_URL", "")
-CROSSREF_API_MAX_RESULTS = os.getenv("CROSSREF_API_MAX_RESULTS", 6)
+CROSSREF_API_MAX_RESULTS = int(os.getenv("CROSSREF_API_MAX_RESULTS", 6))
+CROSSREF_API_TIMEOUT = float(os.getenv("CROSSREF_API_TIMEOUT", 10))
+
+# DOI Content service negotiation
+DOI_API_DELAY = float(os.getenv("DOI_API_DELAY", 0.4))
+DOI_API_URL = os.getenv("DOI_API_URL", "")
+DOI_API_TIMEOUT = float(os.getenv("DOI_API_TIMEOUT", 10))
 
 CONTEXT_KEYWORDS = os.getenv("CONTEXT_KEYWORDS", "")
 
