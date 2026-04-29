@@ -9,6 +9,7 @@ class TextLoader:
         if not Path(file_path).exists():
             raise FileNotFoundError(f"Input file not found: {file_path}")
         self.file_path = file_path
+        self.text = ""
 
     def extract_text_from_docx(self):
         doc = Document(self.file_path)
