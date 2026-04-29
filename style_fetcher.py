@@ -24,9 +24,8 @@ class StyleFetcher:
         style
         """
         response = self.requests_wrapper.get(self.base_url)
-        if response.status_code == 200:
-            supported_styles = response.json()['message']['items']
-            if self.style in supported_styles:
-                self.style_is_valid = True
-            else:
-                self.style_is_valid = False
+        supported_styles = response.json()['message']['items']
+        if self.style in supported_styles:
+            self.style_is_valid = True
+        else:
+            self.style_is_valid = False
