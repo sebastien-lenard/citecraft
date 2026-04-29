@@ -1,19 +1,21 @@
-import requests
 import sys
 from journal_fetcher import JournalFetcher
 
 def check_integ_journals_api_health():
-    print("Checking Crossref API Journals health, schema, and Rate Limit status...")
+    print("Checking Crossref API Journals health, schema, and Rate Limit status via RequestsWrapper...")
     fetcher = JournalFetcher()
     
     # Using a known journal
     test_journal = "The Journal of Geology"
     
     try:
-        # Manually call requests to inspect headers
-        params = {"query": test_journal, "rows": 1, "mailto": fetcher.email}
-        response = requests.get(fetcher.base_url, params=params, timeout=10)
-        response.raise_for_status()
+        # On utilise le wrapper du fetcher. 
+        # On force max_retries=1 pour un diagnostic "sec" sans répétition.
+        response = fetcher.requests_wrapper.get(
+            fetcher.base_url, 
+            params={"query": test_journal, "rows": 1}, 
+            max_retries=1
+        )
         
         headers = response.headers
         
@@ -22,10 +24,9 @@ def check_integ_journals_api_health():
         interval = headers.get('X-Rate-Limit-Interval')
         
         if limit:
-            print(f"[OK] Polite Pool Active: Limit is {limit} requests per {interval}.")
+            print(f"[OK] Polite Pool Active (via Wrapper): Limit is {limit} requests per {interval}.")
         else:
-            print("[WARNING] Rate limit headers not found. You might be in the 'Public' pool.")
-            print("          Check if CROSSREF_API_EMAIL is correctly set.")
+            print("[WARNING] Rate limit headers not found. Check if email is correctly passed by Wrapper.")
 
         # 2. Schema and Data Check
         data = response.json()
@@ -53,14 +54,8 @@ def check_integ_journals_api_health():
 
         print("\n--- ALL SYSTEMS GO ---")
 
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            print("[FAIL] Rate limit exceeded (429 Too Many Requests).")
-        else:
-            print(f"[FAIL] HTTP Error: {e}")
-        sys.exit(1)
     except Exception as e:
-        print(f"[FAIL] Unexpected error: {e}")
+        print(f"[FAIL] Integration unexpected error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
