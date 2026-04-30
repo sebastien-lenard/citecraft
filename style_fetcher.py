@@ -23,7 +23,7 @@ class StyleFetcher:
         """Fetch the official list of supported styles and check the validity of the
         style
         """
-        response = self.requests_wrapper.get(self.base_url)
+        response = self.requests_wrapper.get(self.base_url, headers=self.headers)
         supported_styles = response.json()['message']['items']
         if self.style in supported_styles:
             self.style_is_valid = True

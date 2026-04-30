@@ -1,9 +1,11 @@
 import sys
 from journal_fetcher import JournalFetcher
+from config_loader import CROSSREF_API_EMAIL
 
 def check_integ_journals_api_health():
     print("Checking Crossref API Journals health, schema, and Rate Limit status via RequestsWrapper...")
     fetcher = JournalFetcher()
+    headers = {'User-Agent': f'ManuscriptRefLister/1.0 (mailto:{CROSSREF_API_EMAIL})'}
     
     # Using a known journal
     test_journal = "The Journal of Geology"
@@ -13,7 +15,7 @@ def check_integ_journals_api_health():
         # On force max_retries=1 pour un diagnostic "sec" sans répétition.
         response = fetcher.requests_wrapper.get(
             fetcher.base_url, 
-            params={"query": test_journal, "rows": 1}, 
+            params={"query": test_journal, "rows": 1}, headers=headers,
             max_retries=1
         )
         

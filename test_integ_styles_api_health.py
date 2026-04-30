@@ -1,11 +1,13 @@
 import sys
 from style_fetcher import StyleFetcher
+from config_loader import CROSSREF_API_EMAIL
 
 def check_style_api_health():
     print("Checking Crossref Style API health  via RequestsWrapper...")
     
     # 'apa' is a standard style that should always exist
     fetcher = StyleFetcher("apa")
+    headers = {'User-Agent': f'ManuscriptRefLister/1.0 (mailto:{CROSSREF_API_EMAIL})'}
     
     try:
         fetcher.check_style_is_valid()
@@ -20,7 +22,8 @@ def check_style_api_health():
             sys.exit(1)
 
         # Check for Polite Pool headers for extra safety
-        response = fetcher.requests_wrapper.get(fetcher.base_url, max_retries=1)
+        response = fetcher.requests_wrapper.get(fetcher.base_url, headers=headers,
+                                                max_retries=1)
 
         limit = response.headers.get('X-Rate-Limit-Limit')
         if limit:

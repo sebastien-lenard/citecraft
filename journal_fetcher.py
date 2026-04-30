@@ -41,7 +41,8 @@ class JournalFetcher:
         
         record_list = []
         try:
-            response = self.requests_wrapper.get(self.base_url, params=params)
+            response = self.requests_wrapper.get(self.base_url, params=params,
+                                                 headers=self.headers)
             response.raise_for_status()
             
             items = response.json().get('message', {}).get('items', [])
@@ -102,7 +103,8 @@ class JournalFetcher:
         }
         try:
             response = self.requests_wrapper.get(
-                self.issn_url.replace("{issn}", str(issn)), params=params)
+                self.issn_url.replace("{issn}", str(issn)), params=params,
+                headers=self.headers)
             response.raise_for_status()
             items = response.json().get('message', {}).get('items', [])
             if not items:
