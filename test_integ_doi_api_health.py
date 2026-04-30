@@ -1,4 +1,5 @@
 import sys
+import requests, traceback
 from doi_fetcher import DoiFetcher
 
 def test_doi_service_health():
@@ -27,8 +28,22 @@ def test_doi_service_health():
 
         print("--- DOI HEALTH CHECK PASSED ---")
 
+    except requests.exceptions.HTTPError as e:
+        print(f"\n[FAIL] HTTP Error detected!")
+        print(f"Status Code: {e.response.status_code}")
+        print(f"URL: {e.response.url}")
+        print(f"Response Body: {e.response.text[:200]}...")
+        sys.exit(1)
+
+    except KeyError as e:
+        print(f"\n[FAIL] Data Structure Error (JSON Schema mismatch)!")
+        print(f"Missing key in JSON: {e}")
+        traceback.print_exc(limit=1) 
+        sys.exit(1)
+
     except Exception as e:
-        print(f"[FAIL] An unexpected error occurred: {e}")
+        print(f"\n[FAIL] Unexpected Exception of type {type(e).__name__}:")
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import sys
+import requests, traceback
 from journal_fetcher import JournalFetcher
 from config_loader import CROSSREF_API_EMAIL
 
@@ -56,8 +57,22 @@ def check_integ_journals_api_health():
 
         print("\n--- ALL SYSTEMS GO ---")
 
+    except requests.exceptions.HTTPError as e:
+        print(f"\n[FAIL] HTTP Error detected!")
+        print(f"Status Code: {e.response.status_code}")
+        print(f"URL: {e.response.url}")
+        print(f"Response Body: {e.response.text[:200]}...")
+        sys.exit(1)
+
+    except KeyError as e:
+        print(f"\n[FAIL] Data Structure Error (JSON Schema mismatch)!")
+        print(f"Missing key in JSON: {e}")
+        traceback.print_exc(limit=1) 
+        sys.exit(1)
+
     except Exception as e:
-        print(f"[FAIL] Integration unexpected error: {e}")
+        print(f"\n[FAIL] Unexpected Exception of type {type(e).__name__}:")
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":
