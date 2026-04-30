@@ -68,7 +68,26 @@ class TestRequestsWrapper(unittest.TestCase):
         
         # Should not retry for a 404
         self.assertEqual(mock_get.call_count, 1)
-    
+
+    @patch('requests_wrapper.time.sleep', return_value=None)
+    @patch('requests_wrapper.requests.get')
+    def test_get_max_retries_override(self, mock_get, mock_sleep):
+        """
+        Test that the max_retries parameter in get() overrides the instance default.
+        """
+        # On simule une erreur de connexion persistante
+        mock_get.side_effect = requests.exceptions.ConnectionError("Down")
+
+        # On appelle get avec une surcharge à 1 seule tentative
+        # (alors que self.wrapper.max_retries est à 3 dans le setUp)
+        with self.assertRaises(requests.exceptions.ConnectionError):
+            self.wrapper.get("https://api.test.com", max_retries=1)
+        
+        # On vérifie que le wrapper n'a essayé qu'une seule fois
+        self.assertEqual(mock_get.call_count, 1)
+        # 1 seul sleep (celui de la politesse initiale)
+        self.assertEqual(mock_sleep.call_count, 1)
+
     @patch('requests_wrapper.requests.get')
     def test_get_with_custom_headers(self, mock_get):
         """

@@ -27,7 +27,7 @@ class RequestsWrapper:
         if headers is None:
             headers = {}
         
-        retries = max_retries if max_retries is not None else self.max_retries
+        max_retries = max_retries if max_retries is not None else self.max_retries
             
         # Add politeness mailto if not already present
         if self.email and "mailto" not in params:
@@ -35,7 +35,7 @@ class RequestsWrapper:
 
         last_exception = None
         
-        for attempt in range(self.max_retries):
+        for attempt in range(max_retries):
             # 1. We apply the safety delay before the actual request
             if attempt == 0 and self.delay > 0:
                 time.sleep(self.delay)
@@ -57,10 +57,10 @@ class RequestsWrapper:
                 
                 logger.warning(
                     "Network error on attempt %d/%d for URL %s. Retrying in %ds. Error: %s",
-                    attempt + 1, self.max_retries, url, wait_time, e
+                    attempt + 1, max_retries, url, wait_time, e
                 )
                 
-                if attempt < self.max_retries - 1:
+                if attempt < max_retries - 1:
                     time.sleep(wait_time)
             
             except requests.exceptions.HTTPError as e:
