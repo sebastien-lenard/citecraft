@@ -17,13 +17,15 @@ class RequestsWrapper:
         self.backoff_factor = backoff_factor
         self.delay = delay
 
-    def get(self, url, params=None, max_retries=None):
+    def get(self, url, params=None, headers=None, max_retries=None):
         """
         Performs a GET request with retry logic for network-related errors.
         Fatal errors (like 404 or malformed responses) raise immediately.
         """
         if params is None:
             params = {}
+        if headers is None:
+            headers = {}
         
         retries = max_retries if max_retries is not None else self.max_retries
             
@@ -38,7 +40,8 @@ class RequestsWrapper:
             if attempt == 0 and self.delay > 0:
                 time.sleep(self.delay)
             try:
-                response = requests.get(url, params=params, timeout=self.timeout)
+                response = requests.get(url, params=params, headers=headers,
+                                        timeout=self.timeout)
                 
                 # If we get a 4xx or 5xx, this raises an HTTPError
                 response.raise_for_status()

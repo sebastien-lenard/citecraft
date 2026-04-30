@@ -26,6 +26,7 @@ class TestRequestsWrapper(unittest.TestCase):
     def test_get_retry_on_timeout(self, mock_get, mock_sleep):
         """
         Test that the wrapper retries upon receiving a Timeout exception.
+        Note: Total sleeps = 1 (initial delay) + 2 (retries).
         """
         # Simulate two failures then one success
         mock_get.side_effect = [
@@ -37,7 +38,7 @@ class TestRequestsWrapper(unittest.TestCase):
         response = self.wrapper.get("https://api.test.com")
         
         self.assertEqual(mock_get.call_count, 3)
-        self.assertEqual(mock_sleep.call_count, 2)
+        self.assertEqual(mock_sleep.call_count, 3)
 
     @patch('requests_wrapper.time.sleep', return_value=None)
     @patch('requests_wrapper.requests.get')
@@ -67,3 +68,19 @@ class TestRequestsWrapper(unittest.TestCase):
         
         # Should not retry for a 404
         self.assertEqual(mock_get.call_count, 1)
+    
+    @patch('requests_wrapper.requests.get')
+    def test_get_with_custom_headers(self, mock_get):
+        """
+        Test that custom headers are correctly passed to the requests call.
+        """
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_get.return_value = mock_response
+
+        custom_headers = {'Accept': 'text/x-bibliography'}
+        self.wrapper.get("https://api.test.com", headers=custom_headers)
+
+        # Vérifie que requests.get a été appelé avec les headers fournis
+        args, kwargs = mock_get.call_args
+        self.assertEqual(kwargs['headers'], custom_headers)
