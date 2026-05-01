@@ -7,10 +7,6 @@ env/
 build/
 dist/
 
-# Conda
-.condarc
-conda-meta/
-
 # VS Code
 .vscode/
 
