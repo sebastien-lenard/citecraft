@@ -1,5 +1,7 @@
 import unittest
-from journal_parser import JournalParser
+
+from manuscript_reference_lister import JournalParser
+
 
 class TestJournalParser(unittest.TestCase):
     def setUp(self):
@@ -16,7 +18,7 @@ Geology
 Chemical Geology
 
 End of file."""
-        expected = ['Geomorphology', 'Geology', 'Chemical Geology']
+        expected = ["Geomorphology", "Geology", "Chemical Geology"]
         self.assertEqual(self.parser.extract_journal_list(text), expected)
 
     def test_last_occurrence_only(self):
@@ -31,7 +33,7 @@ New List 1
 New List 2
 
 End."""
-        expected = ['New List 1', 'New List 2']
+        expected = ["New List 1", "New List 2"]
         self.assertEqual(self.parser.extract_journal_list(text), expected)
 
     def test_no_journals_header(self):
@@ -43,13 +45,13 @@ End."""
         """Ensure it stops at a double newline even if it contains spaces or tabs."""
         # Represents: Journals \n Item 1 \n [space][tab] \n Item 2
         text = "Journals\nJournal Alpha\n \t \nJournal Beta"
-        expected = ['Journal Alpha']
+        expected = ["Journal Alpha"]
         self.assertEqual(self.parser.extract_journal_list(text), expected)
 
     def test_no_break_until_end_of_string(self):
         """Handle cases where the list goes until the very end of the string."""
         text = "Journals\nOnly Journal"
-        expected = ['Only Journal']
+        expected = ["Only Journal"]
         self.assertEqual(self.parser.extract_journal_list(text), expected)
 
     def test_strict_match_only(self):
@@ -61,8 +63,9 @@ Journals
 Chemistry
 
 End"""
-        expected = ['Chemistry']
+        expected = ["Chemistry"]
         self.assertEqual(self.parser.extract_journal_list(text), expected)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

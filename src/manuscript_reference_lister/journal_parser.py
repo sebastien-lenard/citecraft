@@ -1,5 +1,6 @@
 import re
 
+
 class JournalParser:
     """
     Responsible for extracting list of journal titles given in a text.
@@ -9,23 +10,23 @@ class JournalParser:
     def extract_journal_list(self, text):
         # Matches "Journals" only if it is the only word on the line
         # re.MULTILINE makes ^ and $ work per line
-        matches = list(re.finditer(r'^Journals\s*$', text, re.MULTILINE))
-        
+        matches = list(re.finditer(r"^Journals\s*$", text, re.MULTILINE))
+
         if not matches:
             return []
-        
+
         # Start from the end of the last "Journals" match
         start_index = matches[-1].end()
         remaining_text = text[start_index:]
-        
+
         # Look for the first occurrence of two newlines (the "break")
         # \n\s*\n matches a newline, any whitespace/tabs, then another newline
-        break_match = re.search(r'\n\s*\n', remaining_text)
-        
+        break_match = re.search(r"\n\s*\n", remaining_text)
+
         # If a break is found, take everything up to it; otherwise take the rest
-        relevant_block = remaining_text[:break_match.start()] if break_match else remaining_text
-            
+        relevant_block = (
+            remaining_text[: break_match.start()] if break_match else remaining_text
+        )
+
         # Split into lines, strip whitespace, and filter out empty strings
         return [line.strip() for line in relevant_block.splitlines() if line.strip()]
-
-
