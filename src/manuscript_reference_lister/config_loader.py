@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,12 +34,34 @@ CONTEXT_KEYWORDS = os.getenv("CONTEXT_KEYWORDS", "")
 JOURNAL_UPDATE_DAYS = os.getenv("JOURNAL_UPDATE_DAYS", 30)
 JOURNAL_UPDATE_MAX = os.getenv("JOURNAL_UPDATE_MAX", 100)
 
-PARSER_DEFAULT_BLACKLIST = ['Fig', 'Figs', 'Figure', 'Figures', 'Tab', 
-                            'Table', 'Eq', 'Plate', 'Section', 'See', 'e.g.', 'i.e.', 
-                            'January', 'February', 'March', 'April', 'May', 'June',
-                            'July', 'August', 'September', 'October', 'November',
-                            'December']
+PARSER_DEFAULT_BLACKLIST = [
+    "Fig",
+    "Figs",
+    "Figure",
+    "Figures",
+    "Tab",
+    "Table",
+    "Eq",
+    "Plate",
+    "Section",
+    "See",
+    "e.g.",
+    "i.e.",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
 
+# TODO: Should be in a function called only when necessary.
 # Ensure directories exist
 for d in [WORK_DIR_PATH, OUTPUT_DIR_PATH, TEST_WORK_DIR_PATH, TEST_OUTPUT_DIR_PATH]:
     if not Path(d).is_dir():
