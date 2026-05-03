@@ -1,20 +1,18 @@
+import logging
+
 from . import config_loader
 from .requests_wrapper import RequestsWrapper
 
 
 class StyleRepository:
-    """
-    Handles API calls to Crossref about styles, e.g. style=apa.
-    """
+    """Handles information about reference styles."""
 
-    def __init__(self, style):
-        """
-        style: reference style, e.g. apa"""
+    def __init__(self, favored_style: str = "apa"):
         self.email = config_loader.CROSSREF_API_EMAIL
         self.headers = {"User-Agent": f"ManuscriptRefLister/1.0 (mailto:{self.email})"}
         self.base_url = config_loader.CROSSREF_API_STYLES_URL
-        self.style = style
-        self.style_is_valid = None
+        self.favored_style = favored_style
+        self.favored_style_is_valid = None
         self.requests_wrapper = RequestsWrapper(
             config_loader.CROSSREF_API_EMAIL,
             timeout=config_loader.CROSSREF_API_TIMEOUT,
@@ -22,13 +20,12 @@ class StyleRepository:
             delay=config_loader.CROSSREF_API_DELAY,
         )
 
-    def check_style_is_valid(self):
-        """Fetch the official list of supported styles and check the validity of the
-        style
-        """
+    def validate_favored_style(self):
+        """Check is the favored reference style is in the repository and supported."""
         response = self.requests_wrapper.get(self.base_url, headers=self.headers)
-        supported_styles = response.json()["message"]["items"]
-        if self.style in supported_styles:
-            self.style_is_valid = True
+        valid_styles = response.json()["message"]["items"]
+        if self.favored_style in valid_styles:
+            self.favored_style_is_valid = True
         else:
-            self.style_is_valid = False
+            self.favored_style_is_valid = False
+            logging.warning("Invalid style %s.", self.favored_style)

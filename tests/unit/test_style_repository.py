@@ -16,28 +16,24 @@ def mock_styles_response():
     return mock
 
 
-@patch("manuscript_reference_lister.style_repository.RequestsWrapper.get")
-def test_check_style_is_valid_success(
-    mock_wrapper_get: MagicMock, mock_styles_response: MagicMock
-) -> None:
-    """Verify style_is_valid is True when the style exists in the API response."""
-    mock_wrapper_get.return_value = mock_styles_response
+def test_validate_favored_style_success(mock_styles_response: MagicMock) -> None:
+    """Verify favored_style_is_valid is True when the style is supported."""
 
     repo = StyleRepository("apa")
-    repo.check_style_is_valid()
+    with patch.object(
+        repo.requests_wrapper, "get", return_value=mock_styles_response
+    ) as mock_get:
+        repo.validate_favored_style()
+        assert repo.favored_style_is_valid is True
+        assert mock_get.call_count == 1
 
-    assert repo.style_is_valid is True
-    assert mock_wrapper_get.call_count == 1
 
-
-@patch("manuscript_reference_lister.style_repository.RequestsWrapper.get")
-def test_check_style_is_valid_failure(
-    mock_wrapper_get: MagicMock, mock_styles_response: MagicMock
+def test_validate_favored_style_favored_style_failure(
+    mock_styles_response: MagicMock,
 ) -> None:
-    """Verify style_is_valid is False when the style is missing from API response."""
-    mock_wrapper_get.return_value = mock_styles_response
+    """Verify favored_style_is_valid is False when the style is not supported."""
 
     repo = StyleRepository("not-a-real-style")
-    repo.check_style_is_valid()
-
-    assert repo.style_is_valid is False
+    with patch.object(repo.requests_wrapper, "get", return_value=mock_styles_response):
+        repo.validate_favored_style()
+        assert repo.favored_style_is_valid is False
