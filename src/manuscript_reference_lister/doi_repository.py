@@ -20,7 +20,8 @@ class DoiRepository:
 
     def get_reference(self, doi: str, style: str = "apa") -> str:
         """Gets the reference formatted to a style and ready to include in a
-        bibliography."""
+        bibliography.
+        Warning: doesn't handle the case when the style is not supported."""
         headers = {"Accept": f"text/x-bibliography; style={style}"}
 
         try:

@@ -8,6 +8,12 @@ class StyleRepository:
     """Handles information about reference styles."""
 
     def __init__(self, favored_style: str = "apa"):
+        """
+        Examples of styles:
+        apa (AGU, Wiley), copernicus-publications (EGU), elsevier-harvard (Elsevier),
+        chicago-author-date (Taylor & Francis), springer-basic-author-date (Springer),
+        etc.
+        """
         self.email = config_loader.CROSSREF_API_EMAIL
         self.headers = {"User-Agent": f"ManuscriptRefLister/1.0 (mailto:{self.email})"}
         self.base_url = config_loader.CROSSREF_API_STYLES_URL
