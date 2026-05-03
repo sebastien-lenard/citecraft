@@ -16,7 +16,7 @@ def test_doi_service_health():
     test_style = "apa"
 
     try:
-        reference = fetcher.get_formatted_reference(test_doi, test_style)
+        reference = fetcher.get_reference(test_doi, test_style)
         print(reference)
         if reference != "Reference unavailable in doi.org." and len(reference) > 10:
             print("[OK] DOI service reachable and returned formatted reference.")
