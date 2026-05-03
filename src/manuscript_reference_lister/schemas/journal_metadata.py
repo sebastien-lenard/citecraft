@@ -9,3 +9,9 @@ class JournalMetadata(TypedDict):
     start_year: int  # e.g. 2008
     end_year: int  # e.g. 2026
     update: str  # e.g. 2026-03-27
+
+
+def is_journal_metadata(record: dict) -> bool:
+    """Check if a dictionary contains ALL keys defined in JournalMetadata."""
+    required_keys = set(JournalMetadata.__annotations__.keys())
+    return isinstance(record, dict) and required_keys.issubset(record.keys())

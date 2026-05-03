@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import Literal
 
 from . import config_loader
+from .data_loader import DataLoader
 from .requests_wrapper import RequestsWrapper
-from .schemas.journal_metadata import JournalMetadata
+from .schemas.journal_metadata import JournalMetadata, is_journal_metadata
 
 
 class JournalRepository:
@@ -193,19 +194,20 @@ class JournalRepository:
         self.records = valid_metadata
 
     def load_and_merge_all(
-        self, input_titles: list[str] | None = None, input_filepath: str = None
+        self,
+        input_titles: list[str] | None = None,
+        input_filepath: str | Path | None = None,
     ) -> None:
         """Load local records if exist and merge them with new records generated without
         metadata from a list of journal titles. Titles already present in local records
         are not duplicated and are discarded."""
-        if not input_filepath:
-            input_filepath = Path(self.work_dir_path) / self.local_filename
-
-        try:
-            with open(input_filepath) as f:
-                self.records = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.records = []
+        input_filepath = Path(
+            input_filepath or Path(self.work_dir_path) / self.local_filename
+        )
+        self.records = DataLoader(input_filepath, raise_exception=False).load_json(
+            is_journal_metadata
+        )
+        self.records = self.records if self.records else []
 
         # Set for fast lookup
         existing_titles = {info["input_title"] for info in self.records}

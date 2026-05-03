@@ -39,16 +39,32 @@ class DataLoader:
             logging.warning(msg)
             return None
 
-    def load_json(self) -> dict | list | None:
-        """Loads and parses JSON data."""
+    def load_json(self, validator=None) -> dict | list | None:
+        """Loads and parses JSON data. Returns None if file corrupted and if a list not
+        records not validated by the validator function."""
         if not self.file_path.is_file():
             return None
         try:
-            with open(self.file_path, encoding="utf-8") as f:
-                return json.load(f)
+            data = json.loads(self.file_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             msg = f"Invalid JSON format: {self.file_path}"
             if self.raise_exception:
                 raise
             logging.warning(msg)
             return None
+
+        if data is None:
+            return None
+
+        if validator and isinstance(data, list):
+            if not all(validator(item) for item in data):
+                msg = (
+                    f"Schema validation failed for one or more items in: "
+                    f"{self.file_path}"
+                )
+                if self.raise_exception:
+                    raise ValueError(msg)
+                logging.warning(msg)
+                return None
+
+        return data
