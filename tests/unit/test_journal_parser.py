@@ -22,7 +22,7 @@ def test_standard_case(parser: JournalParser) -> None:
         "End of file."
     )
     expected = ["Geomorphology", "Geology", "Chemical Geology"]
-    assert parser.extract_journal_list(text) == expected
+    assert parser.extract_all(text) == expected
 
 
 def test_last_occurrence_only(parser: JournalParser) -> None:
@@ -40,7 +40,7 @@ def test_last_occurrence_only(parser: JournalParser) -> None:
         "End."
     )
     expected = ["New List 1", "New List 2"]
-    assert parser.extract_journal_list(text) == expected
+    assert parser.extract_all(text) == expected
 
 
 @pytest.mark.parametrize(
@@ -60,4 +60,4 @@ def test_parsing_edge_cases(
     parser: JournalParser, text: str, expected: list[str]
 ) -> None:
     """Verify various boundary conditions and strict header matching."""
-    assert parser.extract_journal_list(text) == expected
+    assert parser.extract_all(text) == expected

@@ -2,12 +2,11 @@ import re
 
 
 class JournalParser:
-    """
-    Responsible for extracting list of journal titles given in a text.
-    The titles should be positioned below a line containing only the text Journals.
-    """
+    """Handles extraction of journal titles from raw text."""
 
-    def extract_journal_list(self, text):
+    def extract_all(self, text: str) -> list[str]:
+        """Extract journal titles in a text. The titles should be positioned below a
+        line containing only the text Journals, and separated by an EOL."""
         # Matches "Journals" only if it is the only word on the line
         # re.MULTILINE makes ^ and $ work per line
         matches = list(re.finditer(r"^Journals\s*$", text, re.MULTILINE))
