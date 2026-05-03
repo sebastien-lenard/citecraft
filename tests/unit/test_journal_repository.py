@@ -75,7 +75,7 @@ def test_get_journal_metadata_not_found_behavior(
     ],
 )
 def test_get_issn_year_endpoint_success(
-    repo, order: Literal["asc", "desc"], expected_year: int
+    repo: JournalRepository, order: Literal["asc", "desc"], expected_year: int
 ) -> None:
     """Test retrieving years when both print and online dates are present."""
     mock_response = MagicMock()
@@ -109,7 +109,7 @@ def test_get_issn_year_endpoint_success(
         mock_get.assert_called_once()
 
 
-def test_get_issn_year_endpoint_no_items(repo) -> None:
+def test_get_issn_year_endpoint_no_items(repo: JournalRepository) -> None:
     """Test the 'guard clause' when the API returns no items."""
     mock_response = MagicMock()
     mock_response.json.return_value = {"message": {"items": []}}
@@ -121,7 +121,7 @@ def test_get_issn_year_endpoint_no_items(repo) -> None:
         mock_get.assert_called_once()
 
 
-def test_get_issn_year_endpoint_partial_dates(repo) -> None:
+def test_get_issn_year_endpoint_partial_dates(repo: JournalRepository) -> None:
     """Test behavior when only one type of date (e.g. online) is available."""
     mock_response = MagicMock()
     mock_response.json.return_value = {
