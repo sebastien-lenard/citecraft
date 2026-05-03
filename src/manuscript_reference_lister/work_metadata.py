@@ -2,12 +2,9 @@ from typing import TypedDict
 
 
 class WorkMetadata(TypedDict):
-    name: str
-    role: str
-    req_author: str
-    req_year: int
-    req_issn: str
-    req_keywords: str
+    input_first_authors: str
+    input_year_and_suffix: int
+    input_ISSN: str
     reference: str
     style: str
     doi: str
