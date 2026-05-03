@@ -8,7 +8,14 @@ logger = logging.getLogger(__name__)
 
 
 class RequestsWrapper:
-    def __init__(self, email, timeout=30, max_retries=3, backoff_factor=2, delay=1.0):
+    def __init__(
+        self,
+        email: str,
+        timeout: int = 30,
+        max_retries: int = 3,
+        backoff_factor: int = 2,
+        delay: float = 1.0,
+    ):
         """
         Initialize the wrapper with API politeness and retry logic parameters.
         delay: Time to wait (in seconds) before each initial request to respect API
@@ -20,7 +27,13 @@ class RequestsWrapper:
         self.backoff_factor = backoff_factor
         self.delay = delay
 
-    def get(self, url, params=None, headers=None, max_retries=None):
+    def get(
+        self,
+        url: str,
+        params: dict | None = None,
+        headers: dict | None = None,
+        max_retries: int | None = None,
+    ) -> None:
         """
         Performs a GET request with retry logic for network-related errors.
         Fatal errors (like 404 or malformed responses) raise immediately.
