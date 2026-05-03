@@ -2,6 +2,7 @@ from . import config_loader
 from .citation_parser import CitationParser
 from .data_loader import DataLoader
 from .doi_repository import DoiRepository
+from .journal_metadata import JournalMetadata
 from .journal_parser import JournalParser
 from .journal_repository import JournalRepository
 from .requests_wrapper import RequestsWrapper
@@ -15,6 +16,7 @@ __all__ = [
     "CitationParser",
     "DataLoader",
     "DoiRepository",
+    "JournalMetadata",
     "JournalRepository",
     "JournalParser",
     "RequestsWrapper",

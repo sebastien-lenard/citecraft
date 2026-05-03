@@ -3,15 +3,15 @@ import traceback
 
 import requests
 
-from manuscript_reference_lister import JournalFetcher, config_loader
+from manuscript_reference_lister import JournalRepository, config_loader
 
 
-def check_integ_journals_api_health():
+def check_integ_journals_api_health() -> None:
     print(
         "Checking Crossref API Journals health, schema, and Rate Limit status via "
         "RequestsWrapper..."
     )
-    fetcher = JournalFetcher()
+    repo = JournalRepository()
     headers = {
         "User-Agent": f"ManuscriptRefLister/1.0 (mailto:{
             config_loader.CROSSREF_API_EMAIL
@@ -19,14 +19,14 @@ def check_integ_journals_api_health():
     }
 
     # Using a known journal
-    test_journal = "The Journal of Geology"
+    input_title = "The Journal of Geology"
 
     try:
-        # On utilise le wrapper du fetcher.
+        # On utilise le wrapper du repo.
         # On force max_retries=1 pour un diagnostic "sec" sans répétition.
-        response = fetcher.requests_wrapper.get(
-            fetcher.base_url,
-            params={"query": test_journal, "rows": 1},
+        response = repo.requests_wrapper.get(
+            repo.base_url,
+            params={"query": input_title, "rows": 1},
             headers=headers,
             max_retries=1,
         )
@@ -35,7 +35,6 @@ def check_integ_journals_api_health():
 
         # 1. Rate Limit & Polite Pool Check
         limit = headers.get("X-Rate-Limit-Limit")
-        interval = headers.get("X-Rate-Limit-Interval")
 
         if limit:
             print(
@@ -57,14 +56,14 @@ def check_integ_journals_api_health():
             sys.exit(1)
 
         sample_item = items[0]
-        title = sample_item.get("title", ["No title found"])
+        true_title = sample_item.get("title", ["No title found"])
         issns = sample_item.get("ISSN", [])
 
-        print(f"[OK] Schema OK: Found '{title}' with ISSNs: {issns}")
+        print(f"[OK] Schema OK: Found '{true_title}' with ISSNs: {issns}")
 
         # 3. Date Format Check
         print("Testing date extraction logic...")
-        results = fetcher.get_issns_and_dates_by_name(test_journal)
+        results = repo.get_journal_metadata(input_title)
 
         if results and isinstance(results[0].get("start_year"), int):
             print(

@@ -3,239 +3,232 @@ import logging
 import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from typing import Literal
 
 from . import config_loader
+from .journal_metadata import JournalMetadata
 from .requests_wrapper import RequestsWrapper
 
 
 class JournalRepository:
-    """
-    Handles API calls to Crossref about journals.
-    """
+    """Handles journal metadata records."""
 
-    def __init__(self):
+    def __init__(self, local_filename: str = "journal_records.json"):
         self.email = config_loader.CROSSREF_API_EMAIL
         self.headers = {"User-Agent": f"ManuscriptRefLister/1.0 (mailto:{self.email})"}
         self.base_url = config_loader.CROSSREF_API_JOURNALS_URL
         self.issn_url = config_loader.CROSSREF_API_JOURNALS_ISSN_URL
         self.work_dir_path = config_loader.WORK_DIR_PATH
-        self.journal_info_list = []
+        self.records = []
+        self.local_filename = local_filename
         self.update_days = config_loader.JOURNAL_UPDATE_DAYS
-        self.update_max = config_loader.JOURNAL_UPDATE_MAX
+        self.update_limit = config_loader.JOURNAL_UPDATE_LIMIT
         self.has_pending_updates = False
         self.requests_wrapper = RequestsWrapper(
-            config_loader.CROSSREF_API_EMAIL,
+            self.email,
             timeout=config_loader.CROSSREF_API_TIMEOUT,
             max_retries=config_loader.CROSSREF_API_MAX_RETRY,
             delay=config_loader.CROSSREF_API_DELAY,
         )
 
-    def get_issns_and_dates_by_name(self, requested_title):
+    def get_journal_metadata(self, input_title: str) -> list[JournalMetadata]:
         """
-        Retrieves the first match from Crossref, get min/max publication dates and
-        returns a list of dictionaries,
-        one for each ISSN associated with that journal.
+        Get journal metadata filtered on the exact match of the title (input_title) that
+        have published works. A title can correspond to several records or none, each of
+        them identified by a unique ISSN.
+        Warning: If more than 1 exact match is found, returns only the records for the
+        first one found.
         """
+        # Retrieval of records with titles similar to input_title from Crossref API
         params = {
-            "query": requested_title,
-            "rows": 200,  # Pull a large enough batch to find all matches
+            "query": input_title,
+            "rows": 200,  # Large batch to find all matches
             "mailto": self.email,
         }
 
-        record_list = []
-        try:
-            response = self.requests_wrapper.get(
-                self.base_url, params=params, headers=self.headers
-            )
-            response.raise_for_status()
+        journal_records = []
+        response = self.requests_wrapper.get(
+            self.base_url, params=params, headers=self.headers
+        )
+        response.raise_for_status()
 
-            items = response.json().get("message", {}).get("items", [])
-            exact_matches = [
-                item
-                for item in items
-                if item.get("title", "").strip() == requested_title
+        items = response.json().get("message", {}).get("items", [])
+
+        # Discard records without exact title match
+        exact_matches = [
+            item for item in items if item.get("title", "").strip() == input_title
+        ]
+
+        if not exact_matches:
+            logging.warning("Journal %s not found.", input_title)
+            return [
+                {
+                    "input_title": input_title,
+                    "true_title": None,
+                    "publisher": None,
+                    "ISSN": None,
+                    "start_year": None,
+                    "end_year": None,
+                    "update": str(date.today()),
+                }
             ]
 
-            # We only proceed if we found at least one exact match
-            if exact_matches:
-                item = exact_matches[0]
-                title = item.get("title", "")
-                publisher = item.get("publisher", "")
-                issns = item.get("ISSN", [])
-                issns = list(dict.fromkeys(item.get("ISSN", [])))  # remove duplicates
+        # Discard exact matches other than the 1st one
+        if len(exact_matches) > 1:
+            logging.warning(
+                "Discarded duplicate titles in the repo for journal %s.", input_title
+            )
+        item = exact_matches[0]
+        true_title = item.get("title", "")
+        publisher = item.get("publisher", "")
+        issns = item.get("ISSN", [])
+        issns = list(dict.fromkeys(item.get("ISSN", [])))  # remove duplicate ISSNs
 
-                # Create a list of dicts, one per ISSN
-                for issn in issns:
-                    # For each ISSN, try to find its specific publication range
-                    dates = {
-                        "min_year": self.get_year_endpoint(issn, "asc"),
-                        "max_year": self.get_year_endpoint(issn, "desc"),
-                    }
+        for issn in issns:
+            # Publication range
+            dates = {
+                "min_year": self.get_issn_year_endpoint(issn, "asc"),
+                "max_year": self.get_issn_year_endpoint(issn, "desc"),
+            }
 
-                    record_list.append(
-                        {
-                            "requested_title": requested_title,
-                            "title": title,
-                            "publisher": publisher,
-                            "issn": issn,
-                            "start_year": dates["min_year"],
-                            "end_year": dates["max_year"],
-                            "update": str(date.today()),
-                        }
-                    )
-            else:
-                record_list.append(
-                    {
-                        "requested_title": requested_title,
-                        "title": None,
-                        "publisher": None,
-                        "issn": None,
-                        "start_year": None,
-                        "end_year": None,
-                        "update": str(date.today()),
-                    }
-                )
-                logging.warning("Journal %s not found.", requested_title)
-            return record_list
+            # Discard records without published work
+            if not dates["min_year"] or not dates["max_year"]:
+                logging.warning("Skip journal %s (no published work).", input_title)
+                continue
 
-        except Exception as e:
-            raise e
-            return []
+            journal_records.append(
+                {
+                    "input_title": input_title,
+                    "true_title": true_title,
+                    "publisher": publisher,
+                    "ISSN": issn,
+                    "start_year": dates["min_year"],
+                    "end_year": dates["max_year"],
+                    "update": str(date.today()),
+                }
+            )
+        return journal_records
 
-    def get_year_endpoint(self, issn, order):
-        """Helper to fetch the oldest or newest work year for an ISSN.
-        order: asc or desc."""
+    def get_issn_year_endpoint(
+        self, issn: str, order: Literal["asc", "desc"]
+    ) -> int | None:
+        """Get the year of the oldest (order: asc) or the newest (order: desc) published
+        work (no distinction print or online) for the ISSN."""
         params = {"sort": "published", "order": order, "rows": 1, "mailto": self.email}
-        try:
-            response = self.requests_wrapper.get(
-                self.issn_url.replace("{issn}", str(issn)),
-                params=params,
-                headers=self.headers,
-            )
-            response.raise_for_status()
-            items = response.json().get("message", {}).get("items", [])
-            if not items:
-                return None
-
-            # Crossref works use 'published-print' or 'published-online'
-            work = items[0]
-            p_date = work.get("published-print", {}).get("date-parts", [[None]])[0][0]
-            o_date = work.get("published-online", {}).get("date-parts", [[None]])[0][0]
-
-            # Return the earliest or latest year found between print/online
-            years = [y for y in [p_date, o_date] if y is not None]
-            return (
-                min(years)
-                if order == "asc" and years
-                else max(years)
-                if years
-                else None
-            )
-        except:
+        response = self.requests_wrapper.get(
+            self.issn_url.replace("{issn}", str(issn)),
+            params=params,
+            headers=self.headers,
+        )
+        response.raise_for_status()
+        items = response.json().get("message", {}).get("items", [])
+        if not items:
             return None
 
-    def update_journal_info(self):
-        """Set or update issn/dates in self.journal_info_list. Should work ok if list
-        has less than 100k items.
-        Update is restricted to a max number of journals, and methode doesnt save the
-        list to a file."""
+        work = items[0]
+        p_date = work.get("published-print", {}).get("date-parts", [[None]])[0][0]
+        o_date = work.get("published-online", {}).get("date-parts", [[None]])[0][0]
 
-        cutoff_date = date.today() - timedelta(days=self.update_days)
-        # 1. Identify and categorize records needing attention
-        needs_info = []  # Priority 1: Missing data (None)
-        needs_refresh = []  # Priority 2: Old data (Date expired)
-        complete = []  # No update needed
+        # Earliest or latest year found between print/online
+        years = [y for y in [p_date, o_date] if y is not None]
+        return min(years) if order == "asc" and years else max(years) if years else None
 
-        for record in self.journal_info_list:
+    def update_all(self) -> None:
+        """Update the records missing metadata (Priority 1) and records with expired
+        metadata (Priority 2) with up-to-date metatata from the remote repo.
+        Warning: Update restricted to a max number of journals, doesn't include
+        regular local saving of the updates."""
+
+        expiration_date = date.today() - timedelta(days=self.update_days)
+        missing_metadata = []
+        expired_metadata = []
+        valid_metadata = []
+
+        for record in self.records:
             try:
                 last_update = datetime.strptime(record["update"], "%Y-%m-%d").date()
             except (ValueError, TypeError):
                 last_update = date.min
 
             if None in record.values():
-                needs_info.append(record)
-            elif last_update < cutoff_date:
-                needs_refresh.append(record)
+                missing_metadata.append(record)
+            elif last_update < expiration_date:
+                expired_metadata.append(record)
             else:
-                complete.append(record)
+                valid_metadata.append(record)
 
-        # 2. Process updates with a limit
-        final_list = complete
-        to_process = needs_info + needs_refresh  # Missing info comes first
-        calls_made = 0
+        records_to_update = missing_metadata + expired_metadata
+        update_count = 0
         last_display_time = time.time()
-        total_to_process = len(to_process)
-        remaining_updates = 0
+        update_total = len(records_to_update)
+        update_remaining = 0
 
-        for i, record in enumerate(to_process):
-            if calls_made < self.update_max:
-                new_data = self.get_issns_and_dates_by_name(record["requested_title"])
+        for i, record in enumerate(records_to_update):
+            if update_count < self.update_limit:
+                new_data = self.get_journal_metadata(record["input_title"])
                 if new_data:
-                    final_list.extend(new_data)
+                    valid_metadata.extend(new_data)
                 else:
-                    final_list.append(record)
-                calls_made += 1
+                    valid_metadata.append(record)
+                update_count += 1
             else:
                 # We hit the limit; keep the old record and count it for the warning
-                final_list.append(record)
-                remaining_updates = len(to_process) - i
+                valid_metadata.append(record)
+                update_remaining = len(records_to_update) - i
                 break
             # Display update every 10 seconds
             if time.time() - last_display_time > 10:
-                remaining = total_to_process - (i + 1)
-                print(
-                    f"Status: {remaining} updates remaining out of "
-                    f"{total_to_process}..."
-                )
+                remaining = update_total - (i + 1)
+                print(f"Status: {remaining} updates remaining out of {update_total}...")
                 last_display_time = time.time()
 
         # 3. Handle Warning and Flag
-        if remaining_updates > 0:
+        if update_remaining > 0:
             self.has_pending_updates = True
             logging.warning(
                 "Journal update limit reached. %d records still need updating.",
-                remaining_updates,
+                update_remaining,
             )
 
-        self.journal_info_list = final_list
+        self.records = valid_metadata
 
-    def load_and_merge_journal_info_list(
-        self, journal_title_list=[], input_filepath=None
-    ):
-        """Load the list."""
+    def load_and_merge_all(
+        self, input_titles: list[str] | None = None, input_filepath: str = None
+    ) -> None:
+        """Load local records if exist and merge them with new records generated without
+        metadata from a list of journal titles. Titles already present in local records
+        are not duplicated and are discarded."""
         if not input_filepath:
-            input_filepath = Path(self.work_dir_path) / "journal_info_list.json"
+            input_filepath = Path(self.work_dir_path) / self.local_filename
 
         try:
             with open(input_filepath) as f:
-                self.journal_info_list = json.load(f)
+                self.records = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            self.journal_info_list = []
+            self.records = []
 
-        # 1. Get a set of titles already in journal_info_list for fast lookup
-        existing_titles = {info["requested_title"] for info in self.journal_info_list}
+        # Set for fast lookup
+        existing_titles = {info["input_title"] for info in self.records}
 
-        # 2. Filter journal_title_list and create formatted dicts for the new ones
         new_entries = [
             {
-                "requested_title": requested_title,
-                "title": None,
+                "input_title": input_title,
+                "true_title": None,
                 "publisher": None,
-                "issn": None,
+                "ISSN": None,
                 "start_year": None,
                 "end_year": None,
                 "update": str(date.today()),
             }
-            for requested_title in journal_title_list
-            if requested_title not in existing_titles
+            for input_title in input_titles
+            if input_title not in existing_titles
         ]
 
-        # 3. Merge the two lists
-        self.journal_info_list = self.journal_info_list + new_entries
+        self.records = self.records + new_entries
 
-    def save_journal_info_list(self, output_filepath=None):
-        """Save the list."""
+    def save_all(self, output_filepath=None) -> None:
+        """Save the records locally."""
         if not output_filepath:
-            output_filepath = Path(self.work_dir_path) / "journal_info_list.json"
+            output_filepath = Path(self.work_dir_path) / self.local_filename
         with open(output_filepath, "w") as f:
-            json.dump(self.journal_info_list, f, indent=4)
+            json.dump(self.records, f, indent=4)
