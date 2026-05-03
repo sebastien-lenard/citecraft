@@ -21,6 +21,10 @@ class DoiRepository:
     def get_reference(self, doi: str, style: str = "apa") -> str:
         """Gets the reference formatted to a style and ready to include in a
         bibliography.
+        Examples of styles:
+        apa (AGU, Wiley), copernicus-publications (EGU), elsevier-harvard (Elsevier),
+        chicago-author-date (Taylor & Francis), springer-basic-author-date (Springer),
+        etc. Must have been validated using StyleRepository.
         Warning: doesn't handle the case when the style is not supported."""
         headers = {"Accept": f"text/x-bibliography; style={style}"}
 
