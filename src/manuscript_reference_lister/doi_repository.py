@@ -6,7 +6,7 @@ from . import config_loader
 from .requests_wrapper import RequestsWrapper
 
 
-class DoiFetcher:
+class DoiRepository:
     """Handles calls to doi.org, to get full formatted references.
     Done using DOI Content Negotiation Service."""
 

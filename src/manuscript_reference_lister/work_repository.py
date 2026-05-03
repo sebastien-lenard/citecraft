@@ -5,10 +5,10 @@ from unidecode import unidecode
 
 from . import config_loader
 from .requests_wrapper import RequestsWrapper
-from .work import Work
+from .work_metadata import WorkMetadata
 
 
-class WorkFetcher:
+class WorkRepository:
     """
     Handles API calls to Crossref about article references
     with multi-result support.
@@ -35,7 +35,7 @@ class WorkFetcher:
         issn: str | None = None,
         keywords: str = "",
         max_results: int | None = None,
-    ) -> list[Work]:
+    ) -> list[WorkMetadata]:
         """
         Searches for references and returns a list of potential matches.
         year: str (1600-2099), with possible suffix (a, b, etc.).

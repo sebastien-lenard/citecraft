@@ -2,29 +2,29 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister import WorkFetcher
+from manuscript_reference_lister import WorkRepository
 
 
 @pytest.fixture
-def fetcher() -> WorkFetcher:
-    """Provides a fresh instance of WorkFetcher for each test."""
-    return WorkFetcher()
+def repo() -> WorkRepository:
+    """Provides a fresh instance of WorkRepository for each test."""
+    return WorkRepository()
 
 
-@patch("manuscript_reference_lister.work_fetcher.RequestsWrapper.get")
-def test_fetch_not_found(mock_get: MagicMock, fetcher: WorkFetcher) -> None:
+@patch("manuscript_reference_lister.work_repository.RequestsWrapper.get")
+def test_fetch_not_found(mock_get: MagicMock, repo: WorkRepository) -> None:
     """Verify behavior when no results are found (returns empty list)."""
     mock_resp = MagicMock(status_code=200)
     mock_resp.json.return_value = {"message": {"items": []}}
     mock_get.return_value = mock_resp
 
-    result = fetcher.fetch_dois_for_this_info("UnknownAuthor", "2025", issn="1752-0894")
+    result = repo.fetch_dois_for_this_info("UnknownAuthor", "2025", issn="1752-0894")
     assert result == []
 
 
-@patch("manuscript_reference_lister.work_fetcher.RequestsWrapper.get")
-def test_returns_multiple_candidates(mock_get: MagicMock, fetcher: WorkFetcher) -> None:
-    """Verify that the fetcher identifies and returns multiple valid candidates."""
+@patch("manuscript_reference_lister.work_repository.RequestsWrapper.get")
+def test_returns_multiple_candidates(mock_get: MagicMock, repo: WorkRepository) -> None:
+    """Verify that the repo identifies and returns multiple valid candidates."""
     mock_resp = MagicMock(status_code=200)
     mock_resp.json.return_value = {
         "message": {
@@ -43,11 +43,9 @@ def test_returns_multiple_candidates(mock_get: MagicMock, fetcher: WorkFetcher) 
         }
     }
     mock_get.return_value = mock_resp
-    fetcher._get_formatted_full_reference = MagicMock(return_value="APA String")
+    repo._get_formatted_full_reference = MagicMock(return_value="APA String")
 
-    results = fetcher.fetch_dois_for_this_info(
-        "Lenard et al.", "2020", issn="1752-0894"
-    )
+    results = repo.fetch_dois_for_this_info("Lenard et al.", "2020", issn="1752-0894")
 
     assert len(results) == 2
     assert results[0]["type"] == "journal-article"
@@ -56,15 +54,15 @@ def test_returns_multiple_candidates(mock_get: MagicMock, fetcher: WorkFetcher) 
     assert results[1]["type"] == "proceedings-article"
 
 
-@patch("manuscript_reference_lister.work_fetcher.RequestsWrapper.get")
-def test_parameterized_keywords(mock_get: MagicMock, fetcher: WorkFetcher) -> None:
+@patch("manuscript_reference_lister.work_repository.RequestsWrapper.get")
+def test_parameterized_keywords(mock_get: MagicMock, repo: WorkRepository) -> None:
     """Verify that custom keywords are correctly injected into the API query."""
     mock_resp = MagicMock(status_code=200)
     mock_resp.json.return_value = {"message": {"items": []}}
     mock_get.return_value = mock_resp
 
     custom_kws = "Shifts in landslide frequency–area distribution"
-    fetcher.fetch_dois_for_this_info(
+    repo.fetch_dois_for_this_info(
         "Guns and Vanacker", "2014", issn="2213-3054", keywords=custom_kws
     )
 
@@ -72,8 +70,8 @@ def test_parameterized_keywords(mock_get: MagicMock, fetcher: WorkFetcher) -> No
     assert custom_kws in kwargs.get("params", {}).get("query", "")
 
 
-@patch("manuscript_reference_lister.work_fetcher.RequestsWrapper.get")
-def test_author_validation_filtering(mock_get: MagicMock, fetcher: WorkFetcher) -> None:
+@patch("manuscript_reference_lister.work_repository.RequestsWrapper.get")
+def test_author_validation_filtering(mock_get: MagicMock, repo: WorkRepository) -> None:
     """Verify that candidates with non-matching first authors are filtered out."""
     mock_resp = MagicMock(status_code=200)
     mock_resp.json.return_value = {
@@ -96,7 +94,7 @@ def test_author_validation_filtering(mock_get: MagicMock, fetcher: WorkFetcher) 
     }
     mock_get.return_value = mock_resp
 
-    results = fetcher.fetch_dois_for_this_info("Guns et al.", "2014", issn="2213-3054")
+    results = repo.fetch_dois_for_this_info("Guns et al.", "2014", issn="2213-3054")
 
     assert len(results) == 2
     assert results[0]["doi"] == "https://doi.org/10.1/match"
@@ -143,7 +141,7 @@ def test_author_validation_filtering(mock_get: MagicMock, fetcher: WorkFetcher) 
     ],
 )
 def test_validate_first_author_logic(
-    fetcher: WorkFetcher,
+    repo: WorkRepository,
     item: dict,
     search_authors: list,
     expected_count: int,
@@ -151,6 +149,6 @@ def test_validate_first_author_logic(
 ) -> None:
     """Directly test author validation logic across naming and count scenarios."""
     assert (
-        fetcher._validate_first_author(item, search_authors, expected_count)
+        repo._validate_first_author(item, search_authors, expected_count)
         == expected_result
     )

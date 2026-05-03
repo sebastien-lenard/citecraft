@@ -8,7 +8,7 @@ from . import config_loader
 from .requests_wrapper import RequestsWrapper
 
 
-class JournalFetcher:
+class JournalRepository:
     """
     Handles API calls to Crossref about journals.
     """

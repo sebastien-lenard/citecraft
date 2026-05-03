@@ -2,7 +2,7 @@ from . import config_loader
 from .requests_wrapper import RequestsWrapper
 
 
-class StyleFetcher:
+class StyleRepository:
     """
     Handles API calls to Crossref about styles, e.g. style=apa.
     """

@@ -1,7 +1,7 @@
 from typing import TypedDict
 
 
-class Work(TypedDict):
+class WorkMetadata(TypedDict):
     name: str
     role: str
     req_author: str

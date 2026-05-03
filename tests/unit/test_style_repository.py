@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister import StyleFetcher
+from manuscript_reference_lister import StyleRepository
 
 
 @pytest.fixture
@@ -16,28 +16,28 @@ def mock_styles_response():
     return mock
 
 
-@patch("manuscript_reference_lister.style_fetcher.RequestsWrapper.get")
+@patch("manuscript_reference_lister.style_repository.RequestsWrapper.get")
 def test_check_style_is_valid_success(
     mock_wrapper_get: MagicMock, mock_styles_response: MagicMock
 ) -> None:
     """Verify style_is_valid is True when the style exists in the API response."""
     mock_wrapper_get.return_value = mock_styles_response
 
-    fetcher = StyleFetcher("apa")
-    fetcher.check_style_is_valid()
+    repo = StyleRepository("apa")
+    repo.check_style_is_valid()
 
-    assert fetcher.style_is_valid is True
+    assert repo.style_is_valid is True
     assert mock_wrapper_get.call_count == 1
 
 
-@patch("manuscript_reference_lister.style_fetcher.RequestsWrapper.get")
+@patch("manuscript_reference_lister.style_repository.RequestsWrapper.get")
 def test_check_style_is_valid_failure(
     mock_wrapper_get: MagicMock, mock_styles_response: MagicMock
 ) -> None:
     """Verify style_is_valid is False when the style is missing from API response."""
     mock_wrapper_get.return_value = mock_styles_response
 
-    fetcher = StyleFetcher("not-a-real-style")
-    fetcher.check_style_is_valid()
+    repo = StyleRepository("not-a-real-style")
+    repo.check_style_is_valid()
 
-    assert fetcher.style_is_valid is False
+    assert repo.style_is_valid is False
