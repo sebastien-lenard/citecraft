@@ -1,36 +1,24 @@
-import json
 import logging
 import time
 from datetime import date, datetime, timedelta
-from pathlib import Path
 from typing import Literal
 
 from . import config_loader
-from .data_loader import DataLoader
-from .requests_wrapper import RequestsWrapper
+from .base_repository import BaseRepository
 from .schemas.journal_metadata import JournalMetadata, is_journal_metadata
 
 
-class JournalRepository:
+class JournalRepository(BaseRepository[JournalMetadata]):
     """Handles journal metadata records."""
 
     def __init__(self, local_filename: str = "journal_records.json"):
-        self.email = config_loader.CROSSREF_API_EMAIL
-        self.headers = {"User-Agent": f"ManuscriptRefLister/1.0 (mailto:{self.email})"}
+        super().__init__(local_filename, validator=is_journal_metadata)
+
         self.base_url = config_loader.CROSSREF_API_JOURNALS_URL
         self.issn_url = config_loader.CROSSREF_API_JOURNALS_ISSN_URL
-        self.work_dir_path = config_loader.WORK_DIR_PATH
-        self.records = []
-        self.local_filename = local_filename
         self.update_days = config_loader.JOURNAL_UPDATE_DAYS
         self.update_limit = config_loader.JOURNAL_UPDATE_LIMIT
         self.has_pending_updates = False
-        self.requests_wrapper = RequestsWrapper(
-            self.email,
-            timeout=config_loader.CROSSREF_API_TIMEOUT,
-            max_retries=config_loader.CROSSREF_API_MAX_RETRY,
-            delay=config_loader.CROSSREF_API_DELAY,
-        )
 
     def get_journal_metadata(self, input_title: str) -> list[JournalMetadata]:
         """
@@ -193,28 +181,15 @@ class JournalRepository:
 
         self.records = valid_metadata
 
-    def load_and_merge_all(
-        self,
-        input_titles: list[str] | None = None,
-        input_filepath: str | Path | None = None,
-    ) -> None:
-        """Load local records if exist and merge them with new records generated without
-        metadata from a list of journal titles. Titles already present in local records
-        are not duplicated and are discarded."""
-        input_filepath = Path(
-            input_filepath or Path(self.work_dir_path) / self.local_filename
-        )
-        self.records = DataLoader(input_filepath, raise_exception=False).load_json(
-            is_journal_metadata
-        )
-        self.records = self.records if self.records else []
-
+    def merge_new_titles(self, input_titles: list[str]) -> None:
+        """Merge new titles into the existing records as empty templates.
+        No duplication of titles."""
         # Set for fast lookup
         existing_titles = {info["input_title"] for info in self.records}
 
         new_entries = [
             {
-                "input_title": input_title,
+                "input_title": title,
                 "true_title": None,
                 "publisher": None,
                 "ISSN": None,
@@ -222,15 +197,8 @@ class JournalRepository:
                 "end_year": None,
                 "update": str(date.today()),
             }
-            for input_title in input_titles
-            if input_title not in existing_titles
+            for title in input_titles
+            if title not in existing_titles
         ]
 
-        self.records = self.records + new_entries
-
-    def save_all(self, output_filepath=None) -> None:
-        """Save the records locally."""
-        if not output_filepath:
-            output_filepath = Path(self.work_dir_path) / self.local_filename
-        with open(output_filepath, "w") as f:
-            json.dump(self.records, f, indent=4)
+        self.records.extend(new_entries)

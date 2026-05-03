@@ -1,4 +1,5 @@
 from . import config_loader
+from .base_repository import BaseRepository
 from .citation_parser import CitationParser
 from .data_loader import DataLoader
 from .doi_repository import DoiRepository
@@ -13,6 +14,7 @@ from .work_repository import WorkRepository
 
 # Warning: don't include packages that can call themselves in a circular way
 __all__ = [
+    "BaseRepository",
     "config_loader",
     "CitationMetadata",
     "CitationParser",

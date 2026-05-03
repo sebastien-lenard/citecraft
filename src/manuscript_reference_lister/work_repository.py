@@ -1,33 +1,20 @@
-import json
-from pathlib import Path
-
 from unidecode import unidecode
 
 from . import config_loader
-from .requests_wrapper import RequestsWrapper
+from .base_repository import BaseRepository
 from .schemas.citation_metadata import CitationMetadata
 from .schemas.crossref_author import CrossrefAuthor
-from .schemas.work_metadata import WorkMetadata
+from .schemas.work_metadata import WorkMetadata, is_work_metadata
 
 
-class WorkRepository:
+class WorkRepository(BaseRepository[WorkMetadata]):
     """Handles published work metadata records (for articles, book chapters, etc.)."""
 
     def __init__(self, local_filename: str = "work_records.json"):
-        self.email = config_loader.CROSSREF_API_EMAIL
-        self.headers = {"User-Agent": f"ManuscriptRefLister/1.0 (mailto:{self.email})"}
+        super().__init__(local_filename, validator=is_work_metadata)
         self.base_url = config_loader.CROSSREF_API_WORKS_URL
         self.doi_url = config_loader.DOI_API_URL
         self.get_limit = config_loader.CROSSREF_API_WORKS_GET_LIMIT
-        self.work_dir_path = config_loader.WORK_DIR_PATH
-        self.records = []
-        self.local_filename = local_filename
-        self.requests_wrapper = RequestsWrapper(
-            config_loader.CROSSREF_API_EMAIL,
-            timeout=config_loader.CROSSREF_API_TIMEOUT,
-            max_retries=config_loader.CROSSREF_API_MAX_RETRY,
-            delay=config_loader.CROSSREF_API_DELAY,
-        )
 
     def get_work_metadata(
         self,
@@ -166,10 +153,3 @@ class WorkRepository:
                 return False
 
         return True
-
-    def save_all(self, output_filepath=None) -> None:
-        """Save the records locally."""
-        if not output_filepath:
-            output_filepath = Path(self.work_dir_path) / self.local_filename
-        with open(output_filepath, "w") as f:
-            json.dump(self.records, f, indent=4)

@@ -9,9 +9,11 @@ from manuscript_reference_lister.schemas import CrossrefAuthor
 
 
 @pytest.fixture
-def repo() -> WorkRepository:
+def repo(tmp_path: Path) -> WorkRepository:
     """Provides a fresh instance of WorkRepository for each test."""
-    return WorkRepository()
+    repo = WorkRepository()
+    repo.local_repo_dir_path = str(tmp_path)
+    return repo
 
 
 def test_fetch_not_found(repo: WorkRepository) -> None:
@@ -212,7 +214,7 @@ def test_save_all(repo: WorkRepository) -> None:
         }
     ]
     repo.records = initial_records
-    expected_path = Path(repo.work_dir_path) / repo.local_filename
+    expected_path = Path(repo.local_repo_dir_path) / repo.local_filename
 
     repo.save_all()
 

@@ -6,11 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # work and output directories
-WORK_DIR_PATH = os.getenv("WORK_DIR_PATH", "output")
+LOCAL_REPO_DIR_PATH = os.getenv("LOCAL_REPO_DIR_PATH", "repo")
 OUTPUT_DIR_PATH = os.getenv("OUTPUT_DIR_PATH", "output")
-# Dedicated test directories
-TEST_WORK_DIR_PATH = os.getenv("TEST_WORK_DIR_PATH", "tests_output")
-TEST_OUTPUT_DIR_PATH = os.getenv("TEST_OUTPUT_DIR_PATH", "tests_output")
 
 # Crossref Rest API
 CROSSREF_API_DELAY = float(os.getenv("CROSSREF_API_DELAY", 0.5))
@@ -63,6 +60,6 @@ PARSER_DEFAULT_BLACKLIST = [
 
 # TODO: Should be in a function called only when necessary.
 # Ensure directories exist
-for d in [WORK_DIR_PATH, OUTPUT_DIR_PATH, TEST_WORK_DIR_PATH, TEST_OUTPUT_DIR_PATH]:
+for d in [LOCAL_REPO_DIR_PATH, OUTPUT_DIR_PATH]:
     if not Path(d).is_dir():
         os.makedirs(d)

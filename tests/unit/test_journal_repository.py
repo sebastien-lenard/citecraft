@@ -14,7 +14,7 @@ from manuscript_reference_lister import JournalRepository
 def repo(tmp_path: Path) -> JournalRepository:
     """Provides a fresh instance of JournalRepository for each test."""
     repo = JournalRepository()
-    repo.work_dir_path = str(tmp_path)
+    repo.local_repo_dir_path = str(tmp_path)
     return repo
 
 
@@ -179,15 +179,18 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
         assert mock_get.call_count == 5
 
 
-def test_load_and_merge_all(repo: JournalRepository) -> None:
-    """Verify that new titles are merged into the list as empty templates."""
-    temp_file = Path(repo.work_dir_path) / repo.local_filename
-    temp_file.write_text(json.dumps([{"input_title": "Existing", "ISSN": "0000-0000"}]))
+def test_merge_new_titles(repo: JournalRepository) -> None:
+    """Verify that new titles are merged as templates without affecting existing data."""
+    repo.records = [{"input_title": "Existing", "ISSN": "0000-0000"}]
+    repo.merge_new_titles(input_titles=["Existing", "New"])
 
-    repo.load_and_merge_all(input_titles=["Existing", "New"])
+    assert len(repo) == 2
+    assert any(
+        r["input_title"] == "Existing" and r["ISSN"] == "0000-0000"
+        for r in repo.records
+    )
 
-    assert len(repo.records) == 2
-    new_entry = next(i for i in repo.records if i["input_title"] == "New")
+    new_entry = next(r for r in repo.records if r["input_title"] == "New")
     assert new_entry["ISSN"] is None
     assert new_entry["update"] == str(date.today())
 
@@ -196,7 +199,7 @@ def test_save_all(repo: JournalRepository) -> None:
     """Verify that the journal list is saved correctly to the work directory."""
     initial_records = [{"input_title": "Test", "ISSN": "1234"}]
     repo.records = initial_records
-    expected_path = Path(repo.work_dir_path) / repo.local_filename
+    expected_path = Path(repo.local_repo_dir_path) / repo.local_filename
 
     repo.save_all()
 
