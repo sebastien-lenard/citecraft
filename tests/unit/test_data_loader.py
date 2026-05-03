@@ -91,6 +91,43 @@ def test_load_json_invalid_format(
         assert "Invalid JSON format" in caplog.text
 
 
+def test_load_json_with_validator_success(env: EnvPaths) -> None:
+    """Verify that load_json returns data when all items pass validation."""
+    # Setup a list of items
+    list_path = env.dir / "list.json"
+    list_data = [{"id": 1}, {"id": 2}]
+    list_path.write_text(json.dumps(list_data))
+
+    loader = DataLoader(list_path)
+    # Validator checks if 'id' key exists
+    result = loader.load_json(validator=lambda x: "id" in x)
+
+    assert result == list_data
+
+
+@pytest.mark.parametrize("raise_flag", [True, False])
+def test_load_json_with_validator_failure(
+    env: EnvPaths, caplog: pytest.LogCaptureFixture, raise_flag: bool
+) -> None:
+    """Verify that load_json returns None/raises when validation fails."""
+    list_path = env.dir / "invalid_list.json"
+    # Second item is missing 'id'
+    list_data = [{"id": 1}, {"name": "missing_id"}]
+    list_path.write_text(json.dumps(list_data))
+
+    loader = DataLoader(list_path, raise_exception=raise_flag)
+
+    def validator(x):
+        return "id" in x
+
+    if raise_flag:
+        with pytest.raises(ValueError, match="Schema validation failed"):
+            loader.load_json(validator=validator)
+    else:
+        assert loader.load_json(validator=validator) is None
+        assert "Schema validation failed" in caplog.text
+
+
 # --- GENERAL TESTS ---
 
 
