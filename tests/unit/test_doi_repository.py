@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from manuscript_reference_lister import DoiRepository
+from manuscript_reference_lister.repositories import DoiRepository
 
 
 @pytest.fixture

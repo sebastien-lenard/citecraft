@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from manuscript_reference_lister.base_repository import BaseRepository
+from manuscript_reference_lister.repositories import BaseRepository
 
 
 class MockRepository(BaseRepository[dict]):

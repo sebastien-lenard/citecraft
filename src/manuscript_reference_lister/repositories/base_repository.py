@@ -3,9 +3,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
-from . import config_loader
-from .data_loader import DataLoader
-from .requests_wrapper import RequestsWrapper
+from manuscript_reference_lister import DataLoader, RequestsWrapper, config_loader
 
 T = TypeVar("T")
 

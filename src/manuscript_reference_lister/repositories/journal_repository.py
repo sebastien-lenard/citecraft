@@ -3,9 +3,10 @@ import time
 from datetime import date, datetime, timedelta
 from typing import Literal
 
-from . import config_loader
+from manuscript_reference_lister import config_loader
+from manuscript_reference_lister.schemas import JournalMetadata, is_journal_metadata
+
 from .base_repository import BaseRepository
-from .schemas.journal_metadata import JournalMetadata, is_journal_metadata
 
 
 class JournalRepository(BaseRepository[JournalMetadata]):

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister import JournalRepository
+from manuscript_reference_lister.repositories import JournalRepository
 
 
 @pytest.fixture

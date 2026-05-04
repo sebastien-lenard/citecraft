@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister import StyleRepository
+from manuscript_reference_lister.repositories import StyleRepository
 
 
 @pytest.fixture

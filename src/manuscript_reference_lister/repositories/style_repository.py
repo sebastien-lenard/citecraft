@@ -1,7 +1,6 @@
 import logging
 
-from . import config_loader
-from .requests_wrapper import RequestsWrapper
+from manuscript_reference_lister import RequestsWrapper, config_loader
 
 
 class StyleRepository:

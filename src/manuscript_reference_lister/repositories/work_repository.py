@@ -1,10 +1,14 @@
 from unidecode import unidecode
 
-from . import config_loader
+from manuscript_reference_lister import config_loader
+from manuscript_reference_lister.schemas import (
+    CitationMetadata,
+    CrossrefAuthor,
+    WorkMetadata,
+    is_work_metadata,
+)
+
 from .base_repository import BaseRepository
-from .schemas.citation_metadata import CitationMetadata
-from .schemas.crossref_author import CrossrefAuthor
-from .schemas.work_metadata import WorkMetadata, is_work_metadata
 
 
 class WorkRepository(BaseRepository[WorkMetadata]):

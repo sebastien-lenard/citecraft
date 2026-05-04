@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister import WorkRepository
+from manuscript_reference_lister.repositories import WorkRepository
 from manuscript_reference_lister.schemas import CrossrefAuthor
 
 
