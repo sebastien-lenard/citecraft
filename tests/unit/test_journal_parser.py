@@ -1,6 +1,6 @@
 import pytest
 
-from manuscript_reference_lister import JournalParser
+from manuscript_reference_lister.parsers import JournalParser
 
 
 @pytest.fixture
