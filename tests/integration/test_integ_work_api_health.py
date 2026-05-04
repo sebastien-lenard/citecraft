@@ -3,12 +3,12 @@ import traceback
 
 import requests
 
-from manuscript_reference_lister import WorkFetcher
+from manuscript_reference_lister.repositories import WorkRepository
 
 
 def check_integ_works_api_health():
     print("Checking Crossref API Works (Article Search) health via RequestsWrapper...")
-    fetcher = WorkFetcher()
+    repo = WorkRepository()
 
     # Known work
     test_author = "Lenard et al."
@@ -22,12 +22,14 @@ def check_integ_works_api_health():
         print(f"Testing max_results override (requested: {requested_limit})...")
         print("Testing connectivity and author filtering...")
 
-        candidates = fetcher.fetch_dois_for_this_info(
-            author=test_author,
-            year=test_year,
-            issn=test_issn,
+        candidates = repo.get_work_metadata(
+            input_citation_metadata={
+                "first_authors_txt": test_author,
+                "year_and_suffix": test_year,
+            },
+            input_ISSN=test_issn,
             keywords=test_keywords,
-            max_results=requested_limit,
+            get_limit=requested_limit,
         )
 
         if len(candidates) > requested_limit:
@@ -53,7 +55,7 @@ def check_integ_works_api_health():
 
         # 2. Deep check of the 'author' node format from Crossref
         # This is where we verify that the real API matches our assumptions
-        # Since we use fetcher.requests_wrapper, we can do a manual call if we want
+        # Since we use repo.requests_wrapper, we can do a manual call if we want
         # to inspect but checking the candidates is enough.
 
         print("Verifying if Crossref provides the expected 'author' structure...")
@@ -67,8 +69,14 @@ def check_integ_works_api_health():
         test_year_2 = "2014"
         test_issn_2 = "2213-3054"
 
-        candidates_2 = fetcher.fetch_dois_for_this_info(
-            author=test_author_2, year=test_year_2, issn=test_issn_2, max_results=1
+        candidates_2 = repo.get_work_metadata(
+            input_citation_metadata={
+                "first_authors_txt": test_author_2,
+                "year_and_suffix": test_year_2,
+            },
+            input_ISSN=test_issn_2,
+            keywords=test_keywords,
+            get_limit=1,
         )
 
         if candidates_2:
@@ -93,14 +101,15 @@ def check_integ_works_api_health():
             sys.exit(1)
 
         # Check metadata
-        if first_candidate["req_author"] == test_author:
+        if first_candidate["input_first_authors_txt"] == test_author:
             print(
                 f"[OK] Metadata persistence: Original author '{test_author}' preserved "
                 f"in candidate."
             )
         else:
             print(
-                "[FAIL] Metadata persistence: Candidate req_author doesn't match query."
+                "[FAIL] Metadata persistence: Candidate input_first_authors_txt "
+                "doesn't match query."
             )
             sys.exit(1)
 

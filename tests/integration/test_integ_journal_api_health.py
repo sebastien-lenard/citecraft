@@ -3,7 +3,8 @@ import traceback
 
 import requests
 
-from manuscript_reference_lister import JournalRepository, config_loader
+from manuscript_reference_lister import config_loader
+from manuscript_reference_lister.repositories import JournalRepository
 
 
 def check_integ_journals_api_health() -> None:

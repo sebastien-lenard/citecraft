@@ -3,12 +3,12 @@ import traceback
 
 import requests
 
-from manuscript_reference_lister import DoiFetcher
+from manuscript_reference_lister.repositories import DoiRepository
 
 
 def test_doi_service_health() -> None:
     print("Checking DOI Content Negotiation Service  via RequestsWrapper...")
-    fetcher = DoiFetcher()
+    repo = DoiRepository()
 
     # DOI for
     # Steady erosion rates in the Himalayas through late Cenozoic climatic changes
@@ -16,7 +16,7 @@ def test_doi_service_health() -> None:
     test_style = "apa"
 
     try:
-        reference = fetcher.get_reference(test_doi, test_style)
+        reference = repo.get_reference(test_doi, test_style)
         print(reference)
         if reference != "Reference unavailable in doi.org." and len(reference) > 10:
             print("[OK] DOI service reachable and returned formatted reference.")
