@@ -7,7 +7,7 @@ import pytest
 from docx import Document
 from docx.opc.exceptions import PackageNotFoundError
 
-from manuscript_reference_lister import DataLoader
+from manuscript_reference_lister.utils import DataLoader
 
 # Container for paths and expected data to keep tests readable
 EnvPaths = namedtuple("EnvPaths", ["dir", "docx", "docx_content", "json", "json_data"])

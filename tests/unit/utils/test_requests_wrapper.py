@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from manuscript_reference_lister import RequestsWrapper
+from manuscript_reference_lister.utils import RequestsWrapper
 
 
 @pytest.fixture
@@ -14,7 +14,9 @@ def wrapper() -> RequestsWrapper:
 
 def test_get_success(wrapper: RequestsWrapper) -> None:
     """Verify that a successful request returns the response immediately."""
-    with patch("manuscript_reference_lister.requests_wrapper.requests.get") as mock_get:
+    with patch(
+        "manuscript_reference_lister.utils.requests_wrapper.requests.get"
+    ) as mock_get:
         mock_response = MagicMock(status_code=200)
         mock_get.return_value = mock_response
 
@@ -28,8 +30,12 @@ def test_get_retry_on_timeout(wrapper: RequestsWrapper) -> None:
     """Verify that the wrapper retries upon receiving a Timeout exception."""
     # Simulate two failures followed by one success
     with (
-        patch("manuscript_reference_lister.requests_wrapper.requests.get") as mock_get,
-        patch("manuscript_reference_lister.requests_wrapper.time.sleep") as mock_sleep,
+        patch(
+            "manuscript_reference_lister.utils.requests_wrapper.requests.get"
+        ) as mock_get,
+        patch(
+            "manuscript_reference_lister.utils.requests_wrapper.time.sleep"
+        ) as mock_sleep,
     ):
         mock_get.side_effect = [
             requests.exceptions.Timeout("Slow connection"),
@@ -46,8 +52,10 @@ def test_get_retry_on_timeout(wrapper: RequestsWrapper) -> None:
 def test_get_max_retries_reached(wrapper: RequestsWrapper) -> None:
     """Verify the wrapper raises the last exception after max retries are exhausted."""
     with (
-        patch("manuscript_reference_lister.requests_wrapper.requests.get") as mock_get,
-        patch("manuscript_reference_lister.requests_wrapper.time.sleep"),
+        patch(
+            "manuscript_reference_lister.utils.requests_wrapper.requests.get"
+        ) as mock_get,
+        patch("manuscript_reference_lister.utils.requests_wrapper.time.sleep"),
     ):
         mock_get.side_effect = requests.exceptions.ConnectionError("Down")
 
@@ -59,7 +67,9 @@ def test_get_max_retries_reached(wrapper: RequestsWrapper) -> None:
 
 def test_get_fatal_http_error(wrapper: RequestsWrapper) -> None:
     """Verify that fatal HTTP errors (like 404) raise immediately without retry."""
-    with patch("manuscript_reference_lister.requests_wrapper.requests.get") as mock_get:
+    with patch(
+        "manuscript_reference_lister.utils.requests_wrapper.requests.get"
+    ) as mock_get:
         mock_response = MagicMock()
         mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
             "404 Not Found"
@@ -76,8 +86,12 @@ def test_get_fatal_http_error(wrapper: RequestsWrapper) -> None:
 def test_get_max_retries_override(wrapper: RequestsWrapper) -> None:
     """Verify that the max_retries parameter in get() overrides the instance default."""
     with (
-        patch("manuscript_reference_lister.requests_wrapper.requests.get") as mock_get,
-        patch("manuscript_reference_lister.requests_wrapper.time.sleep") as mock_sleep,
+        patch(
+            "manuscript_reference_lister.utils.requests_wrapper.requests.get"
+        ) as mock_get,
+        patch(
+            "manuscript_reference_lister.utils.requests_wrapper.time.sleep"
+        ) as mock_sleep,
     ):
         mock_get.side_effect = requests.exceptions.ConnectionError("Down")
 
@@ -91,7 +105,9 @@ def test_get_max_retries_override(wrapper: RequestsWrapper) -> None:
 
 def test_get_with_custom_headers(wrapper: RequestsWrapper) -> None:
     """Verify that custom headers are correctly passed to the requests call."""
-    with patch("manuscript_reference_lister.requests_wrapper.requests.get") as mock_get:
+    with patch(
+        "manuscript_reference_lister.utils.requests_wrapper.requests.get"
+    ) as mock_get:
         mock_response = MagicMock(status_code=200)
         mock_get.return_value = mock_response
 
