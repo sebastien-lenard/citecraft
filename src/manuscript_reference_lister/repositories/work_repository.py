@@ -4,6 +4,7 @@ from manuscript_reference_lister.schemas import (
     CitationMetadata,
     CrossrefAuthor,
     WorkMetadata,
+    create_work_metadata,
     is_work_metadata,
 )
 from manuscript_reference_lister.utils import AppConfig
@@ -85,15 +86,15 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             doi = item.get("DOI")
             if doi:
                 candidates.append(
-                    {
-                        "input_first_authors_txt": input_first_authors_txt,
-                        "input_year_and_suffix": input_year_and_suffix,
-                        "input_ISSN": input_ISSN,
-                        "reference": "",
-                        "style": "",
-                        "doi": self.config.doi_api_url.replace("{doi}", str(doi)),
-                        "type": item.get("type", "unknown"),
-                    }
+                    create_work_metadata(
+                        input_first_authors_txt=input_first_authors_txt,
+                        input_year_and_suffix=input_year_and_suffix,
+                        input_ISSN=input_ISSN,
+                        reference="",
+                        style="",
+                        doi=self.config.doi_api_url.replace("{doi}", str(doi)),
+                        type=item.get("type", "unknown"),
+                    )
                 )
         return candidates
 

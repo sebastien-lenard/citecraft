@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from manuscript_reference_lister.repositories import WorkRepository
-from manuscript_reference_lister.schemas import CrossrefAuthor
+from manuscript_reference_lister.schemas import CrossrefAuthor, create_citation_metadata
 
 
 @pytest.fixture
@@ -19,10 +19,10 @@ def test_fetch_not_found(repo: WorkRepository) -> None:
 
     with patch.object(repo.requests_wrapper, "get", return_value=mock_resp):
         result = repo.get_work_metadata(
-            {
-                "first_authors_txt": "UnknownAuthor",
-                "year_and_suffix": "2025",
-            },
+            create_citation_metadata(
+                first_authors_txt="UnknownAuthor",
+                year_and_suffix="2025",
+            ),
             input_ISSN="1752-0894",
         )
         assert result == []
@@ -48,11 +48,11 @@ def test_returns_multiple_candidates(repo: WorkRepository) -> None:
         }
     }
 
-    repo._get_formatted_full_reference = MagicMock(return_value="APA String")
-
     with patch.object(repo.requests_wrapper, "get", return_value=mock_resp):
         results = repo.get_work_metadata(
-            {"first_authors_txt": "Lenard et al.", "year_and_suffix": "2020"},
+            create_citation_metadata(
+                first_authors_txt="Lenard et al.", year_and_suffix="2020"
+            ),
             input_ISSN="1752-0894",
         )
         assert len(results) == 2
@@ -70,10 +70,10 @@ def test_parameterized_keywords(repo: WorkRepository) -> None:
 
     with patch.object(repo.requests_wrapper, "get", return_value=mock_resp) as mock_get:
         repo.get_work_metadata(
-            {
-                "first_authors_txt": "Guns and Vanacker",
-                "year_and_suffix": "2014",
-            },
+            create_citation_metadata(
+                first_authors_txt="Guns and Vanacker",
+                year_and_suffix="2014",
+            ),
             input_ISSN="2213-3054",
             keywords=custom_kws,
         )
@@ -106,10 +106,10 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
 
     with patch.object(repo.requests_wrapper, "get", return_value=mock_resp):
         results = repo.get_work_metadata(
-            {
-                "first_authors_txt": "Guns et al.",
-                "year_and_suffix": "2014",
-            },
+            create_citation_metadata(
+                first_authors_txt="Guns et al.",
+                year_and_suffix="2014",
+            ),
             input_ISSN="2213-3054",
         )
         assert len(results) == 2

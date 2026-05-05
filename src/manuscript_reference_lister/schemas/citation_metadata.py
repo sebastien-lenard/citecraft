@@ -11,3 +11,14 @@ def is_citation_metadata(record: dict) -> bool:
     """Check if a dictionary contains ALL keys defined in CitationMetadata."""
     required_keys = set(CitationMetadata.__annotations__.keys())
     return isinstance(record, dict) and required_keys.issubset(record.keys())
+
+
+def create_citation_metadata(**kwargs) -> CitationMetadata:
+    """Creates a default CitationMetadata with values overridable by kwargs."""
+    defaults: CitationMetadata = {
+        "first_authors_txt": "Unknown",
+        "year_and_suffix": "2010",
+        "type": "narrative",
+    }
+    defaults.update(kwargs)
+    return defaults

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from manuscript_reference_lister.repositories import JournalRepository
+from manuscript_reference_lister.schemas import create_journal_metadata
 
 
 @pytest.fixture
@@ -178,7 +179,7 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
 
 def test_merge_new_titles(repo: JournalRepository) -> None:
     """Verify that new titles are merged as templates without affecting existing data."""
-    repo.records = [{"input_title": "Existing", "ISSN": "0000-0000"}]
+    repo.records = [create_journal_metadata(input_title="Existing", ISSN="0000-0000")]
     repo.merge_new_titles(input_titles=["Existing", "New"])
 
     assert len(repo) == 2
@@ -200,13 +201,19 @@ def test_update_all_priority_and_limit(repo: JournalRepository) -> None:
     recent_date = str(today - timedelta(days=5))
 
     repo.records = [
-        {"input_title": "Old", "update": old_date, "ISSN": "1234-5678"},
-        {"input_title": "Missing", "update": recent_date, "ISSN": None},  # Priority
-        {"input_title": "Recent", "update": recent_date, "ISSN": "9012-3456"},
+        create_journal_metadata(input_title="Old", update=old_date, ISSN="1234-5678"),
+        create_journal_metadata(
+            input_title="Missing", update=recent_date, ISSN=None
+        ),  # Priority 1
+        create_journal_metadata(
+            input_title="Recent", update=recent_date, ISSN="9012-3456"
+        ),
     ]
 
     updated_data = [
-        {"input_title": "Missing", "ISSN": "1111-2222", "update": str(today)}
+        create_journal_metadata(
+            input_title="Missing", ISSN="1111-2222", update=str(today)
+        )
     ]
 
     with patch.object(

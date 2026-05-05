@@ -3,7 +3,11 @@ import time
 from datetime import date, datetime, timedelta
 from typing import Literal
 
-from manuscript_reference_lister.schemas import JournalMetadata, is_journal_metadata
+from manuscript_reference_lister.schemas import (
+    JournalMetadata,
+    create_journal_metadata,
+    is_journal_metadata,
+)
 from manuscript_reference_lister.utils import AppConfig
 
 from .base_repository import BaseRepository
@@ -50,17 +54,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
         if not exact_matches:
             logging.warning("Journal %s not found.", input_title)
-            return [
-                {
-                    "input_title": input_title,
-                    "true_title": None,
-                    "publisher": None,
-                    "ISSN": None,
-                    "start_year": None,
-                    "end_year": None,
-                    "update": str(date.today()),
-                }
-            ]
+            return [create_journal_metadata(input_title=input_title)]
 
         # Discard exact matches other than the 1st one
         if len(exact_matches) > 1:
@@ -86,15 +80,14 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                 continue
 
             journal_records.append(
-                {
-                    "input_title": input_title,
-                    "true_title": true_title,
-                    "publisher": publisher,
-                    "ISSN": issn,
-                    "start_year": dates["min_year"],
-                    "end_year": dates["max_year"],
-                    "update": str(date.today()),
-                }
+                create_journal_metadata(
+                    input_title=input_title,
+                    true_title=true_title,
+                    publisher=publisher,
+                    ISSN=issn,
+                    start_year=dates["min_year"],
+                    end_year=dates["max_year"],
+                )
             )
         return journal_records
 
@@ -193,15 +186,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         existing_titles = {info["input_title"] for info in self.records}
 
         new_entries = [
-            {
-                "input_title": title,
-                "true_title": None,
-                "publisher": None,
-                "ISSN": None,
-                "start_year": None,
-                "end_year": None,
-                "update": str(date.today()),
-            }
+            create_journal_metadata(input_title=title)
             for title in input_titles
             if title not in existing_titles
         ]
