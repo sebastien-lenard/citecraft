@@ -26,7 +26,7 @@ dev = [
 ]
 
 [project.scripts]
-references-lister = "manuscript_reference_lister.main:main"
+references-lister = "manuscript_reference_lister.__main__:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
