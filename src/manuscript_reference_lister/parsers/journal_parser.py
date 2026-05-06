@@ -1,3 +1,4 @@
+import logging
 import re
 
 
@@ -28,4 +29,7 @@ class JournalParser:
         )
 
         # Split into lines, strip whitespace, and filter out empty strings
-        return [line.strip() for line in relevant_block.splitlines() if line.strip()]
+        results = [line.strip() for line in relevant_block.splitlines() if line.strip()]
+        results = list(dict.fromkeys(results))  # unique titles
+        logging.info(f"Parsed {len(results)} unique journal titles.")
+        return results

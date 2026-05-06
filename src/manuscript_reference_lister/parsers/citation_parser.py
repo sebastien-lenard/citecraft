@@ -1,3 +1,4 @@
+import logging
 import re
 
 from manuscript_reference_lister.schemas import CitationMetadata
@@ -116,5 +117,5 @@ class CitationParser:
                                 type="parenthetical",
                             )
                         )
-
+        logging.info(f"Parsed {len(results)} unique citations.")
         return results

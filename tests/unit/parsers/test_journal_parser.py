@@ -54,6 +54,8 @@ def test_last_occurrence_only(parser: JournalParser) -> None:
         ("Journals\nOnly Journal", ["Only Journal"]),
         # Strict match: Ensure partial matches like 'Scientific Journals' are ignored
         ("Scientific Journals\nPhysics\n\nJournals\nChemistry\n\nEnd", ["Chemistry"]),
+        # Duplicate removal: Ensure the same title isn't listed twice
+        ("Journals\nNature\nScience\nNature\n\nEnd", ["Nature", "Science"]),
     ],
 )
 def test_parsing_edge_cases(
