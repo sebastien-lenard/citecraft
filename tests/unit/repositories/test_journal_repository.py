@@ -1,5 +1,4 @@
 import logging
-from dataclasses import replace
 from datetime import date, timedelta
 from typing import Literal
 from unittest.mock import MagicMock, patch
@@ -199,7 +198,9 @@ def test_update_all_priority_and_limit(
 ) -> None:
     """Verify that updates prioritize missing info and respect the max update limit."""
     caplog.set_level(logging.INFO)
-    repo.config = replace(repo.config, journal_update_limit=1, journal_update_days=30)
+    repo.config = repo.config.model_copy(
+        update={"journal_update_limit": 1, "journal_update_days": 30}
+    )
     today = date.today()
     old_date = str(today - timedelta(days=45))
     recent_date = str(today - timedelta(days=5))

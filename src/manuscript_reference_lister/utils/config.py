@@ -1,41 +1,50 @@
-import os
-from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
-from dotenv import load_dotenv
+from pydantic import EmailStr, Field, HttpUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@dataclass(frozen=True)
-class AppConfig:
-    # Directories
-    local_repo_dir_path: Path
-    output_dir_path: Path
+def ensure_directories(self) -> None:
+    """Create directories explicitly."""
+    self.local_repo_dir_path.mkdir(parents=True, exist_ok=True)
+    self.output_dir_path.mkdir(parents=True, exist_ok=True)
+
+
+class AppConfig(BaseSettings):
+    """.Env Configuration loader and validator."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    local_repo_dir_path: Path = Field(default=Path("repo"), alias="LOCAL_REPO_DIR_PATH")
+    output_dir_path: Path = Field(default=Path("output"), alias="OUTPUT_DIR_PATH")
 
     # Crossref API
-    crossref_api_delay: float
-    crossref_api_email: str
-    crossref_api_journals_url: str
-    crossref_api_journals_issn_url: str
-    crossref_api_styles_url: str
-    crossref_api_works_url: str
-    crossref_api_works_get_limit: int
-    crossref_api_timeout: float
-    crossref_api_max_retry: int
+    crossref_api_delay: float = 0.5
+    crossref_api_email: EmailStr
+    crossref_api_journals_url: HttpUrl
+    crossref_api_journals_issn_url: str  # String because contains template {issn}
+    crossref_api_styles_url: HttpUrl
+    crossref_api_works_url: HttpUrl
+    crossref_api_works_get_limit: int = 20
+    crossref_api_timeout: float = 20.0
+    crossref_api_max_retry: int = 10
 
     # DOI Service
-    doi_api_delay: float
+    doi_api_delay: float = 0.4
     doi_api_url: str
-    doi_api_timeout: float
-    doi_api_max_retry: int
+    doi_api_timeout: float = 10.0
+    doi_api_max_retry: int = 10
 
     # Other Logic
-    context_keywords: str
-    journal_update_days: int
-    journal_update_limit: int
+    context_keywords: str = ""
+    journal_update_days: int = 30
+    journal_update_limit: int = 100
 
     # Blacklist
-    parser_blacklist: list[str] = field(
+    parser_blacklist: list[str] = Field(
         default_factory=lambda: [
             "Fig",
             "Figs",
@@ -64,44 +73,16 @@ class AppConfig:
         ]
     )
 
-    def ensure_directories(self):
-        """Ensures that the local repository and output directories exist."""
-        for d in [self.local_repo_dir_path, self.output_dir_path]:
-            d.mkdir(parents=True, exist_ok=True)
+    def ensure_repo_directory(self) -> None:
+        """Create local repo directory."""
+        self.local_repo_dir_path.mkdir(parents=True, exist_ok=True)
 
-
-def load_config() -> AppConfig:
-    """Factory function to load .env and create the config object."""
-    load_dotenv()
-
-    config = AppConfig(
-        local_repo_dir_path=Path(os.getenv("LOCAL_REPO_DIR_PATH", "repo")),
-        output_dir_path=Path(os.getenv("OUTPUT_DIR_PATH", "output")),
-        crossref_api_delay=float(os.getenv("CROSSREF_API_DELAY", 0.5)),
-        crossref_api_email=os.getenv("CROSSREF_API_EMAIL", "default@example.com"),
-        crossref_api_journals_url=os.getenv("CROSSREF_API_JOURNALS_URL", ""),
-        crossref_api_journals_issn_url=os.getenv("CROSSREF_API_JOURNALS_ISSN_URL", ""),
-        crossref_api_styles_url=os.getenv("CROSSREF_API_STYLES_URL", ""),
-        crossref_api_works_url=os.getenv("CROSSREF_API_WORKS_URL", ""),
-        crossref_api_works_get_limit=int(os.getenv("CROSSREF_API_WORKS_GET_LIMIT", 6)),
-        crossref_api_timeout=float(os.getenv("CROSSREF_API_TIMEOUT", 10)),
-        crossref_api_max_retry=int(os.getenv("CROSSREF_API_MAX_RETRY", 10)),
-        doi_api_delay=float(os.getenv("DOI_API_DELAY", 0.4)),
-        doi_api_url=os.getenv("DOI_API_URL", ""),
-        doi_api_timeout=float(os.getenv("DOI_API_TIMEOUT", 10)),
-        doi_api_max_retry=int(os.getenv("DOI_API_MAX_RETRY", 10)),
-        context_keywords=os.getenv("CONTEXT_KEYWORDS", ""),
-        journal_update_days=int(os.getenv("JOURNAL_UPDATE_DAYS", 30)),
-        journal_update_limit=int(os.getenv("JOURNAL_UPDATE_LIMIT", 100)),
-    )
-
-    # Call directory creation once loaded
-    config.ensure_directories()
-    return config
+    def ensure_output_directory(self) -> None:
+        """Create default output directory."""
+        self.output_dir_path.mkdir(parents=True, exist_ok=True)
 
 
 @lru_cache(maxsize=1)
 def get_config() -> AppConfig:
-    """Gets current cached config or load it."""
-    config = load_config()
-    return config
+    """Gets current cached config or load it with validation."""
+    return AppConfig()

@@ -1,4 +1,4 @@
-from .config import AppConfig, get_config, load_config
+from .config import AppConfig, get_config
 from .data_loader import DataLoader
 from .requests_wrapper import RequestsWrapper
 
@@ -6,7 +6,6 @@ from .requests_wrapper import RequestsWrapper
 __all__ = [
     "AppConfig",
     "get_config",
-    "load_config",
     "DataLoader",
     "RequestsWrapper",
 ]
