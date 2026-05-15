@@ -60,6 +60,5 @@ Integration (included Crossref API and DOI negotiation service) tests only:
 
 ## 📅 Roadmap
 
-* Finalize formatted reference list generation (Expected in 1-2 weeks).
 * Integration of pydantic for data validation.
 * Researching context-aware matching for common surnames (Smith, Singh, etc.).

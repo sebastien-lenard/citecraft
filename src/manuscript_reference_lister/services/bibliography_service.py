@@ -46,7 +46,9 @@ class BibliographyService:
                 continue
 
             status = (
-                "Warning: select the right reference" if len(matched_works) > 1 else ""
+                "Warning: select the right reference"
+                if len(matched_works) > 1
+                else "OK"
             )
 
             for work in matched_works:

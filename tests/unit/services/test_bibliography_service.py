@@ -63,5 +63,5 @@ def test_export_to_csv_computes_statuses_and_sorts_correctly(tmp_path):
 
     # Fourth row should be Smith Ref
     assert rows[3]["Citation"] == "Smith, 2021"
-    assert rows[3]["Status"] == ""
+    assert rows[3]["Status"] == "OK"
     assert rows[3]["Reference"] == "Smith Ref"
