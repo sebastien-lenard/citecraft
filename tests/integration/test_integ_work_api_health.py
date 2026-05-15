@@ -1,13 +1,15 @@
 import sys
 import traceback
 
+import pytest
 import requests
 
 from manuscript_reference_lister.repositories import WorkRepository
 from manuscript_reference_lister.schemas import CitationMetadata
 
 
-def check_integ_works_api_health():
+@pytest.mark.integration
+def test_integ_works_api_health():
     print("Checking Crossref API Works (Article Search) health via RequestsWrapper...")
     repo = WorkRepository()
 

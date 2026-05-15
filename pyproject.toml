@@ -35,7 +35,8 @@ references-lister = "manuscript_reference_lister.__main__:main"
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
-    "integration: api and full tests (slower)",
+    "e2e: end to end tests (slower)",
+    "integration: api tests (slower)",
     "unit: unit tests (faster)"
 ]
 

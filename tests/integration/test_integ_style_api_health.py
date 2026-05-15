@@ -1,12 +1,14 @@
 import sys
 import traceback
 
+import pytest
 import requests
 
 from manuscript_reference_lister.repositories import StyleRepository
 
 
-def check_style_api_health() -> None:
+@pytest.mark.integration
+def test_style_api_health() -> None:
     print("Checking Crossref Style API health via RequestsWrapper...")
 
     # 'apa' is a standard style that should always exist

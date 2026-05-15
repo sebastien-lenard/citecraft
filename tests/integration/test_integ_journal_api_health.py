@@ -1,12 +1,14 @@
 import sys
 import traceback
 
+import pytest
 import requests
 
 from manuscript_reference_lister.repositories import JournalRepository
 
 
-def check_integ_journals_api_health() -> None:
+@pytest.mark.integration
+def test_integ_journals_api_health() -> None:
     print(
         "Checking Crossref API Journals health, schema, and Rate Limit status via "
         "RequestsWrapper..."

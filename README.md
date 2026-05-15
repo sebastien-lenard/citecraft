@@ -54,9 +54,11 @@ Output file can be omitted, default generated file is OUTPUT_DIR_PATH / "manuscr
 # Run tests
 ```uv run pytest```
 Unit tests only:
-```uv run pytest -m unit```
+```uv run pytest -m "not integration and not e2e"```
 Integration (included Crossref API and DOI negotiation service) tests only:
 ```uv run pytest -m integration```
+End to end tests only:
+```uv run pytest -m e2e```
 
 ## 📅 Roadmap
 
