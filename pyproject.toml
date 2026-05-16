@@ -19,6 +19,7 @@ dependencies = [
     "python-docx>=1.2.0",
     "python-dotenv>=1.2.2",
     "requests>=2.33.1",
+    "tenacity>=9.1.4",
     "unidecode>=1.4.0",
 ]
 
