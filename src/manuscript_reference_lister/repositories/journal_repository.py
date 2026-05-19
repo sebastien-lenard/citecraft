@@ -350,7 +350,6 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
         # Process Missing Metadata (Priority 1)
         for record in missing_metadata:
-            print(f"missing:{record.input_title}.")
             if update_count < self.config.journal_update_limit:
                 new_data = self.get_journal_metadata(record.input_title)
                 if new_data:
