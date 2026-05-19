@@ -251,6 +251,29 @@ def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -
         assert mock_get.call_count == 3
 
 
+def test_get_issns_by_input_title(repo: JournalRepository) -> None:
+    """Verify that get_issns_by_input_title extracts unique and clean ISSNs
+    for a specific input_title, ignoring duplicates and None values.
+    """
+    repo.records = [
+        JournalMetadata(
+            input_title="Journal A", ISSN="1111-1111", start_year=2000, end_year=2010
+        ),
+        JournalMetadata(
+            input_title="Journal A", ISSN="2222-2222", start_year=2005, end_year=2015
+        ),
+        JournalMetadata(input_title="Journal A", ISSN=None),  # Must be ignored
+        JournalMetadata(
+            input_title="Journal B", ISSN="3333-3333", start_year=2000, end_year=2020
+        ),
+    ]
+
+    issns = repo.get_issns_by_input_title("Journal A")
+    assert issns == ["1111-1111", "2222-2222"]
+
+    assert repo.get_issns_by_input_title("Non Existent") == []
+
+
 @pytest.mark.parametrize(
     "order, expected_year",
     [

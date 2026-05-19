@@ -93,3 +93,41 @@ def test_journal_metadata_completeness_logic():
         similar_titles=["Nature Geoscience", "Nature Geography"],
     )
     assert complete_with_suggestions.is_complete
+
+
+def test_journal_metadata_status_property():
+    """Verify that the status property correctly evaluates all business conditions."""
+    # Case: Completely empty record / Not found
+    j_not_found = JournalMetadata(input_title="Fake Journal")
+    assert j_not_found.status == "Not found"
+
+    # Case: Found but missing ISSN
+    j_no_issn = JournalMetadata(
+        input_title="Nature Physics",
+        true_title="Nature Physics",
+        publisher="Springer",
+        ISSN=None,
+    )
+    assert j_no_issn.status == "Found without ISSN"
+
+    # Case: Found with ISSN but missing execution years / works
+    j_no_works = JournalMetadata(
+        input_title="Empty Journal",
+        true_title="Empty Journal",
+        publisher="Silent Publisher",
+        ISSN="1234-5678",
+        start_year=None,
+        end_year=None,
+    )
+    assert j_no_works.status == "Found without work"
+
+    # Case: Complete and operational record
+    j_ok = JournalMetadata(
+        input_title="Science",
+        true_title="Science",
+        publisher="AAAS",
+        ISSN="0036-8075",
+        start_year=1880,
+        end_year=2026,
+    )
+    assert j_ok.status == "OK"

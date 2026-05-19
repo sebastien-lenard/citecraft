@@ -80,8 +80,10 @@ def main(ctx, input_file, text, output_file, verbose):
         if anomalies:
             click.echo("")
             click.secho(
-                "⚠️  Warning: Some journal titles were not found or were found without an ISSN. "
-                "Consequently, they have not been included in the search for works. "
+                "⚠️  Warning: Some journal titles were not found, were found without"
+                " an ISSN, or were found with at least one ISSN without works (these "
+                "journals may have other ISSNs with works). These problematic titles"
+                " or ISSNs have not been included in the search for works. "
                 "This is a known limitation of the Crossref repository data structure.",
                 fg="yellow",
                 bold=True,
@@ -89,17 +91,20 @@ def main(ctx, input_file, text, output_file, verbose):
             )
             click.echo("", err=True)
             click.secho(
-                f"{'input_title':<45} | status",
+                f"{'input_title':<35} | {'issn':<10} | {'status':<20} | issns found",
                 fg="cyan",
                 bold=True,
                 err=True,
             )
-            click.secho("-" * 75, fg="cyan", err=True)
+            click.secho("-" * 90, fg="cyan", err=True)
 
-            for title, status in anomalies.items():
-                click.echo(f"{title:<45} | {status}", err=True)
+            for data in anomalies.values():
+                click.echo(
+                    f"{data['input_title']:<35} | {data['issn']:<10} |"
+                    f" {data['status']:<20} | {data['issns_found']}",
+                    err=True,
+                )
             click.echo("", err=True)
-
         click.echo("Done.")
 
     except click.ClickException as e:

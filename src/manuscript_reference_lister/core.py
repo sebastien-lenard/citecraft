@@ -74,5 +74,12 @@ def run(
     anomalies_map = {}
     for j in journal_repo.records:
         if j.status != "OK":
-            anomalies_map[j.input_title] = j.status
+            all_found_issns = journal_repo.get_issns_by_input_title(j.input_title)
+
+            anomalies_map[j.identity_key] = {
+                "input_title": j.input_title,
+                "status": j.status,
+                "issn": j.ISSN or "",
+                "issns_found": ", ".join(all_found_issns) if all_found_issns else "",
+            }
     return anomalies_map

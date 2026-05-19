@@ -111,27 +111,48 @@ def test_cli_piped_input_handling(runner: CliRunner, test_config: AppConfig) -> 
 def test_cli_displays_journal_anomalies_warning_table(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Check if CLI catches metadata anomalies from run() and correctly displays
-    the warnings and status table."""
+    """Check if CLI catches metadata anomalies dictionary and correctly displays
+    the updated warning text and multi-column status table.
+    """
     mock_anomalies = {
-        "Natural Hazards and Earth System Sciences": "Found without ISSN",
-        "Unknown Fake Journal": "Not found",
+        ("Natural Hazards", "1234-5678"): {
+            "input_title": "Natural Hazards",
+            "status": "Found without work",
+            "issn": "1234-5678",
+            "issns_found": "1234-5678, 9999-9999",
+        },
+        ("Unknown Fake Journal", None): {
+            "input_title": "Unknown Fake Journal",
+            "status": "Not found",
+            "issn": "",
+            "issns_found": "",
+        },
     }
 
     with patch("manuscript_reference_lister.cli.run", return_value=mock_anomalies):
         result = runner.invoke(
             cli,
-            ["main", "-t", "Some text in nature geosciences."],
+            ["main", "-t", "Some text parsing context."],
             obj={"config": test_config},
         )
 
         assert result.exit_code == 0
         assert "Done." in result.output
-        assert "Warning: Some journal titles were not found" in result.output
-        assert "This is a known limitation of the Crossref repository" in result.output
-        assert "Natural Hazards and Earth System Sciences" in result.output
-        assert "Found without ISSN" in result.output
+        assert "or were found with at least one ISSN without works" in result.output
+        assert (
+            "These problematic titles or ISSNs have not been included" in result.output
+        )
+
+        # Check headers/columns of array
+        assert "input_title" in result.output
+        assert "issn" in result.output
+        assert "status" in result.output
+        assert "issns found" in result.output
+
+        # Check content
+        assert "Natural Hazards" in result.output
+        assert "Found without work" in result.output
+        assert "1234-5678" in result.output
+        assert "1234-5678, 9999-9999" in result.output
         assert "Unknown Fake Journal" in result.output
         assert "Not found" in result.output
-        assert "input_title" in result.output
-        assert "status" in result.output

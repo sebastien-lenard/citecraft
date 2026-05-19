@@ -45,6 +45,8 @@ class JournalMetadata(BaseSchema):
         """Deduce the synchronization status of the journal record."""
         if self.ISSN is None and self.true_title is not None:
             return "Found without ISSN"
+        if self.ISSN is not None and (self.start_year is None or self.end_year is None):
+            return "Found without work"
         if not self.is_complete:
             return "Not found"
         return "OK"

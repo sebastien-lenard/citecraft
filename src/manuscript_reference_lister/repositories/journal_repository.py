@@ -52,6 +52,19 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         words = [w[:-1] if w.endswith("s") else w for w in t.split()]
         return " ".join(words)
 
+    def get_issns_by_input_title(self, input_title: str) -> list[str]:
+        """Return the list of all unique, non-null ISSNs present in records
+        for a given input_title."""
+        return sorted(
+            list(
+                {
+                    r.ISSN
+                    for r in self.records
+                    if r.input_title == input_title and r.ISSN is not None
+                }
+            )
+        )
+
     def get_journal_metadata(self, input_title: str) -> list[JournalMetadata]:
         """
         Get journal metadata filtered on the exact match or similar matches of the title
