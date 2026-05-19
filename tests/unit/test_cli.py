@@ -114,8 +114,8 @@ def test_cli_displays_journal_anomalies_warning_table(
     """Check if CLI catches metadata anomalies from run() and correctly displays
     the warnings and status table."""
     mock_anomalies = {
-        "Natural Hazards and Earth System Sciences": "Work found without ISSN",
-        "Unknown Fake Journal": "Work not found",
+        "Natural Hazards and Earth System Sciences": "Found without ISSN",
+        "Unknown Fake Journal": "Not found",
     }
 
     with patch("manuscript_reference_lister.cli.run", return_value=mock_anomalies):
@@ -130,8 +130,8 @@ def test_cli_displays_journal_anomalies_warning_table(
         assert "Warning: Some journal titles were not found" in result.output
         assert "This is a known limitation of the Crossref repository" in result.output
         assert "Natural Hazards and Earth System Sciences" in result.output
-        assert "Work found without ISSN" in result.output
+        assert "Found without ISSN" in result.output
         assert "Unknown Fake Journal" in result.output
-        assert "Work not found" in result.output
+        assert "Not found" in result.output
         assert "input_title" in result.output
         assert "status" in result.output
