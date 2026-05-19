@@ -4,11 +4,11 @@ import sys
 import tempfile
 import uuid
 from pathlib import Path
+from types import MappingProxyType
 
 from dotenv import dotenv_values
 
-# 1. Génération d'un run_id unique pour TOUTE la durée d'exécution de cette session CLI
-# On prend les 8 premiers caractères d'un UUID4 pour que ce soit concis mais unique
+# Unique run_id valid for the session CLI
 RUN_ID = str(uuid.uuid4())[:8]
 
 
@@ -18,6 +18,35 @@ class RunIdFilter(logging.Filter):
     def filter(self, record):
         record.run_id = RUN_ID
         return True
+
+
+class ColorFormatter(logging.Formatter):
+    """Custom formatter to inject ANSI escape sequences into console logs."""
+
+    GREY = "\033[90m"
+    WHITE = "\033[37m"
+    YELLOW = "\033[33m"
+    RED = "\033[31m"
+    BOLD_RED = "\033[31;1m"
+    RESET = "\033[0m"
+
+    LEVEL_COLORS = MappingProxyType(
+        {
+            logging.DEBUG: GREY,
+            logging.INFO: WHITE,
+            logging.WARNING: YELLOW,
+            logging.ERROR: RED,
+            logging.CRITICAL: BOLD_RED,
+        }
+    )  # immutable wrapper
+
+    def format(self, record):
+        """Generates the log string normally, then wraps the entire line with the
+        appropriate level color.
+        """
+        result = super().format(record)
+        color = self.LEVEL_COLORS.get(record.levelno, self.RESET)
+        return f"{color}{result}{self.RESET}"
 
 
 def get_safe_log_dir() -> Path:
@@ -56,6 +85,7 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict:
         },
         "formatters": {
             "human": {
+                "()": ColorFormatter,
                 "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
                 "datefmt": "%H:%M:%S",
             },
