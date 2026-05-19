@@ -4,7 +4,6 @@ import pytest
 from click.testing import CliRunner
 
 from manuscript_reference_lister.cli import cli
-from manuscript_reference_lister.exceptions import JournalSyncError
 from manuscript_reference_lister.utils import AppConfig
 
 
@@ -109,25 +108,30 @@ def test_cli_piped_input_handling(runner: CliRunner, test_config: AppConfig) -> 
         )
 
 
-def test_cli_displays_suggested_journal_alternatives_table(
-    tmp_path, runner: CliRunner, test_config: AppConfig
+def test_cli_displays_journal_anomalies_warning_table(
+    runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Check if CLI catches journal sync error and correctly displays alternative
-    journal titles without interacting with production storage."""
-    mock_missing_journals = {
-        "nature geosciences": ["Nature Geoscience", "Natures-Geosciences"]
+    """Check if CLI catches metadata anomalies from run() and correctly displays
+    the warnings and status table."""
+    mock_anomalies = {
+        "Natural Hazards and Earth System Sciences": "Work found without ISSN",
+        "Unknown Fake Journal": "Work not found",
     }
-    sync_error = JournalSyncError(missing_journals=mock_missing_journals)
 
-    with patch("manuscript_reference_lister.cli.run", side_effect=sync_error):
+    with patch("manuscript_reference_lister.cli.run", return_value=mock_anomalies):
         result = runner.invoke(
             cli,
             ["main", "-t", "Some text in nature geosciences."],
             obj={"config": test_config},
         )
 
-        assert result.exit_code == 1
-        assert "nature geosciences" in result.output
-        assert "Nature Geoscience; Natures-Geosciences" in result.output
+        assert result.exit_code == 0
+        assert "Done." in result.output
+        assert "Warning: Some journal titles were not found" in result.output
+        assert "This is a known limitation of the Crossref repository" in result.output
+        assert "Natural Hazards and Earth System Sciences" in result.output
+        assert "Work found without ISSN" in result.output
+        assert "Unknown Fake Journal" in result.output
+        assert "Work not found" in result.output
         assert "input_title" in result.output
-        assert "suggested alternatives" in result.output
+        assert "status" in result.output

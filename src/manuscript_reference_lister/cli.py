@@ -6,7 +6,6 @@ import traceback
 import click
 
 from .core import run
-from .exceptions import JournalSyncError
 from .logging_config import setup_logging
 from .utils.config import get_config
 
@@ -70,46 +69,41 @@ def main(ctx, input_file, text, output_file, verbose):
     try:
         config = (ctx.obj or {}).get("config") or get_config()
         config.ensure_repo_directory()
-        run(
+
+        anomalies = run(
             input_file_path=input_file,
             input_text=text,
             output_filepath=output_file,
             config=config,
         )
+
+        if anomalies:
+            click.echo("")
+            click.secho(
+                "⚠️  Warning: Some journal titles were not found or were found without an ISSN. "
+                "Consequently, they have not been included in the search for works. "
+                "This is a known limitation of the Crossref repository data structure.",
+                fg="yellow",
+                bold=True,
+                err=True,
+            )
+            click.echo("", err=True)
+            click.secho(
+                f"{'input_title':<45} | status",
+                fg="cyan",
+                bold=True,
+                err=True,
+            )
+            click.secho("-" * 75, fg="cyan", err=True)
+
+            for title, status in anomalies.items():
+                click.echo(f"{title:<45} | {status}", err=True)
+            click.echo("", err=True)
+
         click.echo("Done.")
 
     except click.ClickException as e:
         raise e
-
-    except JournalSyncError as e:
-        logger.warning("Pipeline halted: unfinished journal metadata mapping.")
-
-        click.secho(
-            f"\nError: {len(e.missing_journals)} journal(s) haven't been found.",
-            fg="red",
-            bold=True,
-            err=True,
-        )
-        click.secho(
-            "Please check the list and correct titles in the manuscript:\n",
-            fg="red",
-            err=True,
-        )
-
-        click.secho(
-            f"{'input_title':<30} | suggested alternatives",
-            fg="cyan",
-            bold=True,
-            err=True,
-        )
-        click.secho("-" * 70, fg="cyan", err=True)
-
-        for title, alts in e.missing_journals.items():
-            alternatives_str = "; ".join(alts) if alts else "No alternatives found"
-            click.echo(f"{title:<30} | {alternatives_str}", err=True)
-
-        click.echo("", err=True)
-        sys.exit(1)
 
     except Exception as e:
         logger.critical(

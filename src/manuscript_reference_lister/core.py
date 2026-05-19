@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from .exceptions import JournalSyncError
 from .network import get_http_client_registry
 from .parsers import CitationParser, JournalParser
 from .repositories import (
@@ -20,8 +19,9 @@ def run(
     style: str = "apa",
     output_filepath: str | Path | None = None,
     config: AppConfig | None = None,
-) -> None:
-    """Orchestration of the manuscript-reference-lister pipeline."""
+) -> dict[str, str]:
+    """Orchestration of the manuscript-reference-lister pipeline.
+    Returns a dictionary of problematic journals mapped to their error status."""
 
     config = config or get_config()
     if not input_text:
@@ -29,7 +29,7 @@ def run(
     style_repo = StyleRepository(style, config=config)
     style_repo.validate_favored_style()
     if style_repo.favored_style_is_valid is False:
-        raise ValueError("Style {style} is not found in crossref api styles.")
+        raise ValueError(f"Style {style} is not found in crossref api styles.")
 
     journal_parser = JournalParser()
     journal_required_titles = journal_parser.extract_all(input_text)
@@ -42,16 +42,6 @@ def run(
     journal_repo.merge_new_titles(journal_required_titles)
     journal_repo.update_all()
     journal_repo.save_all()
-
-    sync_status = journal_repo.get_sync_status()
-    if sync_status["missing_metadata_count"] > 0:
-        missing_map = {}
-        for j in journal_repo.records:
-            if not j.is_complete:
-                alts = getattr(j, "similar_titles", []) or []
-                missing_map[j.input_title] = alts
-
-        raise JournalSyncError(missing_journals=missing_map)
 
     work_repo = WorkRepository(config=config)
     work_repo.load_all()
@@ -80,3 +70,9 @@ def run(
 
     get_http_client_registry().close_all()
     get_http_client_registry.cache_clear()
+
+    anomalies_map = {}
+    for j in journal_repo.records:
+        if j.status != "OK":
+            anomalies_map[j.input_title] = j.status
+    return anomalies_map

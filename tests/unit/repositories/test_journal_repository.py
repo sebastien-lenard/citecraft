@@ -71,34 +71,184 @@ def test_get_journal_metadata_similar_matches_found(
     repo: JournalRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Verify normalization rules detect potential matches, filter duplicates, and "
-    "set similar_titles."""
-    mock_resp = MagicMock(status_code=200)
-    mock_resp.json.return_value = {
+    "set similar_titles, and follow up by collecting their ISSNs, query their publication years, and enrich records with metadata."""
+    mock_main = MagicMock(status_code=200)
+    mock_main.json.return_value = {
         "message": {
             "items": [
-                {"title": "Nature Geoscience"},  # Case and delimiter mismatch
-                {"title": "Nature-Geosciences"},  # Plural and hyphen mismatch
-                {"title": "Nature Geoscience"},  # Duplicate entry
-                {"title": "Science Journal"},  # Out of scope completely
+                {
+                    "title": "Nature Geoscience",
+                    "publisher": "Springer Nature",
+                    "ISSN": ["1752-0894"],
+                },
+                {
+                    "title": "Nature-Geosciences",
+                    "publisher": "Springer Nature",
+                    "ISSN": ["1752-0894", "1752-0908"],  # Includes a unique one
+                },
+                {
+                    "title": "Nature Geoscience",
+                    "publisher": "Springer Nature",
+                    "ISSN": ["1752-0894"],
+                },  # Duplicate item
+                {
+                    "title": "Science Journal",
+                    "publisher": "Other",
+                    "ISSN": ["0000-0000"],
+                },  # Out of scope
             ]
         }
     }
 
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_resp):
+    mock_year = MagicMock(status_code=200)
+    mock_year.json.return_value = {
+        "message": {
+            "items": [
+                {
+                    "published-print": {"date-parts": [[2008]]},
+                    "published-online": {"date-parts": [[2026]]},
+                }
+            ]
+        }
+    }
+
+    with patch.object(repo.http_client_wrapper, "get") as mock_get:
+        # 1 call for main query + 2 endpoints per unique ISSN found
+        # (2 unique ISSNs = 4 calls)
+        mock_get.side_effect = [mock_main, mock_year, mock_year, mock_year, mock_year]
+
         with caplog.at_level(logging.WARNING):
             results = repo.get_journal_metadata("nature geoscience")
 
+            # Check for updated warning log string
             assert (
-                "Journal nature geoscience not found. Please check similar titles "
-                "found: Nature Geoscience, Nature-Geosciences" in caplog.text
+                "Journal nature geoscience not found. Use similar titles to fill"
+                " metadata: Nature Geoscience, Nature-Geosciences" in caplog.text
             )
-            assert len(results) == 1
-            assert results[0].ISSN is None
+            # 2 valid unique ISSNs across similar titles generate 2 metadata entries
+            assert len(results) == 2
+
+            # Assert first entry values
             assert results[0].input_title == "nature geoscience"
+            assert results[0].true_title == "Nature Geoscience"
+            assert results[0].ISSN == "1752-0894"
+            assert results[0].start_year == 2008
+            assert results[0].end_year == 2026
             assert results[0].similar_titles == [
                 "Nature Geoscience",
                 "Nature-Geosciences",
             ]
+
+            # Assert second entry values (resolved from the structural variant item)
+            assert results[1].input_title == "nature geoscience"
+            assert results[1].true_title == "Nature-Geosciences"
+            assert results[1].ISSN == "1752-0908"
+            assert results[1].similar_titles == [
+                "Nature Geoscience",
+                "Nature-Geosciences",
+            ]
+
+            assert mock_get.call_count == 5
+
+
+def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
+    """Verify that journals with multiple ISSNs return distinct records."""
+    mock_main = MagicMock(status_code=200)
+    mock_main.json.return_value = {
+        "message": {
+            "items": [
+                {
+                    "title": "Nature",  # Must contain the exact string
+                    "ISSN": ["0028-0836", "1476-4687"],
+                }
+            ]
+        }
+    }
+
+    def year_mock(year: int):
+        m = MagicMock(status_code=200)
+        m.json.return_value = {
+            "message": {"items": [{"published-print": {"date-parts": [[year]]}}]}
+        }
+        return m
+
+    with patch.object(repo.http_client_wrapper, "get") as mock_get:
+        mock_get.side_effect = [
+            mock_main,
+            year_mock(1869),
+            year_mock(2023),  # ISSN 1
+            year_mock(1997),
+            year_mock(2023),  # ISSN 2
+        ]
+
+        results = repo.get_journal_metadata("Nature")
+
+        assert len(results) == 2
+        assert results[0].ISSN == "0028-0836"
+        assert results[1].ISSN == "1476-4687"
+        assert mock_get.call_count == 5
+
+
+def test_get_journal_metadata_missing_issn_handling(repo: JournalRepository) -> None:
+    """Verify that journals found without an ISSN are preserved in the results
+    with ISSN and years set to None, without calling year endpoints.
+    """
+    mock_main = MagicMock(status_code=200)
+    mock_main.json.return_value = {
+        "message": {
+            "items": [
+                {
+                    "title": "Natural Hazards and Earth System Sciences",
+                    "publisher": "Copernicus Publications",
+                }
+            ]
+        }
+    }
+
+    with patch.object(
+        repo.http_client_wrapper, "get", return_value=mock_main
+    ) as mock_get:
+        results = repo.get_journal_metadata("Natural Hazards and Earth System Sciences")
+
+        assert len(results) == 1
+        assert results[0].true_title == "Natural Hazards and Earth System Sciences"
+        assert results[0].ISSN is None
+        assert results[0].start_year is None
+        assert results[0].end_year is None
+        assert mock_get.call_count == 1
+
+
+def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -> None:
+    """Verify that journals with a valid ISSN but no published works are preserved
+    with their metadata intact and dates set to None.
+    """
+    mock_main = MagicMock(status_code=200)
+    mock_main.json.return_value = {
+        "message": {
+            "items": [
+                {
+                    "title": "Empty Journal",
+                    "publisher": "Silent Publisher",
+                    "ISSN": ["9999-999X"],
+                }
+            ]
+        }
+    }
+
+    mock_year_empty = MagicMock(status_code=200)
+    mock_year_empty.json.return_value = {"message": {"items": []}}
+
+    with patch.object(repo.http_client_wrapper, "get") as mock_get:
+        mock_get.side_effect = [mock_main, mock_year_empty, mock_year_empty]
+
+        results = repo.get_journal_metadata("Empty Journal")
+
+        assert len(results) == 1
+        assert results[0].true_title == "Empty Journal"
+        assert results[0].ISSN == "9999-999X"
+        assert results[0].start_year is None
+        assert results[0].end_year is None
+        assert mock_get.call_count == 3
 
 
 @pytest.mark.parametrize(
@@ -173,44 +323,6 @@ def test_get_issn_year_endpoint_partial_dates(repo: JournalRepository) -> None:
     ) as mock_get:
         assert repo.get_issn_year_endpoint("1111-2222", "asc") == 2010
         mock_get.assert_called_once()
-
-
-def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
-    """Verify that journals with multiple ISSNs return distinct records."""
-    mock_main = MagicMock(status_code=200)
-    mock_main.json.return_value = {
-        "message": {
-            "items": [
-                {
-                    "title": "Nature",  # Must contain the exact string
-                    "ISSN": ["0028-0836", "1476-4687"],
-                }
-            ]
-        }
-    }
-
-    def year_mock(year: int):
-        m = MagicMock(status_code=200)
-        m.json.return_value = {
-            "message": {"items": [{"published-print": {"date-parts": [[year]]}}]}
-        }
-        return m
-
-    with patch.object(repo.http_client_wrapper, "get") as mock_get:
-        mock_get.side_effect = [
-            mock_main,
-            year_mock(1869),
-            year_mock(2023),  # ISSN 1
-            year_mock(1997),
-            year_mock(2023),  # ISSN 2
-        ]
-
-        results = repo.get_journal_metadata("Nature")
-
-        assert len(results) == 2
-        assert results[0].ISSN == "0028-0836"
-        assert results[1].ISSN == "1476-4687"
-        assert mock_get.call_count == 5
 
 
 def test_get_sync_status_isolated(repo: JournalRepository) -> None:

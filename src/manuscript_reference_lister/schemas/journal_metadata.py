@@ -40,6 +40,15 @@ class JournalMetadata(BaseSchema):
             if field_name not in excluded_fields
         )
 
+    @property
+    def status(self) -> str:
+        """Deduce the synchronization status of the journal record."""
+        if self.ISSN is None and self.true_title is not None:
+            return "Work found without ISSN"
+        if not self.is_complete:
+            return "Work not found"
+        return "OK"
+
     @field_validator("ISSN")
     @classmethod
     def validate_issn_format(cls, v: str | None) -> str | None:

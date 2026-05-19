@@ -48,22 +48,21 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         if not title:
             return ""
         t = title.strip().lower()
-        t = t.replace("-", " ").replace(":", " ")
+        t = t.replace("-", " ").replace(":", " ").replace(",", " ")
         words = [w[:-1] if w.endswith("s") else w for w in t.split()]
         return " ".join(words)
 
     def get_journal_metadata(self, input_title: str) -> list[JournalMetadata]:
         """
-        Get journal metadata filtered on the exact match of the title (input_title) that
-        have published works. A title can correspond to several records or none, each of
-        them identified by a unique ISSN.
-        - Case exact match: Returns a list of complete JournalMetadata corresponding to
+        Get journal metadata filtered on the exact match or similar matches of the title
+        (input_title). A title can correspond to several
+        records or none, each of them identified by a unique ISSN.
+        - Case exact match: Returns a list of JournalMetadata corresponding to
             the first exact title found (one by distinct ISSN).
-        - Case no exact match but similar titles found: Returns a list of one incomplete
-            JournalMetadata only, enriched with the list similar_titles.
+        - Case no exact match but similar titles found: Resolves ISSNs for all similar
+            titles, queries their publication ranges, and returns JournalMetadata
+            records mapped to the original input_title and the similar_titles list.
         - Case no exact match: Returns a list of one incomplete JournalMetadata only.
-        TODO: The case when an exact match is found without an ISSN is not correctly
-            handled (returns an empty list).
         """
         logger.info(
             "Retrieving journal %s metadata from Crossref...",
@@ -89,25 +88,46 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
         items = response.json().get("message", {}).get("items", [])
 
-        # Discard records without exact title match
+        # Identify exact matches
         exact_matches = [
             item for item in items if item.get("title", "").strip() == input_title
         ]
 
-        if not exact_matches:
+        working_items = []
+        similar_titles = None
+
+        if exact_matches:
+            # Discard exact matches other than the 1st one
+            if len(exact_matches) > 1:
+                logger.warning(
+                    "Discarded %d duplicate titles in the repo for journal: %s",
+                    len(exact_matches),
+                    input_title,
+                    extra={
+                        "status": "WARNING",
+                        "event": "crossref_duplicate_titles_discarded",
+                        "discarded_count": len(exact_matches),
+                        "input_title": input_title,
+                    },
+                )
+            working_items = [exact_matches[0]]
+        else:
             # Look for potential matches based on flexible business rules
             target_norm = self._normalize_title(input_title)
-            similar_titles = []
+            similar_items = []
+            raw_similar_titles = []
+
             for item in items:
                 raw_title = item.get("title", "").strip()
                 if raw_title and self._normalize_title(raw_title) == target_norm:
-                    similar_titles.append(raw_title)
+                    similar_items.append(item)
+                    raw_similar_titles.append(raw_title)
 
-            if similar_titles:
+            if similar_items:
                 # Deduplicate titles keeping order
-                similar_titles = list(dict.fromkeys(similar_titles))
+                similar_titles = list(dict.fromkeys(raw_similar_titles))
                 logger.warning(
-                    "Journal %s not found. Please check similar titles found: %s",
+                    "Journal %s not found. Use similar titles to fill metadata: %s",
                     input_title,
                     ", ".join(similar_titles),
                     extra={
@@ -117,12 +137,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                         "similar_titles": similar_titles,
                     },
                 )
-                return [
-                    JournalMetadata(
-                        input_title=input_title, similar_titles=similar_titles
-                    )
-                ]
+                working_items = similar_items
             else:
+                # Absolute fallback: No match and no similar titles found
                 logger.warning(
                     "Journal %s not found.",
                     input_title,
@@ -134,67 +151,92 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                 )
                 return [JournalMetadata(input_title=input_title)]
 
-        # Discard exact matches other than the 1st one
-        if len(exact_matches) > 1:
-            logger.warning(
-                "Discarded %d duplicate titles in the repo for journal: %s",
-                len(exact_matches),
-                input_title,
-                extra={
-                    "status": "WARNING",
-                    "event": "crossref_duplicate_titles_discarded",
-                    "discarded_count": len(exact_matches),
-                    "input_title": input_title,
-                },
-            )
-        item = exact_matches[0]
-        true_title = item.get("title", "")
-        publisher = item.get("publisher", "")
-        issns = list(dict.fromkeys(item.get("ISSN", [])))  # remove duplicate ISSNs
-
-        for issn in issns:
-            logger.info(
-                "Retrieving %s / %s publication range...",
-                input_title,
-                issn,
-                extra={
-                    "status": "OK",
-                    "event": "crossref_issn_range_query_start",
-                    "input_title": input_title,
-                    "issn": issn,
-                },
-            )
-            # Publication range
-            dates = {
-                "min_year": self.get_issn_year_endpoint(issn, "asc"),
-                "max_year": self.get_issn_year_endpoint(issn, "desc"),
-            }
-
-            # Discard records without published work
-            if not dates["min_year"] or not dates["max_year"]:
+        # Process all validated items (either the exact match or set of similar matches)
+        processed_issns = set()  # Follow-up to avoid duplicates returned by crossref
+        for item in working_items:
+            true_title = item.get("title", "")
+            publisher = item.get("publisher", "")
+            issns = list(dict.fromkeys(item.get("ISSN", [])))  # remove duplicate ISSNs
+            if not issns:
                 logger.warning(
-                    "Skipping journal %s / %s (no published work found)",
+                    "Journal %s found but contains no ISSN metadata.",
+                    true_title,
+                    extra={
+                        "status": "WARNING",
+                        "event": "crossref_journal_missing_issn",
+                        "input_title": input_title,
+                        "true_title": true_title,
+                    },
+                )
+                journal_records.append(
+                    JournalMetadata(
+                        input_title=input_title,
+                        true_title=true_title,
+                        publisher=publisher,
+                        ISSN=None,
+                        start_year=None,
+                        end_year=None,
+                        similar_titles=similar_titles,
+                    )
+                )
+                continue
+
+            for issn in issns:
+                if issn in processed_issns:
+                    logger.debug(
+                        "ISSN %s already processed in this batch. Skipping.",
+                        issn,
+                    )
+                    continue
+
+                processed_issns.add(issn)
+
+                logger.info(
+                    "Retrieving %s / %s publication range...",
                     input_title,
                     issn,
                     extra={
-                        "status": "WARNING",
-                        "event": "crossref_journal_skipped_no_works",
+                        "status": "OK",
+                        "event": "crossref_issn_range_query_start",
                         "input_title": input_title,
                         "issn": issn,
                     },
                 )
-                continue
+                # Publication range
+                dates = {
+                    "min_year": self.get_issn_year_endpoint(issn, "asc"),
+                    "max_year": self.get_issn_year_endpoint(issn, "desc"),
+                }
 
-            journal_records.append(
-                JournalMetadata(
-                    input_title=input_title,
-                    true_title=true_title,
-                    publisher=publisher,
-                    ISSN=issn,
-                    start_year=dates["min_year"],
-                    end_year=dates["max_year"],
+                # Keep records without published work
+                if not dates["min_year"] or not dates["max_year"]:
+                    logger.warning(
+                        "Journal %s / %s has no published work found. Keeping record"
+                        " with empty dates.",
+                        input_title,
+                        issn,
+                        extra={
+                            "status": "WARNING",
+                            "event": "crossref_journal_no_works_found",
+                            "input_title": input_title,
+                            "issn": issn,
+                        },
+                    )
+                    dates["min_year"] = None
+                    dates["max_year"] = None
+
+                journal_records.append(
+                    JournalMetadata(
+                        input_title=input_title,
+                        true_title=true_title,
+                        publisher=publisher,
+                        ISSN=issn,
+                        start_year=dates["min_year"],
+                        end_year=dates["max_year"],
+                        similar_titles=similar_titles,
+                    )
                 )
-            )
+
         return journal_records
 
     def get_issn_year_endpoint(
@@ -229,8 +271,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
     def get_sync_status(self) -> dict[str, int | bool]:
         """Analyze the current state of records to determine sync problems.
-
         Returns a status dictionary useful for control flow in core.py.
+        TODO: Check if we still need this method (after the development of catching
+        metadata from similar titles)
         """
         expiration_date = date.today() - timedelta(days=self.config.journal_update_days)
         missing_count = 0
@@ -307,13 +350,13 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
         # Process Missing Metadata (Priority 1)
         for record in missing_metadata:
+            print(f"missing:{record.input_title}.")
             if update_count < self.config.journal_update_limit:
                 new_data = self.get_journal_metadata(record.input_title)
                 if new_data:
                     new_records.extend(new_data)
                 else:
-                    # TODO: empty list returned by get_journal_metadata when no issn
-                    # found for title exact match
+                    # Should not occur
                     new_records.append(record)
                 update_count += 1
             else:
