@@ -60,9 +60,26 @@ Integration (included Crossref API and DOI negotiation service) tests only:
 End to end tests only:
 ```uv run pytest -m e2e```
 
-## ⚠️ Known Issues
+
 
 ## 🐛 Known Bugs
+
+None reported. Feel free to open an issue if you encounter unexpected behavior.
+
+## ⚠️ Limitations with moderate impact
+
+## 📝 Limitations with minor impact
+
+### Coarse-Grained Cache Updates for Incomplete Journals
+
+The tool maintains a local JSON database (`records`) to cache journal metadata across executions, minimizing redundant API requests to Crossref. This cache expires based on the `JOURNAL_UPDATE_DAYS` environment variable. 
+
+However, if a journal title is flagged with incomplete metadata during a run, the tool triggers a remote Crossref refresh even if the cache has not expired. Incomplete metadata occurs under two conditions:
+* **Missing ISSN:** The registry has no ISSN mapped to the title (`Found without ISSN`).
+* **Missing Works:** An ISSN exists but has no registered publication years or historical records (`Found without work`).
+
+**The Limitation:** 
+The update mechanism operates at the **journal title level**, not the individual ISSN level. If a journal possesses multiple ISSNs (such as an old print ISSN and a modern e-ISSN) and *only one* of these records lacks metadata, the tool will force a full Crossref API reload for **all** records sharing that input title. While this ensures data completeness, it leads to redundant API queries for the valid ISSNs of that same journal.
 
 ## 🔌 External Dependencies & Limitations
 
@@ -84,9 +101,6 @@ Due to structural behaviors in the Crossref index, automated matching can fail o
 * **Historical ISSN Shifts and Consolidation:** Certain journals share a complex indexing history where multiple distinct sub-publications were grouped under a single parent ISSN before receiving their own independent identifiers.
    * *Example (AGU):* *Journal of Geophysical Research: Solid Earth* was historically consolidated under the ISSN of *Journal of Geophysical Research: Atmospheres* for metadata records spanning until 2012–2013. Consequently, for any citation dated prior to 2014, Crossref may only recognize the historical parent ISSN. To successfully resolve these entries, the user must include both titles (*Journal of Geophysical Research: Atmospheres* and *Journal of Geophysical Research: Solid Earth*) in the manuscript's journal list.
    * *Other instances:* Similar historical tracking and splitting discrepancies affect journals such as *Comptes Rendus Geoscience* and *Journal of Earth System Science*, requiring identical multi-title listing for older papers.
-
-
-
 
 ### 3. Consequences for the User
 
