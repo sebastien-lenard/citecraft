@@ -1,4 +1,5 @@
 import logging
+import time
 
 from unidecode import unidecode
 
@@ -96,6 +97,27 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                     )
                 )
         return candidates
+
+    def _log_heartbeat_if_needed(
+        self, processed: int, total: int, last_time: float
+    ) -> float:
+        """Helper to log heartbeat every 10 seconds."""
+        current_time = time.time()
+        if current_time - last_time > 10:
+            remaining = total - processed
+            logger.info(
+                "Batch update status: %d updates remaining out of %d",
+                remaining,
+                total,
+                extra={
+                    "status": "OK",
+                    "event": "work_update_heartbeat",
+                    "remaining_count": remaining,
+                    "total_count": total,
+                },
+            )
+            return current_time
+        return last_time
 
     def _normalize_string(self, text: str) -> str:
         """
@@ -203,12 +225,24 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         new_rich_records = []
         processed_templates = []
         failed_count = 0
+        last_display_time = time.time()
 
         for record in templates_to_process:
             # Construct the search object expected by get_work_metadata
             citation_info = CitationMetadata(
                 first_authors_txt=record.input_first_authors_txt,
                 year_and_suffix=record.input_year_and_suffix,
+            )
+            logger.info(
+                "Retrieving citation (%s, %s) metadata from Crossref...",
+                citation_info.first_authors_txt,
+                citation_info.year_and_suffix,
+                extra={
+                    "status": "OK",
+                    "event": "crossref_journal_query_start",
+                    "first_authors_txt": citation_info.first_authors_txt,
+                    "year_and_suffix": citation_info.year_and_suffix,
+                },
             )
 
             found_for_this_record = False
@@ -236,6 +270,11 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                         "year": citation_info.year_and_suffix,
                     },
                 )
+            last_display_time = self._log_heartbeat_if_needed(
+                len(processed_templates) + failed_count,
+                len(templates_to_process),
+                last_display_time,
+            )
 
         # 2. Swap templates for rich records
         for template in processed_templates:
