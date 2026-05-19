@@ -60,6 +60,35 @@ Integration (included Crossref API and DOI negotiation service) tests only:
 End to end tests only:
 ```uv run pytest -m e2e```
 
+## ⚠️ Known Issues
+
+## 🐛 Known Bugs
+
+## 🔌 External Dependencies & Limitations
+
+### 1. System Interactions
+
+The tool relies on two external web services to automate reference generation:
+
+* **Crossref REST API:** Used in two distinct phases. First, it queries the `/journals` endpoint to resolve exact journal titles into standard ISSNs. Second, it queries the `/works` endpoint using author and year metadata combined with these ISSNs to isolate the specific publication.
+* **DOI Citation Negotiation Service (`doi.org`):** Once a unique DOI is successfully retrieved from Crossref, this service is queried with specific HTTP headers (`Accept: text/x-bibliography; style=apa` or other style-specific strings) to fetch the fully formatted bibliographic reference.
+
+### 2. API Limitations & Operational Impact
+
+Due to structural behaviors in the Crossref index, automated matching can fail or produce false positives. The primary challenges include:
+
+* **Weak Author Weighting in Queries:** The `/works` endpoint does not support strict, isolated filtering by author name (e.g., no `filter=author:Lenard`). Author names are treated as general keywords. Because the tool only possesses an author-year pair from the in-text citation—and lacks the article title—a broad keyword search for common surnames returns hundreds of irrelevant records.
+* **Journal Metadata Gaps:** To mitigate the volume of irrelevant results, the tool restricts queries using ISSN filters. However, Crossref’s journal database depends heavily on publisher compliance, which remains inconsistent:
+* *Missing ISSNs:* Some prominent journals or preprint repositories (such as *EGUsphere*) do not have their ISSN properly mapped or indexed within the Crossref registry.
+* *Rigid Title Matching:* While the tool implements string normalization to handle punctuation discrepancies (e.g., matching *"Proceedings of the Royal Society A: Mathematical, Physical and Engineering Sciences"* against its unpunctuated registry entry), titles with slight morphological variations (e.g., *Natural Hazards and Earth System Sciences* vs. the registered *Natural Hazards and Earth System Science*) fail to resolve.
+
+### 3. Consequences for the User
+
+When a journal title fails to resolve to an ISSN, or when an author keyword search yields inconclusive metadata, the tool cannot safely guarantee the precision of the DOI. To prevent the injection of silent errors into the bibliography, the tool skips these ambiguous entries.
+
+> ⚠️ **Manual Intervention Required:** In these specific scenarios, users must manually search the Crossref interface or the journal's website to retrieve the correct DOI and complete the reference.
+
+
 ## 📅 Roadmap
 
 * Researching context-aware matching for common surnames (Smith, Singh, etc.).
