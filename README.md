@@ -88,6 +88,9 @@ When a journal title fails to resolve to an ISSN, or when an author keyword sear
 
 > ⚠️ **Manual Intervention Required:** In these specific scenarios, users must manually search the Crossref interface or the journal's website to retrieve the correct DOI and complete the reference.
 
+## 🔌Journals and ISSN: good to know
+
+Some distinct journals were grouped under a unique ISSN and later had their own ISSN. For instance, Journal of Geophysical Research: Solid Earth was grouped with other instances under the ISSN of Journal of Geophysical Research until 2012/2013. In that case, if a citation is earlier than 2014, the user should add in the list of Journals of the manuscript the title Journal of Geophysical Research, in addition to Journal of Geophysical Research: Solid Earth.
 
 ## 📅 Roadmap
 
