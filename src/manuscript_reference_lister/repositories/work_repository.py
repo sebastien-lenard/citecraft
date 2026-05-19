@@ -67,7 +67,6 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             "filter": f"from-pub-date:{year_int},until-pub-date:{year_int},"
             f"issn:{input_ISSN}",
         }
-
         response = self.http_client_wrapper.get(
             self.config.crossref_api_works_url, headers=self.headers, params=params
         )
@@ -82,7 +81,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                 continue
 
             if not self._validate_first_authors(
-                item["author"], raw_authors, expected_count
+                item["author"], raw_authors, expected_count, is_et_al=is_et_al
             ):
                 continue
             doi = item.get("DOI")
@@ -134,18 +133,22 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         crossref_authors: list[CrossrefAuthor],
         input_first_authors: list[str],
         input_first_authors_count: int | None = None,
+        is_et_al: bool = False,
     ) -> bool:
         """
         Validates if the first crossref_authors match the input_first_authors, and if
-        number of authors match too if 1 or 2 authors only.
+        number of authors match too if 1 or 2 authors only. Filters out single-author
+        works if citation is 'et al.', and prevents matching an expected family name
+        against a Crossref given name when family name metadata is available.
         Warning: strict comparison, case insensitive. If name slightly differs (e.g.
         VanDijk vs Van Dijk, comparison returns False)
         """
         # 1. Strict count validation if not an "et al." citation
-        if (
-            input_first_authors_count is not None
-            and len(crossref_authors) != input_first_authors_count
-        ):
+        if input_first_authors_count is not None:
+            if len(crossref_authors) != input_first_authors_count:
+                return False
+        elif is_et_al and len(crossref_authors) <= 2:
+            # A citation "X et al." implies at least 3 authors
             return False
 
         norm_expected = [self._normalize_string(a) for a in input_first_authors]
@@ -156,11 +159,14 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             (a for a in crossref_authors if a.get("sequence") == "first"),
             crossref_authors[0],
         )
+        has_family = "family" in first_author_obj
         norm_first_family = self._normalize_string(
             first_author_obj.get("family", first_author_obj.get("name", ""))
         )
 
         if norm_expected[0] != norm_first_family:
+            if has_family:
+                return False
             # Fallback check on given name
             norm_first_given = self._normalize_string(first_author_obj.get("given", ""))
             if norm_expected[0] != norm_first_given:
@@ -169,9 +175,9 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         # 3. Validate second author if exactly two are expected
         if input_first_authors_count == 2:
             # The second author is the one that is NOT the first_author_obj
-            second_author_obj = [a for a in crossref_authors if a != first_author_obj][
-                0
-            ]
+            second_author_obj = next(
+                a for a in crossref_authors if a != first_author_obj
+            )
             norm_second_family = self._normalize_string(
                 second_author_obj.get("family", second_author_obj.get("name", ""))
             )

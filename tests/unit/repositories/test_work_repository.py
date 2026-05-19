@@ -42,12 +42,20 @@ def test_returns_multiple_candidates(repo: WorkRepository) -> None:
                 {
                     "DOI": "10.1038/s41561-020-0585-2",
                     "type": "journal-article",
-                    "author": [{"family": "Lenard", "sequence": "first"}],
+                    "author": [
+                        {"family": "Lenard", "sequence": "first"},
+                        {"family": "Smith", "sequence": "additional"},
+                        {"family": "Doe", "sequence": "additional"},
+                    ],
                 },
                 {
                     "DOI": "10.1/ref2",
                     "type": "proceedings-article",
-                    "author": [{"family": "Lenard", "sequence": "first"}],
+                    "author": [
+                        {"family": "Lenard", "sequence": "first"},
+                        {"family": "Jones", "sequence": "additional"},
+                        {"family": "Brown", "sequence": "additional"},
+                    ],
                 },
             ]
         }
@@ -95,7 +103,11 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
             "items": [
                 {
                     "DOI": "10.1/match",
-                    "author": [{"family": "Guns", "sequence": "first"}],
+                    "author": [
+                        {"family": "Guns", "sequence": "first"},
+                        {"family": "Alpha", "sequence": "additional"},
+                        {"family": "Beta", "sequence": "additional"},
+                    ],
                 },
                 {
                     "DOI": "10.1/wrong",
@@ -103,7 +115,11 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
                 },
                 {
                     "DOI": "10.1/inverted",
-                    "author": [{"given": "Guns", "family": "M.", "sequence": "first"}],
+                    "author": [
+                        {"given": "Guns", "sequence": "first"},
+                        {"family": "Gamma", "sequence": "additional"},
+                        {"family": "Delta", "sequence": "additional"},
+                    ],
                 },
             ]
         }
@@ -186,6 +202,22 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
             None,
             True,
         ),
+        # Testing "et al." with one Crossref author only
+        (
+            [{"family": "Lucas", "sequence": "first"}],
+            ["Lucas"],
+            None,  # input_first_authors_count when is_et_al=True
+            False,
+        ),
+        # Testing inversion family/given name.
+        (
+            [{"given": "Lucas", "family": "Laursen", "sequence": "first"}],
+            ["Lucas"],
+            1,
+            False,
+        ),
+        # Given name match accepted only if absent family in Crossref metadata
+        ([{"given": "Lucas", "sequence": "first"}], ["Lucas"], 1, True),
     ],
 )
 def test_validate_first_authors_logic(
@@ -196,9 +228,13 @@ def test_validate_first_authors_logic(
     expected_result: bool,
 ) -> None:
     """Directly test author validation logic across naming and count scenarios."""
+    is_et_al_flag = input_first_authors_count is None
     assert (
         repo._validate_first_authors(
-            crossref_authors, input_first_authors, input_first_authors_count
+            crossref_authors,
+            input_first_authors,
+            input_first_authors_count,
+            is_et_al=is_et_al_flag,
         )
         == expected_result
     )
