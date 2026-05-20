@@ -29,12 +29,20 @@ def test_fill_missing_references_success(mock_doi_repo):
             reference="Old",
             style="bibtex",
         ),
+        WorkMetadata(
+            input_first_authors_txt="B",
+            input_year_and_suffix="2021",
+            DOI=None,
+            reference=None,
+            style=None,
+        ),
     ]
 
     ReferenceService.fill_missing_references(records, mock_doi_repo, target_style="apa")
 
     assert records[0].reference == "Formatted Author (2020). Title..."
     assert records[1].style == "apa"
+    assert records[2].reference is None
     assert mock_doi_repo.get_reference.call_count == 2
 
 

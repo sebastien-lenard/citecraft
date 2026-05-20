@@ -14,6 +14,7 @@ def test_work_metadata_instantiation_defaults():
 
     # Other fields should be None by default
     assert work.DOI is None
+    assert work.raw_reference is None
     assert work.reference is None
     assert work.style is None
     assert work.type is None
