@@ -1,4 +1,5 @@
 import csv
+import logging
 
 from manuscript_reference_lister.schemas import CitationMetadata, WorkMetadata
 from manuscript_reference_lister.services.bibliography_service import (
@@ -6,8 +7,9 @@ from manuscript_reference_lister.services.bibliography_service import (
 )
 
 
-def test_export_to_csv_computes_statuses_and_sorts_correctly(tmp_path):
+def test_export_to_csv_computes_statuses_and_sorts_correctly(tmp_path, caplog):
     """Verify statuses mapping logic and correct primary/secondary sorting."""
+    caplog.set_level(logging.INFO)
     output_csv = tmp_path / "output.csv"
 
     citations = [
@@ -39,6 +41,24 @@ def test_export_to_csv_computes_statuses_and_sorts_correctly(tmp_path):
 
     BibliographyService.export_to_csv(citations, works, output_csv)
 
+    # Logging assertions
+    assert any(
+        "No metadata or DOI found for citation: Alpha, 2019" in record.message
+        and record.levelname == "WARNING"
+        for record in caplog.records
+    )
+    assert any(
+        "Several references found for citation: Lenard et al., 2020" in record.message
+        and record.levelname == "INFO"
+        for record in caplog.records
+    )
+    assert any(
+        "Generated and saved bibliography with 4 rows" in record.message
+        and record.levelname == "INFO"
+        for record in caplog.records
+    )
+
+    # Csv content assertions
     # Read written rows back for assertion checking
     with open(output_csv, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
@@ -48,7 +68,7 @@ def test_export_to_csv_computes_statuses_and_sorts_correctly(tmp_path):
 
     # First row should be Alpha because Reference is None/Empty String (Primary Sort)
     assert rows[0]["Citation"] == "Alpha, 2019"
-    assert rows[0]["Status"] == "Error: No doi or reference found for the citation"
+    assert rows[0]["Status"] == "Warning: No doi or reference found for the citation"
     assert rows[0]["Reference"] == ""
 
     # Second row should be Lenard Ref A (Alphabetical sort priority over Lenard Ref B)

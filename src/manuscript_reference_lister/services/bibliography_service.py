@@ -36,7 +36,7 @@ class BibliographyService:
             matched_works = works_by_citation.get(key, [])
 
             if not matched_works:
-                logger.error(
+                logger.warning(
                     "No metadata or DOI found for citation: %s",
                     citation_str,
                     extra={
@@ -48,19 +48,19 @@ class BibliographyService:
                 rows.append(
                     {
                         "Citation": citation_str,
-                        "Status": "Error: No doi or reference found for the citation",
+                        "Status": "Warning: No doi or reference found for the citation",
                         "Reference": None,
                     }
                 )
                 continue
 
             if len(matched_works) > 1:
-                logger.error(
-                    "No metadata or DOI found for citation: %s",
+                logger.info(
+                    "Several references found for citation: %s",
                     citation_str,
                     extra={
                         "status": "KO",
-                        "event": "bibliography_missing_reference",
+                        "event": "bibliography_multiple_references",
                         "citation": citation_str,
                     },
                 )
