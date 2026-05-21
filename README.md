@@ -46,9 +46,13 @@ The application uses environment variables for path management and API settings.
 ## 📖 Usage
 Run the tool using the uv run prefix.
 
-# Process a manuscript file and specify output
-```uv run references-lister -f "manuscript.docx" -o "C:\Documents\bibliography.csv```
-Output file can be omitted, default generated file is OUTPUT_DIR_PATH / "manuscript_references.csv"
+# Process a manuscript file and specify the output path
+```uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv```
+If -o is omitted, the tool defaults to: OUTPUT_DIR_PATH / "manuscript_references.csv"
+
+Control log verbosity (-v for INFO, -vv for DEBUG):
+```uv run references-lister -f "C:\Documents\manuscript.docx" -v```
+
 # Pipe source directly
 ```echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run references-lister```
 # Run tests
@@ -80,6 +84,12 @@ However, if a journal title is flagged with incomplete metadata during a run, th
 
 **The Limitation:** 
 The update mechanism operates at the **journal title level**, not the individual ISSN level. If a journal possesses multiple ISSNs (such as an old print ISSN and a modern e-ISSN) and *only one* of these records lacks metadata, the tool will force a full Crossref API reload for **all** records sharing that input title. While this ensures data completeness, it leads to redundant API queries for the valid ISSNs of that same journal.
+
+### Coarse-Grained Progress Bar ETA
+In default mode (without `-v` or `-vv`), the application displays a progress bar tracking high-level execution phases (e.g., transitions between parsing, journal metadata resolution, and work metadata fetching).
+
+**Note on ETA accuracy:** Because the progress bar tracks these major processing milestones rather than individual, fine-grained network requests, the Estimated Time of Arrival (ETA) updates in blocks. It should be treated as a rough phase indicator rather than a precise second-by-second countdown.
+
 
 ## 🔌 External Dependencies & Limitations
 
