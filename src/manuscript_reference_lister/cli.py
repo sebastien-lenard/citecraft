@@ -1,15 +1,40 @@
 import logging
 import os
 import sys
+import threading
+import time
 import traceback
 
 import click
 
-from .core import run
+from .core import ProgressStep, run
 from .logging_config import setup_logging
 from .utils.config import get_config
 
 logger = logging.getLogger(__name__)
+
+
+class QueueHandler(logging.Handler):
+    """Handler that interceps logs to insert them above active progress bar.
+    Keeps the bar visible and animated."""
+
+    def __init__(self, draw_callback):
+        super().__init__()
+        self.draw_callback = draw_callback
+
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+
+            # Erase current line on console and write log
+            # \r = return to start of line, \033[K = erase all til the end of line
+            sys.stderr.write(f"\r\033[K{msg}\n")
+            sys.stderr.flush()
+
+            # Redraw bar below log
+            self.draw_callback()
+        except Exception:
+            self.handleError(record)
 
 
 @click.group()
@@ -54,9 +79,14 @@ def main(ctx, input_file, text, output_file, verbose):
         $ echo "Voila (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | \
             uv run python -m manuscript_reference_lister
     """
+    # Force console to replace caracters that can't be encoded rather than throw fatal
+    if sys.platform == "win32":
+        sys.stdout.reconfigure(errors="replace")
+        sys.stderr.reconfigure(errors="replace")
+
+    click.echo("Starting manuscript-reference-lister...")
 
     log_dir = setup_logging(verbose_level=verbose)
-
     logger.info("Starting manuscript-reference-lister...")
     logger.debug("Current working directory: %s", os.getcwd())
     logger.debug("Logs are being written to: %s", log_dir)
@@ -70,12 +100,117 @@ def main(ctx, input_file, text, output_file, verbose):
         config = (ctx.obj or {}).get("config") or get_config()
         config.ensure_repo_directory()
 
-        anomalies = run(
-            input_file_path=input_file,
-            input_text=text,
-            output_filepath=output_file,
-            config=config,
-        )
+        anomalies = {}
+        export_metadata = {}
+
+        # Mode non-verbose: display of a progress bar with execution time and estimated
+        # time of completion (ETA)
+        if verbose == 0:
+            start_global_time = time.time()
+
+            state = {
+                "message": "Initializing...",
+                "current_step": 0,
+                "total_steps": 4,
+                "running": True,
+            }
+
+            def generate_bar_string(current, total, elapsed_time, width=30):
+                percent = int((current / total) * 100) if total > 0 else 0
+                filled_length = int(width * current // total) if total > 0 else 0
+
+                fill_char = click.style("█", fg="cyan")
+                empty_char = "░"
+                bar = (fill_char * filled_length) + (
+                    empty_char * (width - filled_length)
+                )
+
+                if current == 0 or total == 0:
+                    eta_str = "--:--"
+                elif current == total:
+                    eta_str = "00:00"
+                else:
+                    remaining_steps = total - current
+                    estimated_remaining_seconds = int(
+                        (remaining_steps * elapsed_time) / current
+                    )
+                    eta_min, eta_sec = divmod(estimated_remaining_seconds, 60)
+                    eta_str = f"{eta_min:02d}:{eta_sec:02d}"
+
+                return f"[{bar}] {percent}% (ETA: {eta_str})"
+
+            def draw_line():
+                elapsed = int(time.time() - start_global_time)
+                minutes, seconds = divmod(elapsed, 60)
+                time_str = f"[{minutes:02d}:{seconds:02d}]"
+
+                bar_text = generate_bar_string(
+                    state["current_step"], state["total_steps"], elapsed
+                )
+                full_line = f"\r\033[K{time_str} {state['message']:<55} {bar_text}"
+
+                sys.stderr.write(full_line)
+                sys.stderr.flush()
+
+            # --- INJECTION OF LOGGING HANDLER ---
+            root_logger = logging.getLogger()
+            # Temporary removal of default handlers to prevent duplicate logs
+            old_handlers = root_logger.handlers[:]
+            for h in old_handlers:
+                root_logger.removeHandler(h)
+
+            custom_handler = QueueHandler(draw_callback=draw_line)
+            custom_handler.setFormatter(
+                logging.Formatter(
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                )
+            )
+            root_logger.addHandler(custom_handler)
+
+            # BACKGROUND TIMER THREAD
+            def timer_ticker():
+                while state["running"]:
+                    draw_line()
+                    time.sleep(1.0)
+
+            ticker_thread = threading.Thread(target=timer_ticker, daemon=True)
+            ticker_thread.start()
+
+            # MAIN THREAD CALLBACK
+            def cli_progress_handler(step: ProgressStep):
+                state["message"] = step.message
+                state["total_steps"] = step.total
+                if step.status == "completed":
+                    state["current_step"] = step.current
+                    draw_line()
+
+            try:
+                anomalies, export_metadata = run(
+                    input_file_path=input_file,
+                    input_text=text,
+                    output_filepath=output_file,
+                    config=config,
+                    progress_callback=cli_progress_handler,
+                )
+            finally:
+                state["current_step"] = state["total_steps"]
+                draw_line()
+
+                state["running"] = False
+                ticker_thread.join(timeout=1.0)
+
+                # Restauration of original handlers for safety
+                root_logger.removeHandler(custom_handler)
+                for h in old_handlers:
+                    root_logger.addHandler(h)
+        else:
+            anomalies, export_metadata = run(
+                input_file_path=input_file,
+                input_text=text,
+                output_filepath=output_file,
+                config=config,
+                progress_callback=None,
+            )
 
         if anomalies:
             click.echo("")
@@ -105,6 +240,16 @@ def main(ctx, input_file, text, output_file, verbose):
                     err=True,
                 )
             click.echo("", err=True)
+
+        if export_metadata:
+            click.echo("")
+            click.secho(
+                f"✨ Success: Generated and saved bibliography with"
+                f" {export_metadata.total_rows} rows "
+                f"to {export_metadata.output_filepath}",
+                fg="green",
+                bold=True,
+            )
         click.echo("Done.")
 
     except click.ClickException as e:

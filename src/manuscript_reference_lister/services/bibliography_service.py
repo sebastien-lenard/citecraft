@@ -1,11 +1,19 @@
 import csv
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from manuscript_reference_lister.schemas import CitationMetadata, WorkMetadata
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ExportResult:
+    total_rows: int
+    output_filepath: Path
+    export_format: str = "CSV"
 
 
 class BibliographyService:
@@ -16,9 +24,9 @@ class BibliographyService:
         citations: list[CitationMetadata],
         works: list[WorkMetadata],
         output_path: Path,
-    ) -> None:
+    ) -> ExportResult:
         """Construct a bibliography by filtering works against citations, determining
-        statuses, sorting, and saving to CSV."""
+        statuses, sorting, saving to CSV, and return export data."""
         works_by_citation: dict[tuple[str, str], list[WorkMetadata]] = {}
         for work in works:
             key = (work.input_first_authors_txt, work.input_year_and_suffix)
@@ -103,3 +111,4 @@ class BibliographyService:
                 "total_rows": len(rows),
             },
         )
+        return ExportResult(total_rows=len(citations), output_filepath=output_path)

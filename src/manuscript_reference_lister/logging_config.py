@@ -30,6 +30,9 @@ class ColorFormatter(logging.Formatter):
     BOLD_RED = "\033[31;1m"
     RESET = "\033[0m"
 
+    # Push cursor to start of line and clear current line on terminal
+    CLEAR_LINE = "\r\033[K"
+
     LEVEL_COLORS = MappingProxyType(
         {
             logging.DEBUG: GREY,
@@ -41,12 +44,12 @@ class ColorFormatter(logging.Formatter):
     )  # immutable wrapper
 
     def format(self, record):
-        """Generates the log string normally, then wraps the entire line with the
-        appropriate level color.
+        """Generates the log string normally, clears the current progress bar line,
+        then wraps the entire log line with the appropriate level color.
         """
         result = super().format(record)
         color = self.LEVEL_COLORS.get(record.levelno, self.RESET)
-        return f"{color}{result}{self.RESET}"
+        return f"{self.CLEAR_LINE}{color}{result}{self.RESET}"
 
 
 def get_safe_log_dir() -> Path:

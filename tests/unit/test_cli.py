@@ -1,4 +1,5 @@
-from unittest.mock import patch
+import logging
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
@@ -26,7 +27,9 @@ def mock_setup_logging():
 
 def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
     """Verify that the CLI exits with 0 on successful execution."""
-    with patch("manuscript_reference_lister.cli.run") as mock_run:
+    with patch(
+        "manuscript_reference_lister.cli.run", return_value=({}, {})
+    ) as mock_run:
         result = runner.invoke(
             cli, ["main", "-f", "manuscript.docx"], obj={"config": test_config}
         )
@@ -38,6 +41,7 @@ def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
             input_text="",
             output_filepath=None,
             config=test_config,
+            progress_callback=ANY,
         )
 
 
@@ -93,7 +97,9 @@ def test_cli_piped_input_handling(runner: CliRunner, test_config: AppConfig) -> 
     correctly to the run function."""
     piped_text = "Some citation (Lenard et al., 2025)"
 
-    with patch("manuscript_reference_lister.cli.run") as mock_run:
+    with patch(
+        "manuscript_reference_lister.cli.run", return_value=({}, {})
+    ) as mock_run:
         result = runner.invoke(
             cli, ["main"], input=piped_text, obj={"config": test_config}
         )
@@ -105,6 +111,7 @@ def test_cli_piped_input_handling(runner: CliRunner, test_config: AppConfig) -> 
             input_text=piped_text,
             output_filepath=None,
             config=test_config,
+            progress_callback=ANY,
         )
 
 
@@ -129,7 +136,14 @@ def test_cli_displays_journal_anomalies_warning_table(
         },
     }
 
-    with patch("manuscript_reference_lister.cli.run", return_value=mock_anomalies):
+    mock_export = MagicMock()
+    mock_export.total_rows = 0
+    mock_export.output_filepath = "/mock/path.csv"
+
+    with patch(
+        "manuscript_reference_lister.cli.run",
+        return_value=(mock_anomalies, mock_export),
+    ):
         result = runner.invoke(
             cli,
             ["main", "-t", "Some text parsing context."],
@@ -156,3 +170,107 @@ def test_cli_displays_journal_anomalies_warning_table(
         assert "1234-5678, 9999-9999" in result.output
         assert "Unknown Fake Journal" in result.output
         assert "Not found" in result.output
+
+
+def test_progress_bar_disabled_in_verbose_mode(runner, test_config):
+    """Check absence of progress bar if verbose option activated."""
+    with (
+        patch("manuscript_reference_lister.cli.run") as mock_run,
+        patch("manuscript_reference_lister.cli.threading.Thread") as mock_thread,
+    ):
+        mock_run.return_value = ({}, {})
+
+        result = runner.invoke(
+            cli,
+            ["main", "-f", "manuscript.docx", "-v"],
+            obj={"config": test_config},
+        )
+
+        assert result.exit_code == 0
+        mock_thread.assert_not_called()
+
+
+def test_progress_bar_nominal_flow(runner, test_config):
+    """Check nominal content of progress bar (0% à 100%)"""
+
+    def mock_run_impl(
+        input_file_path, input_text, output_filepath, config, progress_callback
+    ):
+        from manuscript_reference_lister.core import ProgressStep
+
+        progress_callback(
+            ProgressStep("parsing", 0, 4, "Parsing manuscript...", status="started")
+        )
+        progress_callback(
+            ProgressStep(
+                "references", 4, 4, "Bibliographic references saved", status="completed"
+            )
+        )
+        return {}, {}
+
+    with (
+        patch("manuscript_reference_lister.cli.run", side_effect=mock_run_impl),
+        patch("manuscript_reference_lister.cli.threading.Thread"),
+        patch("time.time", side_effect=[1000.0, 1005.0, 1010.0]),
+    ):
+        result = runner.invoke(
+            cli, ["main", "-f", "manuscript.docx"], obj={"config": test_config}
+        )
+
+        assert result.exit_code == 0
+
+        raw_output = result.output
+
+        assert "\r\033[K" in raw_output or "\r\x1b[K" in raw_output
+
+        assert "Bibliographic references saved" in raw_output
+        assert "100%" in raw_output
+
+
+def test_progress_bar_log_interruption_behavior(runner, test_config):
+    """Check sequence when progress bar interrupted by a log"""
+
+    def mock_run_with_log(
+        input_file_path, input_text, output_filepath, config, progress_callback
+    ):
+        from manuscript_reference_lister.core import ProgressStep
+
+        progress_callback(
+            ProgressStep("parsing", 1, 4, "Step 1...", status="completed")
+        )
+
+        logger = logging.getLogger("manuscript_reference_lister.cli")
+        logger.warning("Missing ISSN detected !")
+        return {}, {}
+
+    with (
+        patch("manuscript_reference_lister.cli.run", side_effect=mock_run_with_log),
+        patch("manuscript_reference_lister.cli.threading.Thread"),
+        patch("time.time", return_value=1000.0),
+    ):
+        result = runner.invoke(
+            cli, ["main", "-f", "manuscript.docx"], obj={"config": test_config}
+        )
+
+        stderr_content = result.output  # Read Click capture
+
+        assert "Missing ISSN detected !" in stderr_content
+
+        # Display normalization if raw encoding replace \033 par \x1b
+        stderr_content = stderr_content.replace("\x1b", "\033")
+        parts = stderr_content.split("\033[K")
+
+        log_sequence_found = False
+        for i, part in enumerate(parts):
+            if "Missing ISSN detected !" in part:
+                assert "\n" in part
+
+                # Following part that contains refreshed bar should display the step
+                next_part = parts[i + 1]
+                assert "Step 1..." in next_part
+                log_sequence_found = True
+                break
+
+        assert log_sequence_found, (
+            "The sequence [Erase -> Log -> Redraw] is not respected."
+        )

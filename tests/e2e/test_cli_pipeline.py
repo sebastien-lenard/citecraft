@@ -42,6 +42,7 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
     isolated_env["LOCAL_REPO_DIR_PATH"] = str(tmp_path / "repo")
     isolated_env["LOG_DIR_PATH"] = str(tmp_path / "log")
     isolated_env["OUTPUT_DIR_PATH"] = str(tmp_path / "output")
+    isolated_env["PYTHONIOENCODING"] = "utf-8"  # Crucial for special icons in logs
 
     result = subprocess.run(
         cmd, capture_output=True, text=True, check=False, env=isolated_env
@@ -77,6 +78,7 @@ def test_stdin_pipeline_execution(tmp_path: Path) -> None:
     isolated_env["LOCAL_REPO_DIR_PATH"] = str(tmp_path / "repo")
     isolated_env["LOG_DIR_PATH"] = str(tmp_path / "log")
     isolated_env["OUTPUT_DIR_PATH"] = str(tmp_path / "output")
+    isolated_env["PYTHONIOENCODING"] = "utf-8"
 
     result = subprocess.run(
         cmd,
