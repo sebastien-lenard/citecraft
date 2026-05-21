@@ -184,6 +184,7 @@ def main(ctx, input_file, text, output_file, verbose):
                     state["current_step"] = step.current
                     draw_line()
 
+            success = False
             try:
                 anomalies, export_metadata = run(
                     input_file_path=input_file,
@@ -192,12 +193,22 @@ def main(ctx, input_file, text, output_file, verbose):
                     config=config,
                     progress_callback=cli_progress_handler,
                 )
+                success = True
             finally:
-                state["current_step"] = state["total_steps"]
-                draw_line()
-
+                # Cut thread to freeze display
                 state["running"] = False
                 ticker_thread.join(timeout=1.0)
+
+                if success:
+                    state["current_step"] = state["total_steps"]
+                    state["message"] = "Completed."
+                    draw_line()
+                    sys.stderr.write("\n")
+                else:
+                    # Crash: force end of line to free the progress bar line before
+                    # traceback print
+                    sys.stderr.write("\n")
+                sys.stderr.flush()
 
                 # Restauration of original handlers for safety
                 root_logger.removeHandler(custom_handler)
@@ -260,7 +271,7 @@ def main(ctx, input_file, text, output_file, verbose):
             "Fatal application crash encountered during execution", exc_info=True
         )
 
-        click.secho(f"\nError: An unexpected error occurred: {e}", fg="red", err=True)
+        click.secho(f"Error: An unexpected error occurred: {e}", fg="red", err=True)
 
         if verbose > 0:
             # If -v or -vv activated, traceback printed

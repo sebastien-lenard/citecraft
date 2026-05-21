@@ -172,7 +172,9 @@ def test_cli_displays_journal_anomalies_warning_table(
         assert "Not found" in result.output
 
 
-def test_progress_bar_disabled_in_verbose_mode(runner, test_config):
+def test_progress_bar_disabled_in_verbose_mode(
+    runner: CliRunner, test_config: AppConfig
+) -> None:
     """Check absence of progress bar if verbose option activated."""
     with (
         patch("manuscript_reference_lister.cli.run") as mock_run,
@@ -190,7 +192,7 @@ def test_progress_bar_disabled_in_verbose_mode(runner, test_config):
         mock_thread.assert_not_called()
 
 
-def test_progress_bar_nominal_flow(runner, test_config):
+def test_progress_bar_nominal_flow(runner: CliRunner, test_config: AppConfig) -> None:
     """Check nominal content of progress bar (0% à 100%)"""
 
     def mock_run_impl(
@@ -227,7 +229,9 @@ def test_progress_bar_nominal_flow(runner, test_config):
         assert "100%" in raw_output
 
 
-def test_progress_bar_log_interruption_behavior(runner, test_config):
+def test_progress_bar_log_interruption_behavior(
+    runner: CliRunner, test_config: AppConfig
+) -> None:
     """Check sequence when progress bar interrupted by a log"""
 
     def mock_run_with_log(
@@ -273,4 +277,28 @@ def test_progress_bar_log_interruption_behavior(runner, test_config):
 
         assert log_sequence_found, (
             "The sequence [Erase -> Log -> Redraw] is not respected."
+        )
+
+
+def test_cli_fatal_error_handling_cleans_progress_bar(
+    runner: CliRunner, test_config: AppConfig
+) -> None:
+    """Check that fatal error triggers clean stop of the progress bar thread and the
+    injection of an end of line to prevent visual collisions on stderr"""
+
+    with patch("manuscript_reference_lister.cli.run") as mock_run:
+        mock_run.side_effect = RuntimeError("Simulated database corruption")
+
+        result = runner.invoke(
+            cli, ["main", "-f", "dummy.docx"], obj={"config": test_config}
+        )
+
+        assert result.exit_code == 1
+        assert (
+            "Error: An unexpected error occurred: Simulated database corruption"
+            in result.stderr
+        )
+
+        assert "\n" in result.stderr, (
+            "Crash did not trigger progress bar line freeing with end of line."
         )
