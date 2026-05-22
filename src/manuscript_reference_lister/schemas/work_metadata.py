@@ -40,3 +40,12 @@ class WorkMetadata(BaseSchema):
             self.input_year_and_suffix,
             self.DOI,
         )
+
+    @property
+    def status(self) -> str:
+        """Status based on the availability of attributes."""
+        if not self.DOI:
+            return "Missing DOI"
+        if not self.reference:
+            return "Missing reference"
+        return "OK"

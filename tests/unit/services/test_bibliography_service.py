@@ -39,17 +39,20 @@ def test_export_to_csv_computes_statuses_and_sorts_correctly(
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
+            DOI="10.1000/xyz.b",
             reference="Lenard Ref B",
         ),
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
+            DOI="10.1000/xyz.a",
             reference="Lenard Ref A",
         ),
         # Single match case for Smith
         WorkMetadata(
             input_first_authors_txt="Smith",
             input_year_and_suffix="2021",
+            DOI="10.1000/smith",
             reference="Smith Ref",
         ),
         # Alpha is intentionally omitted here to simulate a missing Reference/DOI error
@@ -120,11 +123,13 @@ def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
+            DOI="10.1000/ref1",
             reference="Ref 1",
         ),
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
+            DOI="10.1000/ref2",
             reference="Ref 2",
         ),
     ]
@@ -132,12 +137,12 @@ def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
     biblio_service = BibliographyService(config=test_config)
     result = biblio_service.export_to_csv(citations, works, output_csv)
 
-    # 1. Validation stricte du type de retour
+    # Validation of return type
     assert result.total_rows == 2
     assert result.output_filepath == output_csv
     assert result.export_format == "CSV"
 
-    # 2. Validation de la tuyauterie des logs (niveaux et contenu ciblé)
+    # Log validation
     log_messages = [record.message for record in caplog.records]
     log_levels = [record.levelname for record in caplog.records]
 
@@ -165,6 +170,7 @@ def test_export_to_csv_strips_only_preserved_tags(
         WorkMetadata(
             input_first_authors_txt="Test",
             input_year_and_suffix="2026",
+            DOI="10.1000/tags-test",
             reference=(
                 "Analysis of CO<sub>2</sub> within <unsupported-tag>text"
                 "</unsupported-tag>."
@@ -182,3 +188,49 @@ def test_export_to_csv_strips_only_preserved_tags(
         "Analysis of CO2 within <unsupported-tag>text</unsupported-tag>."
     )
     assert rows[0]["Reference"] == expected_reference
+
+
+def test_export_to_csv_excludes_invalid_work_records(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, test_config: AppConfig
+) -> None:
+    """Verify that works missing either a DOI or a reference are excluded from matching
+    and trigger the appropriate warning statuses and console logs.
+    """
+    caplog.set_level(logging.WARNING)
+    output_csv = tmp_path / "output.csv"
+
+    citations = [
+        CitationMetadata(first_authors_txt="MissingDOI", year_and_suffix="2024"),
+        CitationMetadata(first_authors_txt="MissingRef", year_and_suffix="2025"),
+    ]
+
+    works = [
+        # 1. Work exists locally but has no DOI
+        WorkMetadata(
+            input_first_authors_txt="MissingDOI",
+            input_year_and_suffix="2024",
+            DOI=None,
+            reference="Some orphan reference string",
+        ),
+        # 2. Work exists locally but has no reference text
+        WorkMetadata(
+            input_first_authors_txt="MissingRef",
+            input_year_and_suffix="2025",
+            DOI="10.1016/j.isprsjprs.2025.101",
+            reference=None,
+        ),
+    ]
+
+    biblio_service = BibliographyService(config=test_config)
+    biblio_service.export_to_csv(citations, works, output_csv)
+
+    assert any("MissingDOI, 2024" in r.message for r in caplog.records)
+    assert any("MissingRef, 2025" in r.message for r in caplog.records)
+
+    with open(output_csv, encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+
+    assert len(rows) == 2
+    for row in rows:
+        assert row["Status"] == "Warning: No doi or reference found for the citation"
+        assert row["Reference"] == ""

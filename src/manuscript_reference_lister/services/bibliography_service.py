@@ -36,12 +36,13 @@ class BibliographyService:
         works: list[WorkMetadata],
         output_path: Path,
     ) -> ExportResult:
-        """Construct a bibliography by filtering works against citations, determining
-        statuses, sorting, saving to CSV, and return export data."""
+        """Construct a bibliography by filtering valid works against citations,
+        determining statuses, sorting, saving to CSV, and return export data."""
         works_by_citation: dict[tuple[str, str], list[WorkMetadata]] = {}
         for work in works:
-            key = (work.input_first_authors_txt, work.input_year_and_suffix)
-            works_by_citation.setdefault(key, []).append(work)
+            if work.status == "OK":
+                key = (work.input_first_authors_txt, work.input_year_and_suffix)
+                works_by_citation.setdefault(key, []).append(work)
 
         unique_citations = {
             (c.first_authors_txt, c.year_and_suffix): c for c in citations

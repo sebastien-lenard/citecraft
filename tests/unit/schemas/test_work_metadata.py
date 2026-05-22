@@ -1,3 +1,5 @@
+import pytest
+
 from manuscript_reference_lister.schemas.work_metadata import WorkMetadata
 
 
@@ -91,3 +93,26 @@ def test_work_metadata_doi_normalization():
 
     assert work.DOI == "10.1038/nature123"
     assert work.identity_key[2] == "10.1038/nature123"
+
+
+@pytest.mark.parametrize(
+    "doi, reference, expected_status",
+    [
+        ("10.1038/s41561-020-0585-2", "Lenard, S. J. P. (2020)...", "OK"),
+        (None, "Lenard, S. J. P. (2020)...", "Missing DOI"),
+        ("10.1038/s41561-020-0585-2", None, "Missing reference"),
+        (None, None, "Missing DOI"),
+    ],
+)
+def test_work_metadata_status_property(
+    doi: str | None, reference: str | None, expected_status: str
+) -> None:
+    """Verify that the status property correctly evaluates the validity of a
+    WorkMetadata record."""
+    work = WorkMetadata(
+        input_first_authors_txt="Lenard et al.",
+        input_year_and_suffix="2020",
+        DOI=doi,
+        reference=reference,
+    )
+    assert work.status == expected_status
