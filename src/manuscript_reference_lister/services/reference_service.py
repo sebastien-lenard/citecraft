@@ -4,12 +4,22 @@ import time
 from manuscript_reference_lister.parsers import HtmlCleaner
 from manuscript_reference_lister.repositories import DoiRepository
 from manuscript_reference_lister.schemas import WorkMetadata
+from manuscript_reference_lister.utils import (
+    AppConfig,
+    get_config,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class ReferenceService:
     """Coordinates metadata enrichment."""
+
+    def __init__(
+        self,
+        config: AppConfig | None = None,
+    ):
+        self.config = config or get_config()
 
     @staticmethod
     def _log_heartbeat_if_needed(processed: int, total: int, last_time: float) -> float:
@@ -31,9 +41,8 @@ class ReferenceService:
             return current_time
         return last_time
 
-    @staticmethod
     def fill_missing_references(
-        records: list[WorkMetadata], doi_repo: DoiRepository, target_style: str
+        self, records: list[WorkMetadata], doi_repo: DoiRepository, target_style: str
     ) -> None:
         """
         Enriches WorkMetadata records with formatted references.
@@ -42,6 +51,7 @@ class ReferenceService:
         Note: If doi_repo.get_reference raises an exception, the execution
         will stop to ensure the error is handled and analyzed.
         """
+        html_cleaner = HtmlCleaner(config=self.config)
         records_to_process = [
             r
             for r in records
@@ -63,7 +73,7 @@ class ReferenceService:
             # No try/except: let HTTPError or ConnectionError bubble up
             raw_reference = doi_repo.get_reference(record.DOI, style=target_style)
 
-            cleaned_reference = HtmlCleaner.clean_to_plain_text(raw_reference)
+            cleaned_reference = html_cleaner.clean_to_plain_text(raw_reference)
 
             record.reference = cleaned_reference
             record.raw_reference = raw_reference

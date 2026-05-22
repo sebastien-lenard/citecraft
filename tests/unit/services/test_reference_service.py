@@ -4,6 +4,7 @@ import pytest
 
 from manuscript_reference_lister.schemas import WorkMetadata
 from manuscript_reference_lister.services.reference_service import ReferenceService
+from manuscript_reference_lister.utils import get_config
 
 
 @pytest.fixture
@@ -13,7 +14,13 @@ def mock_doi_repo():
     return repo
 
 
-def test_fill_missing_references_success(mock_doi_repo):
+@pytest.fixture
+def test_config():
+    """Provides a safe copy of the application configuration for isolation."""
+    return get_config().model_copy()
+
+
+def test_fill_missing_references_success(mock_doi_repo, test_config):
     """Verify that records are updated correctly on success."""
     records = [
         WorkMetadata(
@@ -38,7 +45,10 @@ def test_fill_missing_references_success(mock_doi_repo):
         ),
     ]
 
-    ReferenceService.fill_missing_references(records, mock_doi_repo, target_style="apa")
+    reference_service = ReferenceService(config=test_config)
+    reference_service.fill_missing_references(
+        records, mock_doi_repo, target_style="apa"
+    )
 
     assert records[0].reference == "Formatted Author (2020). Title..."
     assert records[1].style == "apa"
@@ -46,7 +56,7 @@ def test_fill_missing_references_success(mock_doi_repo):
     assert mock_doi_repo.get_reference.call_count == 2
 
 
-def test_fill_missing_references_raises_on_api_error(mock_doi_repo):
+def test_fill_missing_references_raises_on_api_error(mock_doi_repo, test_config):
     """Verify that an exception in the repository stops the service."""
     # Simulate an API failure (e.g., 500 Server Error)
     mock_doi_repo.get_reference.side_effect = Exception("API Connection Failed")
@@ -59,10 +69,11 @@ def test_fill_missing_references_raises_on_api_error(mock_doi_repo):
             reference=None,
         )
     ]
+    reference_service = ReferenceService(config=test_config)
 
     # The service should NOT catch the exception; it should bubble up to core.py
     with pytest.raises(Exception) as excinfo:
-        ReferenceService.fill_missing_references(
+        reference_service.fill_missing_references(
             records, mock_doi_repo, target_style="apa"
         )
 

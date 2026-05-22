@@ -74,6 +74,12 @@ class AppConfig(BaseSettings):
         ]
     )
 
+    # HTML Cleaning Configuration
+    # Structural tags to explicitly preserve in the local repository
+    preserved_html_tags: set[str] = Field(default={"sup", "sub"})
+    # Styling tags whose inner text is kept but boundaries are discarded
+    discarded_html_tags: set[str] = Field(default={"i", "b", "strong", "u", "small"})
+
     def ensure_repo_directory(self) -> None:
         """Create local repo directory."""
         self.local_repo_dir_path.mkdir(parents=True, exist_ok=True)

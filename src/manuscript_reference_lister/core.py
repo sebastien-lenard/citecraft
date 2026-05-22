@@ -129,8 +129,8 @@ def run(
             )
         )
     doi_repo = DoiRepository(config=config)
-
-    ReferenceService.fill_missing_references(
+    reference_service = ReferenceService(config=config)
+    reference_service.fill_missing_references(
         records=work_repo.records,
         doi_repo=doi_repo,
         target_style=style_repo.favored_style,

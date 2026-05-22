@@ -2,17 +2,18 @@ import html
 import re
 from html.parser import HTMLParser
 
+from manuscript_reference_lister.utils.config import AppConfig, get_config
+
 
 class HtmlCleaner(HTMLParser):
     """Parses and sanitizes HTML-polluted text."""
 
-    def __init__(self) -> None:
+    def __init__(self, config: AppConfig | None = None) -> None:
         super().__init__()
-        # Structural tags to explicitly preserve in the final output record
-        self._preserved_tags = {"sup", "sub"}
-        # Styling tags whose inner text is kept but boundaries are discarded
-        self._discarded_tags = {"i", "b", "strong", "u", "small"}
+        self._config = config or get_config()
 
+        self._preserved_tags = self._config.preserved_html_tags
+        self._discarded_tags = self._config.discarded_html_tags
         self._result_parts: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -36,8 +37,7 @@ class HtmlCleaner(HTMLParser):
         resolved = html.unescape(f"&{name};")
         self._result_parts.append(resolved)
 
-    @classmethod
-    def clean_to_plain_text(cls, raw_reference: str) -> str:
+    def clean_to_plain_text(self, raw_reference: str) -> str:
         """Transform an HTML-polluted reference into formatted plain text.
         Extracts text, strips generic styling tags, preserves structural
         sub/superscripts, converts HTML entities back to UTF-8 characters, and
@@ -46,18 +46,19 @@ class HtmlCleaner(HTMLParser):
         if not raw_reference:
             return ""
 
-        # Step 1: Parse the HTML structure and filter tags
-        parser = cls()
-        parser.feed(raw_reference)
-        parsed_str = "".join(parser._result_parts)
+        # Buffer reset
+        self._result_parts = []
+        self.feed(raw_reference)
+        parsed_str = "".join(self._result_parts)
 
-        # Step 2: Normalize all spaces and newlines
+        # Normalize all spaces and newlines
         # This converts any sequence of tabs, newlines (\n), and spaces into one single standard space.
         parsed_str = re.sub(r"\s+", " ", parsed_str)
 
-        # Step 3: Collapse internal tag spacing (e.g., "<sub>  w  </sub>" -> "<sub>w</sub>")
-        # Since Step 2 reduced everything to single spaces, we only need to handle a single optional space.
-        parsed_str = re.sub(r"<(sup|sub)>\s?", r"<\1>", parsed_str)
-        parsed_str = re.sub(r"\s?</(sup|sub)>", r"</\1>", parsed_str)
+        # Collapse remaining internal tag spacing
+        if self._preserved_tags:
+            tags_pattern = "|".join(map(re.escape, self._preserved_tags))
+            parsed_str = re.sub(f"<({tags_pattern})>\\s?", r"<\1>", parsed_str)
+            parsed_str = re.sub(f"\\s?</({tags_pattern})>", r"</\1>", parsed_str)
 
         return parsed_str.strip()
