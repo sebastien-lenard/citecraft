@@ -4,23 +4,25 @@ import pytest
 
 from manuscript_reference_lister.schemas import WorkMetadata
 from manuscript_reference_lister.services.reference_service import ReferenceService
-from manuscript_reference_lister.utils import get_config
+from manuscript_reference_lister.utils import AppConfig, get_config
 
 
 @pytest.fixture
-def mock_doi_repo():
+def mock_doi_repo() -> MagicMock:
     repo = MagicMock()
     repo.get_reference.return_value = "Formatted Author (2020). Title..."
     return repo
 
 
 @pytest.fixture
-def test_config():
+def test_config() -> AppConfig:
     """Provides a safe copy of the application configuration for isolation."""
     return get_config().model_copy()
 
 
-def test_fill_missing_references_success(mock_doi_repo, test_config):
+def test_fill_missing_references_success(
+    mock_doi_repo: MagicMock, test_config: AppConfig
+) -> None:
     """Verify that records are updated correctly on success."""
     records = [
         WorkMetadata(
@@ -56,7 +58,9 @@ def test_fill_missing_references_success(mock_doi_repo, test_config):
     assert mock_doi_repo.get_reference.call_count == 2
 
 
-def test_fill_missing_references_raises_on_api_error(mock_doi_repo, test_config):
+def test_fill_missing_references_raises_on_api_error(
+    mock_doi_repo: MagicMock, test_config: AppConfig
+) -> None:
     """Verify that an exception in the repository stops the service."""
     # Simulate an API failure (e.g., 500 Server Error)
     mock_doi_repo.get_reference.side_effect = Exception("API Connection Failed")
