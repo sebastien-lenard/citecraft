@@ -52,6 +52,16 @@ Run the tool using the uv run prefix.
 # Control log verbosity (-v for INFO, -vv for DEBUG):
 ```uv run references-lister -f "C:\Documents\manuscript.docx" -v```
 
+# Clear cache (local repository)
+Clear cache and process a manuscript:
+```uv run references-lister -f "C:\Documents\manuscript.docx" --clear-cache```
+
+Clear cache (maintenance only)
+```uv run references-lister --clear-cache```
+
+The tool will display a confirmation message.
+
+
 # Pipe source directly
 ```echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run references-lister```
 

@@ -4,6 +4,8 @@ import sys
 import threading
 import time
 import traceback
+from datetime import datetime
+from pathlib import Path
 
 import click
 
@@ -15,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class QueueHandler(logging.Handler):
-    """Handler that interceps logs to insert them above active progress bar.
+    """Handler that intercepts logs to insert them above active progress bar.
     Keeps the bar visible and animated."""
 
     def __init__(self, draw_callback):
@@ -75,7 +77,15 @@ def cli(ctx):
 @click.option(
     "-v", "--verbose", count=True, help="Increase verbosity (-v (INFO), -vv (DEBUG))"
 )
-def main(ctx, input_file, text, output_file, style, verbose):
+@click.option(
+    "--clear-cache",
+    is_flag=True,
+    help=(
+        "Safely archive local JSON cache repository files (journals and works) by"
+        " renaming them."
+    ),
+)
+def main(ctx, input_file, text, output_file, style, verbose, clear_cache):
     """\b
     CLI entry point.
     Examples:
@@ -89,6 +99,9 @@ def main(ctx, input_file, text, output_file, style, verbose):
         # Pipe source directly
         $ echo "Voila (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | \
             uv run python -m manuscript_reference_lister
+        
+        # Clear the local cache safely
+        $ uv run python -m manuscript_reference_lister --clear-cache
     """
     # Force console to replace caracters that can't be encoded rather than throw fatal
     if sys.platform == "win32":
@@ -102,15 +115,96 @@ def main(ctx, input_file, text, output_file, style, verbose):
     logger.debug("Current working directory: %s", os.getcwd())
     logger.debug("Logs are being written to: %s", log_dir)
 
-    if not text and not sys.stdin.isatty():
-        # Read piped text with literal "\n" and "\r" converted into newline/CR bytes
-        text = sys.stdin.read().strip().encode("utf-8").decode("unicode_escape")
-        text = text.replace("\r", "")
+    cache_summary_message = None
 
     try:
         config = (ctx.obj or {}).get("config") or get_config()
         config.ensure_repo_directory()
 
+        # --- CACHE CLEARING PROCESS ---
+        if clear_cache:
+            click.echo("")
+            click.secho(
+                "⚠️  Warning: You are about to clear the local cache.",
+                fg="yellow",
+                bold=True,
+            )
+            click.echo(
+                "This will archive your existing journal and work local repositories,"
+                " forcing fresh remote API lookups."
+            )
+
+            if not click.confirm("Do you want to proceed?", default=False):
+                click.echo("Operation cancelled. Cache left untouched.")
+                sys.exit(0)
+
+            # Define cache files from configuration paths
+            # (Assuming standard config structure targets: repo_dir / journals.json
+            # and repo_dir / work_records.json)
+            repo_path = Path(config.local_repo_dir_path)
+            cache_files = [
+                repo_path / "journal_records.json",  # Local journal database
+                repo_path / "work_records.json",  # Local works repository
+            ]
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            moved_count = 0
+
+            for cache_file in cache_files:
+                if cache_file.exists():
+                    backup_name = f"{cache_file.name}.bak_{timestamp}"
+                    backup_path = cache_file.with_name(backup_name)
+                    try:
+                        cache_file.rename(backup_path)
+                        click.echo(f"Moved: {cache_file.name} -> {backup_name}")
+                        logger.info(
+                            "Cache file archived: %s to %s",
+                            cache_file.name,
+                            backup_name,
+                        )
+                        moved_count += 1
+                    except Exception as e:
+                        logger.error(
+                            "Failed to archive cache file %s: %s", cache_file.name, e
+                        )
+                        click.secho(
+                            f"Error archiving {cache_file.name}: {e}",
+                            fg="red",
+                            err=True,
+                        )
+                else:
+                    click.secho(
+                        f"⚠️  Warning: Expected cache file '{cache_file.name}' was not"
+                        f" found. Skipping.",
+                        fg="yellow",
+                    )
+                    logger.warning(
+                        "Cache file not found for clearing: %s", cache_file.name
+                    )
+
+            if moved_count > 0:
+                cache_summary_message = (
+                    f"🧹 Local cache cleared ({moved_count} file"
+                    "(s) safely archived with suffix '.bak_{timestamp}')."
+                )
+            else:
+                cache_summary_message = "ℹ️  No active cache files were found to clear."
+
+            click.echo("")
+            click.secho(cache_summary_message, fg="green", bold=True)
+            has_piped_input = not sys.stdin.isatty()
+            if not input_file and not text and not has_piped_input:
+                click.echo("No manuscript or text provided for processing.")
+                click.echo("Done.")
+                sys.exit(0)
+
+            click.echo("Proceeding to manuscript processing with a fresh cache...\n")
+
+        # --- STANDARD MANUSCRIPT PROCESSING ---
+        if not text and not sys.stdin.isatty():
+            # Read piped text with literal "\n" and "\r" converted into newline/CR bytes
+            text = sys.stdin.read().strip().encode("utf-8").decode("unicode_escape")
+            text = text.replace("\r", "")
         style = style if style else config.default_reference_style
 
         anomalies = {}
@@ -238,6 +332,10 @@ def main(ctx, input_file, text, output_file, style, verbose):
                 progress_callback=None,
             )
 
+        if cache_summary_message:
+            click.echo("")
+            click.secho(cache_summary_message, fg="green", bold=True)
+
         if anomalies:
             click.echo("")
             click.secho(
@@ -286,6 +384,11 @@ def main(ctx, input_file, text, output_file, style, verbose):
             "Fatal application crash encountered during execution", exc_info=True
         )
 
+        if cache_summary_message:
+            click.echo("")
+            click.secho(cache_summary_message, fg="green", bold=True)
+
+        click.echo("")
         click.secho(f"Error: An unexpected error occurred: {e}", fg="red", err=True)
 
         if verbose > 0:

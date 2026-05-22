@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
@@ -17,6 +18,22 @@ def test_config() -> AppConfig:
     config.default_reference_style = "apa"
     config.ensure_repo_directory = MagicMock()
     return config
+
+
+@pytest.fixture
+def fake_cache_env(test_config: AppConfig, tmp_path: Path) -> tuple[Path, list[Path]]:
+    """Create temporary local repository files."""
+    repo_dir = tmp_path / "mock_repo"
+    repo_dir.mkdir()
+
+    test_config.local_repo_dir_path = str(repo_dir)
+
+    cache_files = [repo_dir / "journal_records.json", repo_dir / "work_records.json"]
+
+    for file in cache_files:
+        file.write_text('{"test": "data"}', encoding="utf-8")
+
+    return repo_dir, cache_files
 
 
 @pytest.fixture
@@ -351,3 +368,142 @@ def test_cli_fatal_error_handling_cleans_progress_bar(
         assert "\n" in (result.stderr or result.output), (
             "Crash did not trigger progress bar line freeing with end of line."
         )
+
+
+def test_cli_clear_cache_option_absent_does_not_touch_files(
+    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+) -> None:
+    """Checks that without option --clear-cache, files are untouched."""
+    _, cache_files = fake_cache_env
+
+    with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
+        result = runner.invoke(
+            cli, ["main", "-f", "manuscript.docx"], obj={"config": test_config}
+        )
+
+    assert result.exit_code == 0
+    for file in cache_files:
+        assert file.exists()
+        assert "bak_" not in result.output
+
+
+def test_cli_clear_cache_cancelled_by_user(
+    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+) -> None:
+    """Checks clear cache operation stops on user refusal."""
+    _, cache_files = fake_cache_env
+
+    result = runner.invoke(
+        cli, ["main", "--clear-cache"], input="n\n", obj={"config": test_config}
+    )
+
+    assert result.exit_code == 0
+    assert "Operation cancelled. Cache left untouched." in result.output
+
+    for file in cache_files:
+        assert file.exists()
+
+
+def test_cli_clear_cache_maintenance_only_success(
+    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+) -> None:
+    """Check maintenance mode: clear cache without handling manuscript/document."""
+    repo_dir, cache_files = fake_cache_env
+
+    with patch("manuscript_reference_lister.cli.run") as mock_run:
+        mock_run.return_value = ({}, {})
+
+        result = runner.invoke(
+            cli, ["main", "--clear-cache"], input="y\n", obj={"config": test_config}
+        )
+
+    assert result.exit_code == 0
+    assert "Local cache cleared" in result.output
+    assert "Done." in result.output
+
+    for file in cache_files:
+        assert not file.exists()
+
+    backups = list(repo_dir.glob("*.bak_*"))
+    assert len(backups) == 2
+
+
+def test_cli_clear_cache_then_proceeds_to_run(
+    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+) -> None:
+    """Check cache clearing followed by processing if input document present."""
+    repo_dir, cache_files = fake_cache_env
+
+    with patch(
+        "manuscript_reference_lister.cli.run", return_value=({}, {})
+    ) as mock_run:
+        result = runner.invoke(
+            cli,
+            ["main", "-f", "manuscript.docx", "--clear-cache"],
+            input="y\n",
+            obj={"config": test_config},
+        )
+
+    assert result.exit_code == 0
+    assert "Local cache cleared" in result.output
+    assert "Proceeding to manuscript processing with a fresh cache..." in result.output
+    assert "Done." in result.output
+
+    for file in cache_files:
+        assert not file.exists()
+    assert len(list(repo_dir.glob("*.bak_*"))) == 2
+
+    mock_run.assert_called_once()
+
+
+def test_cli_clear_cache_summary_displayed_at_the_very_end(
+    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+) -> None:
+    """Check presence of cache clearing synthetic message after processing."""
+    _, _ = fake_cache_env
+
+    with patch(
+        "manuscript_reference_lister.cli.run", return_value=({}, {})
+    ) as mock_run:
+        result = runner.invoke(
+            cli,
+            ["main", "-f", "manuscript.docx", "--clear-cache"],
+            input="y\n",
+            obj={"config": test_config},
+        )
+
+    assert result.exit_code == 0
+    mock_run.assert_called_once()
+
+    lines = [line.strip() for line in result.output.splitlines() if line.strip()]
+
+    assert any("🧹 Local cache cleared" in line for line in lines)
+
+    # Check structure of the end of the output to ensure message hasn't been
+    # erased/hidden
+    assert "Done." in lines[-1]
+
+
+def test_cli_clear_cache_partial_files_shows_warning(
+    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+) -> None:
+    """Check that a warning is displayed if one of the expected cache files is missing."""
+    _, cache_files = fake_cache_env
+
+    missing_file = cache_files[0]
+    missing_file.unlink()
+
+    with patch("manuscript_reference_lister.cli.run") as mock_run:
+        mock_run.return_value = ({}, {})
+
+        result = runner.invoke(
+            cli, ["main", "--clear-cache"], input="y\n", obj={"config": test_config}
+        )
+
+    assert result.exit_code == 0
+    assert (
+        f"Warning: Expected cache file '{missing_file.name}' was not found"
+        in result.output
+    )
+    assert "Moved: work_records.json" in result.output
+    assert "Local cache cleared (1 file(s) safely archived" in result.output
