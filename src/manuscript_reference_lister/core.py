@@ -155,7 +155,8 @@ def run(
         output_filepath = Path(output_filepath)
         output_filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    export_result = BibliographyService.export_to_csv(
+    bibliography_service = BibliographyService(config=config)
+    export_result = bibliography_service.export_to_csv(
         citations=citations, works=work_repo.records, output_path=output_filepath
     )
 

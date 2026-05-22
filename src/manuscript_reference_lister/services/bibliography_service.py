@@ -1,10 +1,15 @@
 import csv
 import logging
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from manuscript_reference_lister.schemas import CitationMetadata, WorkMetadata
+from manuscript_reference_lister.utils import (
+    AppConfig,
+    get_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +24,14 @@ class ExportResult:
 class BibliographyService:
     """Handles bibliographies."""
 
-    @staticmethod
+    def __init__(
+        self,
+        config: AppConfig | None = None,
+    ):
+        self.config = config or get_config()
+
     def export_to_csv(
+        self,
         citations: list[CitationMetadata],
         works: list[WorkMetadata],
         output_path: Path,
@@ -38,6 +49,13 @@ class BibliographyService:
 
         rows: list[dict[str, Any]] = []
 
+        if self.config.preserved_html_tags:
+            tags_pattern = "|".join(
+                re.escape(tag) for tag in self.config.preserved_html_tags
+            )
+            preserved_tags_regex = re.compile(rf"<(/)?({tags_pattern})(?:>|\s[^>]*>)")
+        else:
+            preserved_tags_regex = None
         for cite in unique_citations:
             citation_str = f"{cite.first_authors_txt}, {cite.year_and_suffix}"
             key = (cite.first_authors_txt, cite.year_and_suffix)
@@ -78,11 +96,15 @@ class BibliographyService:
                 status = "OK"
 
             for work in matched_works:
+                cleaned_ref = work.reference
+                if cleaned_ref and preserved_tags_regex:
+                    cleaned_ref = preserved_tags_regex.sub("", cleaned_ref)
+
                 rows.append(
                     {
                         "Citation": citation_str,
                         "Status": status,
-                        "Reference": work.reference,
+                        "Reference": cleaned_ref,
                     }
                 )
 
