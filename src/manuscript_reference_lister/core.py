@@ -109,7 +109,7 @@ def run(
     work_repo = WorkRepository(config=config)
     work_repo.load_all()
     work_repo.merge_new_works(citations)
-    ISSNs = list({j.ISSN for j in journal_repo.records if j.ISSN is not None})
+    ISSNs = journal_repo.get_unique_issns_for_titles(journal_required_titles)
     work_repo.update_all(ISSNs=ISSNs)
     if progress_callback:
         progress_callback(

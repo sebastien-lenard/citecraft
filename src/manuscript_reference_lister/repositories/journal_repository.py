@@ -65,6 +65,26 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             )
         )
 
+    def get_unique_issns_for_titles(self, titles: list[str]) -> list[str]:
+        """Extract a consolidated list of unique, non-null ISSNs for a batch of titles.
+        Utilizes the internal title normalization to ensure robust matching against
+        the cached records.
+        """
+        if not titles:
+            return []
+
+        # Normalize and put in a set (O(1) search)
+        required_normalized = {self._normalize_title(t) for t in titles if t}
+
+        # Cache filter (O(N))
+        unique_issns: set[str] = set()
+        for record in self.records:
+            if record.ISSN:
+                if self._normalize_title(record.input_title) in required_normalized:
+                    unique_issns.add(record.ISSN)
+
+        return sorted(list(unique_issns))
+
     def get_journal_metadata(self, input_title: str) -> list[JournalMetadata]:
         """
         Get journal metadata filtered on the exact match or similar matches of the title

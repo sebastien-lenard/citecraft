@@ -274,6 +274,51 @@ def test_get_issns_by_input_title(repo: JournalRepository) -> None:
     assert repo.get_issns_by_input_title("Non Existent") == []
 
 
+def test_get_unique_issns_for_titles(repo: JournalRepository) -> None:
+    """Verify that get_unique_issns_for_titles extracts unique sorted ISSNs
+    for a batch of titles, using a simple normalization check to ensure
+    case and punctuation resilience.
+    """
+    repo.records = [
+        JournalMetadata(
+            input_title="Nature Geoscience",
+            ISSN="1752-0894",
+            start_year=2008,
+            end_year=2026,
+        ),
+        JournalMetadata(
+            input_title="Nature Geoscience",
+            ISSN="1752-0908",
+            start_year=2008,
+            end_year=2026,
+        ),
+        JournalMetadata(
+            input_title="Journal of Climate",
+            ISSN="1111-1111",
+            start_year=2000,
+            end_year=2010,
+        ),
+        JournalMetadata(
+            input_title="Remote Sensing",
+            ISSN=None,  # Should be ignored
+        ),
+    ]
+
+    # Validation of unicity and sort
+    requested = ["Nature Geoscience", "Journal of Climate"]
+    issns = repo.get_unique_issns_for_titles(requested)
+    assert issns == ["1111-1111", "1752-0894", "1752-0908"]
+
+    # Minimal check of normalization
+    dirty_requested = ["  nature-geoscience  "]
+    issns_dirty = repo.get_unique_issns_for_titles(dirty_requested)
+    assert issns_dirty == ["1752-0894", "1752-0908"]
+
+    # Boundaries
+    assert repo.get_unique_issns_for_titles([]) == []
+    assert repo.get_unique_issns_for_titles(["Unknown Journal"]) == []
+
+
 @pytest.mark.parametrize(
     "order, expected_year",
     [
