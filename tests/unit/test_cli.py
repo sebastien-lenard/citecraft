@@ -70,6 +70,8 @@ def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
             config=test_config,
             style="apa",
             progress_callback=ANY,
+            skip_journal_update=False,
+            skip_work_update=False,
         )
 
 
@@ -143,6 +145,8 @@ def test_cli_piped_input_default_style(
             config=test_config,
             style="apa",
             progress_callback=ANY,
+            skip_journal_update=False,
+            skip_work_update=False,
         )
 
 
@@ -177,7 +181,48 @@ def test_cli_custom_style_and_output_options(
             config=test_config,
             style="copernicus-publications",
             progress_callback=ANY,
+            skip_journal_update=False,
+            skip_work_update=False,
         )
+
+
+def test_cli_skip_update_flags_propagate(
+    runner: CliRunner, test_config: AppConfig
+) -> None:
+    """Verify that both --skip-journal-update and --skip-work-update flags
+    correctly propagate their values to the core.run function and display
+    the summary of skipped steps in the output.
+    """
+    with patch(
+        "manuscript_reference_lister.cli.run", return_value=({}, {})
+    ) as mock_run:
+        result = runner.invoke(
+            cli,
+            [
+                "main",
+                "-f",
+                "doc.docx",
+                "--skip-journal-update",
+                "--skip-work-update",
+            ],
+            obj={"config": test_config},
+        )
+
+        assert result.exit_code == 0
+        mock_run.assert_called_once_with(
+            input_file_path="doc.docx",
+            input_text="",
+            output_filepath=None,
+            config=test_config,
+            style="apa",
+            progress_callback=ANY,
+            skip_journal_update=True,
+            skip_work_update=True,
+        )
+
+        assert "ℹ️  Pipeline Skips:" in result.output
+        assert "- Journal metadata update was skipped." in result.output
+        assert "- Work DOI search and update was skipped" in result.output
 
 
 def test_cli_displays_journal_anomalies_warning_table(
@@ -261,7 +306,14 @@ def test_progress_bar_nominal_flow(runner: CliRunner, test_config: AppConfig) ->
     """Check nominal content of progress bar (0% à 100%)"""
 
     def mock_run_impl(
-        input_file_path, input_text, output_filepath, config, style, progress_callback
+        input_file_path,
+        input_text,
+        output_filepath,
+        config,
+        style,
+        progress_callback,
+        skip_journal_update,
+        skip_work_update,
     ):
         from manuscript_reference_lister.core import ProgressStep
 
@@ -300,7 +352,14 @@ def test_progress_bar_log_interruption_behavior(
     """Check sequence when progress bar interrupted by a log."""
 
     def mock_run_with_log(
-        input_file_path, input_text, output_filepath, config, style, progress_callback
+        input_file_path,
+        input_text,
+        output_filepath,
+        config,
+        style,
+        progress_callback,
+        skip_journal_update,
+        skip_work_update,
     ):
         from manuscript_reference_lister.core import ProgressStep
 

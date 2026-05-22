@@ -69,7 +69,8 @@ The tool will display a confirmation message.
 * `-f` : Path to the `.docx` manuscript to parse.
 * `-o` : Path to the output CSV file. Contains the parsed citations, Crossref/DOI lookup status, and formatted references. *(Default: `OUTPUT_DIR_PATH / "manuscript_references.csv"` if omitted)*.
 * `-s` : Style identifier recognized by [citation.doi.org](https://citation.doi.org/). *(Default: `apa` if omitted)*.
-
+* `--skip-journal-update` : Skips the remote Crossref API lookup for journal metadata and ISSNs. New journal titles are still registered locally, but without fetching remote metadata. Useful to bypass API latency when no new journals have been added to the manuscript.
+* `--skip-work-update` : Skips the remote Crossref API lookup for work DOIs. Existing local records are processed normally, but no network calls are made to fetch missing DOIs. Useful to speed up re-runs when no new citations have been added to the manuscript.
 
 
 # Run tests

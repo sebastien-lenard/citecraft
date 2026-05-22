@@ -75,6 +75,16 @@ def cli(ctx):
     ),
 )
 @click.option(
+    "--skip-journal-update",
+    is_flag=True,
+    help="Skip fetching updates for journal records from the remote API.",
+)
+@click.option(
+    "--skip-work-update",
+    is_flag=True,
+    help="Skip fetching and updating work records from remote API.",
+)
+@click.option(
     "-v", "--verbose", count=True, help="Increase verbosity (-v (INFO), -vv (DEBUG))"
 )
 @click.option(
@@ -85,7 +95,17 @@ def cli(ctx):
         " renaming them."
     ),
 )
-def main(ctx, input_file, text, output_file, style, verbose, clear_cache):
+def main(
+    ctx,
+    input_file,
+    text,
+    output_file,
+    style,
+    skip_journal_update,
+    skip_work_update,
+    verbose,
+    clear_cache,
+):
     """\b
     CLI entry point.
     Examples:
@@ -300,6 +320,8 @@ def main(ctx, input_file, text, output_file, style, verbose, clear_cache):
                     config=config,
                     style=style,
                     progress_callback=cli_progress_handler,
+                    skip_journal_update=skip_journal_update,
+                    skip_work_update=skip_work_update,
                 )
                 success = True
             finally:
@@ -330,12 +352,21 @@ def main(ctx, input_file, text, output_file, style, verbose, clear_cache):
                 config=config,
                 style=style,
                 progress_callback=None,
+                skip_journal_update=skip_journal_update,
+                skip_work_update=skip_work_update,
             )
 
         if cache_summary_message:
             click.echo("")
             click.secho(cache_summary_message, fg="green", bold=True)
 
+        if skip_journal_update or skip_work_update:
+            click.echo("")
+            click.echo("ℹ️  Pipeline Skips:")
+            if skip_journal_update:
+                click.echo("   - Journal metadata update was skipped.")
+            if skip_work_update:
+                click.echo("   - Work DOI search and update was skipped.")
         if anomalies:
             click.echo("")
             click.secho(
