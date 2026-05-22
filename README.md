@@ -47,16 +47,25 @@ The application uses environment variables for path management and API settings.
 Run the tool using the uv run prefix.
 
 # Process a manuscript file and specify the output path
-```uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv```
-If -o is omitted, the tool defaults to: OUTPUT_DIR_PATH / "manuscript_references.csv"
+```uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -s "copernicus-publications"```
 
-Control log verbosity (-v for INFO, -vv for DEBUG):
+# Control log verbosity (-v for INFO, -vv for DEBUG):
 ```uv run references-lister -f "C:\Documents\manuscript.docx" -v```
 
 # Pipe source directly
 ```echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run references-lister```
+
+**CLI arguments:**
+* `-f` : Path to the `.docx` manuscript to parse.
+* `-o` : Path to the output CSV file. Contains the parsed citations, Crossref/DOI lookup status, and formatted references. *(Default: `OUTPUT_DIR_PATH / "manuscript_references.csv"` if omitted)*.
+* `-s` : Style identifier recognized by [citation.doi.org](https://citation.doi.org/). *(Default: `apa` if omitted)*.
+
+
+
 # Run tests
 ```uv run pytest```
+
+# Run specific test suites
 Unit tests only:
 ```uv run pytest -m "not integration and not e2e"```
 Integration (included Crossref API and DOI negotiation service) tests only:
@@ -74,7 +83,49 @@ None reported. Feel free to open an issue if you encounter unexpected behavior.
 
 ## 📝 Limitations with minor impact
 
-### Coarse-Grained Cache Updates for Incomplete Journals
+### 📝 Finding the Correct Style Name (`-s`)
+
+The tool formats references using the CSL style identifiers recognized by [citation.doi.org](https://citation.doi.org/).
+
+For many major journals, the identifier is simply the lowercase title with spaces replaced by hyphens (e.g., `earth-surface-processes-and-landforms`). However, many journals do not have a unique style and instead inherit a parent format (e.g., Copernicus journals use `copernicus-publications`, AGU journals use `american-geophysical-union`).
+
+Since the tool does not yet automate this lookup, you can find the exact string manually using the official CSL repository:
+
+1. Search for your target journal title on the [CSL Styles GitHub Repository](https://github.com/citation-style-language/styles).
+2. Open the journal's `.csl` file and inspect the first few lines:
+
+#### Case A: The journal has its own independent style
+
+Look at the `<id>` tag. If there is no link containing `rel="independent-parent"`, your style name is the final part of the URL inside the `<id>` tag.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" default-locale="en-US" class="in-text" version="1.0">
+  <info>
+    <title>Earth Surface Processes and Landforms</title>
+    <id>http://www.zotero.org/styles/earth-surface-processes-and-landforms</id>
+
+```
+
+👉 *Value to pass to `-s`:* `earth-surface-processes-and-landforms`
+
+#### Case B: The journal shares a style with a parent publisher
+
+If the file includes a link with `rel="independent-parent"`, the tool requires the parent style name found at the end of that specific `href` attribute.
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" default-locale="en-US">
+  <info>
+    <title>Geophysical Research Letters</title>
+    <id>http://www.zotero.org/styles/geophysical-research-letters</id>
+    <link href="http://www.zotero.org/styles/american-geophysical-union" rel="independent-parent"/>
+
+```
+
+👉 *Value to pass to `-s`:* `american-geophysical-union`
+
+### 📝 Coarse-Grained Cache Updates for Incomplete Journals
 
 The tool maintains a local JSON database (`records`) to cache journal metadata across executions, minimizing redundant API requests to Crossref. This cache expires based on the `JOURNAL_UPDATE_DAYS` environment variable. 
 
@@ -85,7 +136,7 @@ However, if a journal title is flagged with incomplete metadata during a run, th
 **The Limitation:** 
 The update mechanism operates at the **journal title level**, not the individual ISSN level. If a journal possesses multiple ISSNs (such as an old print ISSN and a modern e-ISSN) and *only one* of these records lacks metadata, the tool will force a full Crossref API reload for **all** records sharing that input title. While this ensures data completeness, it leads to redundant API queries for the valid ISSNs of that same journal.
 
-### Coarse-Grained Progress Bar ETA
+### 📝 Coarse-Grained Progress Bar ETA
 In default mode (without `-v` or `-vv`), the application displays a progress bar tracking high-level execution phases (e.g., transitions between parsing, journal metadata resolution, and work metadata fetching).
 
 **Note on ETA accuracy:** Because the progress bar tracks these major processing milestones rather than individual, fine-grained network requests, the Estimated Time of Arrival (ETA) updates in blocks. It should be treated as a rough phase indicator rather than a precise second-by-second countdown.
@@ -127,4 +178,5 @@ When a journal title fails to resolve to an ISSN, or when an author keyword sear
 
 ## 📅 Roadmap
 
-* Researching context-aware matching for common surnames (Smith, Singh, etc.).
+* [ ] **Automated Style Lookup:** Resolve journal titles to their official CSL style identifier automatically.
+* [ ] **Context-Aware Author Matching:** Implement secondary filters to improve DOI resolution accuracy for common surnames (e.g., Smith, Singh, Müller).

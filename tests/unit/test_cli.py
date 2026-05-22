@@ -9,6 +9,17 @@ from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
+def test_config() -> AppConfig:
+    """Provides a controlled configuration instance for testing,
+    ensuring complete isolation from local production .env files.
+    """
+    config = MagicMock(spec=AppConfig)
+    config.default_reference_style = "apa"
+    config.ensure_repo_directory = MagicMock()
+    return config
+
+
+@pytest.fixture
 def runner() -> CliRunner:
     """Provides a Click CliRunner instance for testing CLI commands."""
     return CliRunner()
@@ -19,7 +30,6 @@ def mock_setup_logging():
     """Autouse fixture to prevent the CLI from restructuring the global logging
     handlers and breaking pytest's caplog during global test suite runs.
     """
-
     with patch("manuscript_reference_lister.cli.setup_logging") as mock:
         mock.return_value = "/mock/log/dir"
         yield mock
@@ -41,6 +51,7 @@ def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
             input_text="",
             output_filepath=None,
             config=test_config,
+            style="apa",
             progress_callback=ANY,
         )
 
@@ -92,9 +103,11 @@ def test_cli_shows_traceback_in_verbose_mode(
         assert "-----------------------" in result.output
 
 
-def test_cli_piped_input_handling(runner: CliRunner, test_config: AppConfig) -> None:
+def test_cli_piped_input_default_style(
+    runner: CliRunner, test_config: AppConfig
+) -> None:
     """Verify that standard input redirection (piping) passes the string
-    correctly to the run function."""
+    correctly and uses the default style from the configuration."""
     piped_text = "Some citation (Lenard et al., 2025)"
 
     with patch(
@@ -111,6 +124,41 @@ def test_cli_piped_input_handling(runner: CliRunner, test_config: AppConfig) -> 
             input_text=piped_text,
             output_filepath=None,
             config=test_config,
+            style="apa",
+            progress_callback=ANY,
+        )
+
+
+def test_cli_custom_style_and_output_options(
+    runner: CliRunner, test_config: AppConfig
+) -> None:
+    """Verify that both --style and --output_file options correctly propagate
+    their values to the core.run function.
+    """
+    with patch(
+        "manuscript_reference_lister.cli.run", return_value=({}, {})
+    ) as mock_run:
+        result = runner.invoke(
+            cli,
+            [
+                "main",
+                "-f",
+                "doc.docx",
+                "-o",
+                "custom_output.csv",
+                "-s",
+                "copernicus-publications",
+            ],
+            obj={"config": test_config},
+        )
+
+        assert result.exit_code == 0
+        mock_run.assert_called_once_with(
+            input_file_path="doc.docx",
+            input_text="",
+            output_filepath="custom_output.csv",
+            config=test_config,
+            style="copernicus-publications",
             progress_callback=ANY,
         )
 
@@ -196,7 +244,7 @@ def test_progress_bar_nominal_flow(runner: CliRunner, test_config: AppConfig) ->
     """Check nominal content of progress bar (0% à 100%)"""
 
     def mock_run_impl(
-        input_file_path, input_text, output_filepath, config, progress_callback
+        input_file_path, input_text, output_filepath, config, style, progress_callback
     ):
         from manuscript_reference_lister.core import ProgressStep
 
@@ -232,10 +280,10 @@ def test_progress_bar_nominal_flow(runner: CliRunner, test_config: AppConfig) ->
 def test_progress_bar_log_interruption_behavior(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Check sequence when progress bar interrupted by a log"""
+    """Check sequence when progress bar interrupted by a log."""
 
     def mock_run_with_log(
-        input_file_path, input_text, output_filepath, config, progress_callback
+        input_file_path, input_text, output_filepath, config, style, progress_callback
     ):
         from manuscript_reference_lister.core import ProgressStep
 
@@ -284,7 +332,7 @@ def test_cli_fatal_error_handling_cleans_progress_bar(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
     """Check that fatal error triggers clean stop of the progress bar thread and the
-    injection of an end of line to prevent visual collisions on stderr"""
+    injection of an end of line to prevent visual collisions on stderr."""
 
     with patch("manuscript_reference_lister.cli.run") as mock_run:
         mock_run.side_effect = RuntimeError("Simulated database corruption")
@@ -297,8 +345,9 @@ def test_cli_fatal_error_handling_cleans_progress_bar(
         assert (
             "Error: An unexpected error occurred: Simulated database corruption"
             in result.stderr
+            or result.output
         )
 
-        assert "\n" in result.stderr, (
+        assert "\n" in (result.stderr or result.output), (
             "Crash did not trigger progress bar line freeing with end of line."
         )

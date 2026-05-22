@@ -10,7 +10,7 @@ from docx import Document
 @pytest.mark.e2e
 def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
     """Validation of full pipeline from a temporary .docx and check structure of CSV
-    generated."""
+    generated, using an explicit style flag."""
     input_file = tmp_path / "test_manuscript.docx"
     output_csv = tmp_path / "output_test_references.csv"
     doc = Document()
@@ -36,6 +36,8 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
         str(input_file),
         "-o",
         str(output_csv),
+        "-s",
+        "apa",
     ]
 
     isolated_env = os.environ.copy()
@@ -43,6 +45,7 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
     isolated_env["LOG_DIR_PATH"] = str(tmp_path / "log")
     isolated_env["OUTPUT_DIR_PATH"] = str(tmp_path / "output")
     isolated_env["PYTHONIOENCODING"] = "utf-8"  # Crucial for special icons in logs
+    isolated_env["DEFAULT_REFERENCE_STYLE"] = "apa"
 
     result = subprocess.run(
         cmd, capture_output=True, text=True, check=False, env=isolated_env
@@ -68,7 +71,8 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
 
 @pytest.mark.e2e
 def test_stdin_pipeline_execution(tmp_path: Path) -> None:
-    """Validation of full pipeline from stdin."""
+    """Validation of full pipeline from stdin, relying on the default style
+    configured via environment variables."""
 
     input_data = "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience"
     output_csv = tmp_path / "stdin_output.csv"
@@ -79,6 +83,7 @@ def test_stdin_pipeline_execution(tmp_path: Path) -> None:
     isolated_env["LOG_DIR_PATH"] = str(tmp_path / "log")
     isolated_env["OUTPUT_DIR_PATH"] = str(tmp_path / "output")
     isolated_env["PYTHONIOENCODING"] = "utf-8"
+    isolated_env["DEFAULT_REFERENCE_STYLE"] = "apa"
 
     result = subprocess.run(
         cmd,

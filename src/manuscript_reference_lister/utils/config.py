@@ -44,6 +44,8 @@ class AppConfig(BaseSettings):
     journal_update_days: int = 30
     journal_update_limit: int = 100
 
+    default_reference_style: str = "apa"
+
     # Blacklist
     parser_blacklist: list[str] = Field(
         default_factory=lambda: [

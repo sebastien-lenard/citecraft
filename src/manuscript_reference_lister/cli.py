@@ -63,15 +63,26 @@ def cli(ctx):
     help="Filepath for the output Bibliography CSV",
 )
 @click.option(
+    "-s",
+    "--style",
+    default=None,
+    show_default=True,
+    help=(
+        "Style name recognized by https://citation.doi.org/ (e.g., apa, "
+        "copernicus-publications)."
+    ),
+)
+@click.option(
     "-v", "--verbose", count=True, help="Increase verbosity (-v (INFO), -vv (DEBUG))"
 )
-def main(ctx, input_file, text, output_file, verbose):
+def main(ctx, input_file, text, output_file, style, verbose):
     """\b
     CLI entry point.
     Examples:
         # Process a file and specify output
         $ uv run python -m manuscript_reference_lister \
-            --f "C:\\Documents\\manuscript.docx" -o "C:\\Documents\\bibliography.csv"
+            -f "C:\\Documents\\manuscript.docx" -o "C:\\Documents\\bibliography.csv" \
+            -s "copernicus-publications"
 
         Output file can be omitted, default generated file is \
             OUTPUT_DIR_PATH / "manuscript_references.csv"
@@ -99,6 +110,8 @@ def main(ctx, input_file, text, output_file, verbose):
     try:
         config = (ctx.obj or {}).get("config") or get_config()
         config.ensure_repo_directory()
+
+        style = style if style else config.default_reference_style
 
         anomalies = {}
         export_metadata = {}
@@ -191,6 +204,7 @@ def main(ctx, input_file, text, output_file, verbose):
                     input_text=text,
                     output_filepath=output_file,
                     config=config,
+                    style=style,
                     progress_callback=cli_progress_handler,
                 )
                 success = True
@@ -220,6 +234,7 @@ def main(ctx, input_file, text, output_file, verbose):
                 input_text=text,
                 output_filepath=output_file,
                 config=config,
+                style=style,
                 progress_callback=None,
             )
 
