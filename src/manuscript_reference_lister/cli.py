@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import textwrap
 import threading
 import time
 import traceback
@@ -405,6 +406,84 @@ def main(
                 fg="green",
                 bold=True,
             )
+
+            # 1. Affichage des statistiques de synthèse
+            click.echo("")
+            click.secho("📊 Export Summary:", bold=True)
+            click.echo(f"  • Valid references (OK)   : {export_metadata.ok_count}")
+            click.echo(f"  • Missing DOI/Reference   : {export_metadata.missing_count}")
+            click.echo(
+                f"  • Ambiguous matches       : {export_metadata.duplicate_count}"
+            )
+
+            # 2. Construction de la section "CSV Preview"
+            # On rassemble les échantillons disponibles dans l'ordre (OK, puis Missing, puis Duplicates)
+            preview_rows = []
+            if export_metadata.sample_ok:
+                preview_rows.append(export_metadata.sample_ok)
+            if export_metadata.sample_missing:
+                preview_rows.append(export_metadata.sample_missing)
+            if export_metadata.samples_duplicate:
+                preview_rows.extend(export_metadata.samples_duplicate)
+
+            if preview_rows:
+                click.echo("")
+                click.secho("📝 CSV Preview:", bold=True, fg="cyan")
+
+                # Définition des largeurs fixes de colonnes
+                col1_w, col2_w, col3_w = 25, 32, 60
+                header = f"{'Citation':<{col1_w}} | {'Status':<{col2_w}} | {'Reference Preview':<{col3_w}}"
+
+                click.secho(header, fg="cyan", bold=True)
+                click.secho("-" * len(header), fg="cyan")
+
+                for row in preview_rows:
+                    # Simplification des statuts pour le tableau
+                    status_text = row.get("Status", "")
+                    if "No doi or reference" in status_text:
+                        status_text = "Warning: Missing metadata"
+                    elif "select the right reference" in status_text:
+                        status_text = "Warning: Multiple matches"
+
+                    ref_text = row.get("Reference") or "None"
+
+                    # Découpage automatique de la référence en morceaux de 60 caractères max
+                    ref_lines = textwrap.wrap(ref_text, width=col3_w) or ["None"]
+
+                    # Première ligne : contient la Citation, le Statut et le début de la Référence
+                    click.echo(
+                        f"{row['Citation']:<{col1_w}} | "
+                        f"{status_text:<{col2_w}} | "
+                        f"{ref_lines[0]:<{col3_w}}"
+                    )
+
+                    # Lignes suivantes : on laisse les deux premières colonnes vides
+                    for extra_line in ref_lines[1:]:
+                        click.echo(
+                            f"{'':<{col1_w}} | {'':<{col2_w}} | {extra_line:<{col3_w}}"
+                        )
+
+                # 3. Messages informatifs d'aide à la post-édition
+                click.echo("")
+                click.secho("💡 Next Steps & Recommendations:", bold=True, fg="yellow")
+
+                if export_metadata.missing_count > 0:
+                    click.echo(
+                        "  • For citations marked as 'Missing DOI/Reference': Please search for their DOIs\n"
+                        "    manually on the Crossref website (https://search.crossref.org) and update your records."
+                    )
+
+                if export_metadata.duplicate_count > 0:
+                    click.echo(
+                        "  • For citations with multiple matches: Review the generated CSV file and delete\n"
+                        "    the irrelevant reference rows, leaving only the correct one for each citation."
+                    )
+
+                click.echo(
+                    "  • Once the CSV file is cleaned and reviewed, you can directly copy and paste\n"
+                    "    the finalized reference list into your manuscript."
+                )
+                click.echo("")
         click.echo("Done.")
 
     except click.ClickException as e:

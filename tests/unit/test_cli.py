@@ -6,34 +6,25 @@ import pytest
 from click.testing import CliRunner
 
 from manuscript_reference_lister.cli import cli
+from manuscript_reference_lister.services.bibliography_service import ExportResult
 from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
-def test_config() -> AppConfig:
-    """Provides a controlled configuration instance for testing,
-    ensuring complete isolation from local production .env files.
-    """
-    config = MagicMock(spec=AppConfig)
-    config.default_reference_style = "apa"
-    config.ensure_repo_directory = MagicMock()
-    return config
-
-
-@pytest.fixture
-def fake_cache_env(test_config: AppConfig, tmp_path: Path) -> tuple[Path, list[Path]]:
+def test_local_repo_filepaths(
+    test_config: AppConfig, tmp_path: Path
+) -> tuple[Path, list[Path]]:
     """Create temporary local repository files."""
-    repo_dir = tmp_path / "mock_repo"
-    repo_dir.mkdir()
 
-    test_config.local_repo_dir_path = str(repo_dir)
+    local_repo_files = [
+        test_config.local_repo_dir_path / "journal_records.json",
+        test_config.local_repo_dir_path / "work_records.json",
+    ]
 
-    cache_files = [repo_dir / "journal_records.json", repo_dir / "work_records.json"]
-
-    for file in cache_files:
+    for file in local_repo_files:
         file.write_text('{"test": "data"}', encoding="utf-8")
 
-    return repo_dir, cache_files
+    return local_repo_files
 
 
 @pytest.fixture
@@ -249,6 +240,9 @@ def test_cli_displays_journal_anomalies_warning_table(
     mock_export = MagicMock()
     mock_export.total_rows = 0
     mock_export.output_filepath = "/mock/path.csv"
+    mock_export.sample_ok = None
+    mock_export.sample_missing = None
+    mock_export.samples_duplicate = []
 
     with patch(
         "manuscript_reference_lister.cli.run",
@@ -280,6 +274,98 @@ def test_cli_displays_journal_anomalies_warning_table(
         assert "1234-5678, 9999-9999" in result.output
         assert "Unknown Fake Journal" in result.output
         assert "Not found" in result.output
+
+
+def test_cli_final_summary_display_integrity(
+    runner: CliRunner,
+    test_config: AppConfig,
+    test_local_repo_filepaths: tuple[Path, list[Path]],
+    tmp_path: Path,
+) -> None:
+    """Verify that the CLI correctly structures and displays the final summary metrics,
+    the multi-line textwrapped preview table, and the user guidance section.
+    """
+
+    mock_manuscript = tmp_path / "mock_manuscript.docx"
+    mock_manuscript.write_text("dummy content", encoding="utf-8")
+
+    mock_export_metadata = ExportResult(
+        total_rows=4,
+        output_filepath=Path("/mock/path/manuscript_references.csv"),
+        export_format="CSV",
+        ok_count=1,
+        missing_count=1,
+        duplicate_count=2,
+        sample_ok={
+            "Citation": "Smith, 2021",
+            "Status": "OK",
+            "Reference": "Smith, J. (2021). Short Reference Style.",
+        },
+        sample_missing={
+            "Citation": "Alpha, 2019",
+            "Status": "Warning: No doi or reference found for the citation",
+            "Reference": None,
+        },
+        samples_duplicate=[
+            {
+                "Citation": "Lenard et al., 2020",
+                "Status": "Warning: select the right reference",
+                "Reference": "Lenard, S. J. P., Lavé, J., France-Lanord, C. (2020). "
+                "Steady erosion rates in the Himalayas through late Cenozoic climatic"
+                " changes. Nature Geoscience.",
+            },
+            {
+                "Citation": "Lenard et al., 2020",
+                "Status": "Warning: select the right reference",
+                "Reference": "Lenard Duplicate Version B Text.",
+            },
+        ],
+    )
+
+    with (
+        patch("manuscript_reference_lister.utils.get_config", return_value=test_config),
+        patch("manuscript_reference_lister.cli.run") as mock_run,
+    ):
+        mock_run.return_value = ({}, mock_export_metadata)
+
+        result = runner.invoke(
+            cli,
+            ["main", "-f", str(mock_manuscript)],
+            obj={"config": test_config},
+        )
+
+    # Global execution
+    assert result.exit_code == 0, (
+        f"CLI crashed with: {result.exception}\nOutput: {result.output}"
+    )
+
+    assert "Export Summary:" in result.output
+    assert "Valid references (OK)   : 1" in result.output
+    assert "Missing DOI/Reference   : 1" in result.output
+    assert "Ambiguous matches       : 2" in result.output
+
+    assert "CSV Preview:" in result.output
+    assert "Citation" in result.output
+    assert "Status" in result.output
+    assert "Reference Preview" in result.output
+
+    assert "Warning: Missing metadata" in result.output
+    assert "Warning: Multiple matches" in result.output
+
+    # Wrapping
+    assert (
+        "Lenard, S. J. P., Lavé, J., France-Lanord, C. (2020). Steady" in result.output
+    )
+
+    # Alignment
+    expected_padding = " " * 25 + " | " + " " * 32 + " | "
+    assert expected_padding in result.output
+
+    # Advice for user
+    assert "Next Steps & Recommendations:" in result.output
+    assert "search for their DOIs" in result.output
+    assert "https://search.crossref.org" in result.output
+    assert "delete" in result.output
 
 
 def test_progress_bar_disabled_in_verbose_mode(
@@ -430,10 +516,12 @@ def test_cli_fatal_error_handling_cleans_progress_bar(
 
 
 def test_cli_clear_cache_option_absent_does_not_touch_files(
-    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+    runner: CliRunner,
+    test_config: AppConfig,
+    test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
     """Checks that without option --clear-cache, files are untouched."""
-    _, cache_files = fake_cache_env
+    local_repo_files = test_local_repo_filepaths
 
     with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
         result = runner.invoke(
@@ -441,16 +529,18 @@ def test_cli_clear_cache_option_absent_does_not_touch_files(
         )
 
     assert result.exit_code == 0
-    for file in cache_files:
+    for file in local_repo_files:
         assert file.exists()
         assert "bak_" not in result.output
 
 
 def test_cli_clear_cache_cancelled_by_user(
-    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+    runner: CliRunner,
+    test_config: AppConfig,
+    test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
     """Checks clear cache operation stops on user refusal."""
-    _, cache_files = fake_cache_env
+    local_repo_files = test_local_repo_filepaths
 
     result = runner.invoke(
         cli, ["main", "--clear-cache"], input="n\n", obj={"config": test_config}
@@ -459,15 +549,17 @@ def test_cli_clear_cache_cancelled_by_user(
     assert result.exit_code == 0
     assert "Operation cancelled. Cache left untouched." in result.output
 
-    for file in cache_files:
+    for file in local_repo_files:
         assert file.exists()
 
 
 def test_cli_clear_cache_maintenance_only_success(
-    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+    runner: CliRunner,
+    test_config: AppConfig,
+    test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
     """Check maintenance mode: clear cache without handling manuscript/document."""
-    repo_dir, cache_files = fake_cache_env
+    local_repo_files = test_local_repo_filepaths
 
     with patch("manuscript_reference_lister.cli.run") as mock_run:
         mock_run.return_value = ({}, {})
@@ -480,18 +572,20 @@ def test_cli_clear_cache_maintenance_only_success(
     assert "Local cache cleared" in result.output
     assert "Done." in result.output
 
-    for file in cache_files:
+    for file in local_repo_files:
         assert not file.exists()
 
-    backups = list(repo_dir.glob("*.bak_*"))
+    backups = list(test_config.local_repo_dir_path.glob("*.bak_*"))
     assert len(backups) == 2
 
 
 def test_cli_clear_cache_then_proceeds_to_run(
-    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+    runner: CliRunner,
+    test_config: AppConfig,
+    test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
     """Check cache clearing followed by processing if input document present."""
-    repo_dir, cache_files = fake_cache_env
+    local_repo_files = test_local_repo_filepaths
 
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
@@ -508,18 +602,20 @@ def test_cli_clear_cache_then_proceeds_to_run(
     assert "Proceeding to manuscript processing with a fresh cache..." in result.output
     assert "Done." in result.output
 
-    for file in cache_files:
+    for file in local_repo_files:
         assert not file.exists()
-    assert len(list(repo_dir.glob("*.bak_*"))) == 2
+    assert len(list(test_config.local_repo_dir_path.glob("*.bak_*"))) == 2
 
     mock_run.assert_called_once()
 
 
 def test_cli_clear_cache_summary_displayed_at_the_very_end(
-    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+    runner: CliRunner,
+    test_config: AppConfig,
+    test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
     """Check presence of cache clearing synthetic message after processing."""
-    _, _ = fake_cache_env
+    _, _ = test_local_repo_filepaths
 
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
@@ -544,12 +640,14 @@ def test_cli_clear_cache_summary_displayed_at_the_very_end(
 
 
 def test_cli_clear_cache_partial_files_shows_warning(
-    runner: CliRunner, test_config: AppConfig, fake_cache_env: tuple[Path, list[Path]]
+    runner: CliRunner,
+    test_config: AppConfig,
+    test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
     """Check that a warning is displayed if one of the expected cache files is missing."""
-    _, cache_files = fake_cache_env
+    local_repo_files = test_local_repo_filepaths
 
-    missing_file = cache_files[0]
+    missing_file = local_repo_files[0]
     missing_file.unlink()
 
     with patch("manuscript_reference_lister.cli.run") as mock_run:

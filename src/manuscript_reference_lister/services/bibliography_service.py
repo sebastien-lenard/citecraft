@@ -1,7 +1,7 @@
 import csv
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +19,16 @@ class ExportResult:
     total_rows: int
     output_filepath: Path
     export_format: str = "CSV"
+
+    # Metrics
+    ok_count: int = 0
+    missing_count: int = 0
+    duplicate_count: int = 0
+
+    # Row examples
+    sample_ok: dict[str, Any] | None = None
+    sample_missing: dict[str, Any] | None = None
+    samples_duplicate: list[dict[str, Any]] = field(default_factory=list)
 
 
 class BibliographyService:
@@ -134,4 +144,29 @@ class BibliographyService:
                 "total_rows": len(rows),
             },
         )
-        return ExportResult(total_rows=len(citations), output_filepath=output_path)
+
+        # ---- Statistics and samples for return ----
+        status_missing = "Warning: No doi or reference found for the citation"
+        status_duplicate = "Warning: select the right reference"
+
+        ok_count = sum(1 for r in rows if r["Status"] == "OK")
+        missing_count = sum(1 for r in rows if r["Status"] == status_missing)
+        # Note : Number of rows (not of unique citations)
+        duplicate_count = sum(1 for r in rows if r["Status"] == status_duplicate)
+
+        sample_ok = next((r for r in rows if r["Status"] == "OK"), None)
+        sample_missing = next((r for r in rows if r["Status"] == status_missing), None)
+
+        samples_duplicate = [r for r in rows if r["Status"] == status_duplicate][:2]
+
+        return ExportResult(
+            total_rows=len(rows),
+            output_filepath=output_path,
+            export_format="CSV",
+            ok_count=ok_count,
+            missing_count=missing_count,
+            duplicate_count=duplicate_count,
+            sample_ok=sample_ok,
+            sample_missing=sample_missing,
+            samples_duplicate=samples_duplicate,
+        )

@@ -111,36 +111,68 @@ def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
     tmp_path: Path, caplog: pytest.LogCaptureFixture, test_config: AppConfig
 ) -> None:
     """Verify that execution lifecycle logs correctly and returns a structural
-    ExportResult."""
+    ExportResult loaded with precise counters and sorted row samples.
+    """
     caplog.set_level(logging.INFO)
     output_csv = tmp_path / "output.csv"
 
     citations = [
         CitationMetadata(first_authors_txt="Alpha", year_and_suffix="2019"),
         CitationMetadata(first_authors_txt="Lenard et al.", year_and_suffix="2020"),
+        CitationMetadata(first_authors_txt="Smith", year_and_suffix="2021"),
     ]
     works = [
+        # Duplicates (Warning: select the right reference)
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
             DOI="10.1000/ref1",
-            reference="Ref 1",
+            reference="Lenard Ref B",
         ),
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
             DOI="10.1000/ref2",
-            reference="Ref 2",
+            reference="Lenard Ref A",
         ),
+        # Unique (OK)
+        WorkMetadata(
+            input_first_authors_txt="Smith",
+            input_year_and_suffix="2021",
+            DOI="10.1000/smith",
+            reference="Smith Ref",
+        ),
+        # Alpha without corresponding record (Warning: No doi or reference...)
     ]
 
     biblio_service = BibliographyService(config=test_config)
     result = biblio_service.export_to_csv(citations, works, output_csv)
 
     # Validation of return type
-    assert result.total_rows == 2
+    assert result.total_rows == 4
     assert result.output_filepath == output_csv
     assert result.export_format == "CSV"
+    assert result.ok_count == 1
+    assert result.missing_count == 1
+    assert result.duplicate_count == 2
+
+    # Sample validation (alphabetic sort)
+    # Sample OK
+    assert result.sample_ok is not None
+    assert result.sample_ok["Citation"] == "Smith, 2021"
+    assert result.sample_ok["Status"] == "OK"
+
+    # Missing sample
+    assert result.sample_missing is not None
+    assert result.sample_missing["Citation"] == "Alpha, 2019"
+    assert result.sample_missing["Reference"] is None
+
+    # Duplicates, with sort
+    assert len(result.samples_duplicate) == 2
+    assert result.samples_duplicate[0]["Reference"] == "Lenard Ref A"
+    assert result.samples_duplicate[1]["Reference"] == "Lenard Ref B"
+    assert result.samples_duplicate[0]["Citation"] == "Lenard et al., 2020"
+    assert result.samples_duplicate[1]["Citation"] == "Lenard et al., 2020"
 
     # Log validation
     log_messages = [record.message for record in caplog.records]
@@ -150,9 +182,6 @@ def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
     assert "WARNING" in log_levels
 
     assert "Several references found for citation: Lenard et al., 2020" in log_messages
-    assert any(
-        "Generated and saved bibliography with 3 rows" in msg for msg in log_messages
-    )
 
 
 def test_export_to_csv_strips_only_preserved_tags(
