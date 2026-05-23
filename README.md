@@ -72,7 +72,47 @@ The tool will display a confirmation message.
 * `--skip-journal-update` : Skips the remote Crossref API lookup for journal metadata and ISSNs. New journal titles are still registered locally, but without fetching remote metadata. Useful to bypass API latency when no new journals have been added to the manuscript.
 * `--skip-work-update` : Skips the remote Crossref API lookup for work DOIs. Existing local records are processed normally, but no network calls are made to fetch missing DOIs. Useful to speed up re-runs when no new citations have been added to the manuscript.
 
+**Output**
+At the end of the execution, the console can display warnings for journals without ISSN. Several cases may occur: Journal title not found in the remote API, title found without ISSN, title found with an ISSN but without published work associated to this ISSN. The lookup for DOIs is carried out only on journal titles that have at least one ISSN with published work.
 
+The console also displays a preview of the CSV output, with instances of the three possible lookup status:
+* `OK` : A unique DOI has been found for the citation and reference can be copy-pasted to the manuscript as such.
+* `Warning: Multiple matches` or `Ambiguous matches` : Several DOIs have been found for the citation. The user is invited to manually select the correct one and delete the other ones before copy-paste to the manuscript.
+* `Warning: Missing metadata` : No DOI has been found for the citation. The user is invited to manually look for the reference using [www.crossref.org](www.crossref.org) or [scholar.google.com](scholar.google.com).
+
+
+## Output & Interpretation
+
+### Console Warnings
+
+At the end of the execution, the console displays warnings for journals that could not be fully resolved. This happens in three specific cases:
+
+1. **Journal title not found** in the Crossref registry.
+2. **Journal found without an ISSN**.
+3. **Journal found with an ISSN, but with zero published works** associated with it.
+
+> 🔍 **Core Logic:** The tool only attempts DOI lookups for journals that have both a valid ISSN and at least one registered publication.
+
+### CSV Preview & Status Codes
+
+The console also prints a preview of the generated CSV file. Each citation receives one of three status codes in the output:
+
+* `OK`
+* **Meaning:** A unique DOI was successfully found.
+* **Action:** The formatted reference is ready to be copied directly into your manuscript.
+
+
+* `Warning: Multiple matches` (or `Ambiguous matches`)
+* **Meaning:** Crossref returned multiple potential DOIs for this citation (due to common surnames or shared publication years).
+* **Action:** Review the rows manually, keep the correct reference, and delete the incorrect duplicates.
+
+
+* `Warning: Missing metadata`
+* **Meaning:** No matching DOI could be found.
+* **Action:** Manually search for the reference using [www.crossref.org](https://www.crossref.org) or [scholar.google.com](https://scholar.google.com).
+
+
+## Tests
 # Run tests
 ```uv run pytest```
 
