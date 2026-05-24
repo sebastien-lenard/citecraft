@@ -2,47 +2,23 @@ import logging
 import os
 import sys
 import textwrap
-import threading
-import time
 import traceback
 from datetime import datetime
 from pathlib import Path
 
 import click
 
-from .core import ProgressStep, run
+from .core import run
 from .logging_config import setup_logging
+from .ui.progress_bar_context import ProgressBarContext
 from .utils.config import get_config
 
 logger = logging.getLogger(__name__)
 
 
-class QueueHandler(logging.Handler):
-    """Handler that intercepts logs to insert them above active progress bar.
-    Keeps the bar visible and animated."""
-
-    def __init__(self, draw_callback):
-        super().__init__()
-        self.draw_callback = draw_callback
-
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-
-            # Erase current line on console and write log
-            # \r = return to start of line, \033[K = erase all til the end of line
-            sys.stderr.write(f"\r\033[K{msg}\n")
-            sys.stderr.flush()
-
-            # Redraw bar below log
-            self.draw_callback()
-        except Exception:
-            self.handleError(record)
-
-
 @click.group()
 @click.pass_context
-def cli(ctx):
+def cli(ctx: click.Context) -> None:
     """CLI main entry point."""
     # Load config here at execution, not import
     ctx.ensure_object(dict)
@@ -97,16 +73,16 @@ def cli(ctx):
     ),
 )
 def main(
-    ctx,
-    input_file,
-    text,
-    output_file,
-    style,
-    skip_journal_update,
-    skip_work_update,
-    verbose,
-    clear_cache,
-):
+    ctx: click.Context,
+    input_file: str | None,
+    text: str | None,
+    output_file: str | None,
+    style: str | None,
+    skip_journal_update: bool,
+    skip_work_update: bool,
+    verbose: int,
+    clear_cache: bool,
+) -> None:
     """\b
     CLI entry point.
     Examples:
@@ -149,6 +125,7 @@ def main(
                 "⚠️  Warning: You are about to clear the local cache.",
                 fg="yellow",
                 bold=True,
+                err=True,
             )
             click.echo(
                 "This will archive your existing journal and work local repositories,"
@@ -160,8 +137,6 @@ def main(
                 sys.exit(0)
 
             # Define cache files from configuration paths
-            # (Assuming standard config structure targets: repo_dir / journals.json
-            # and repo_dir / work_records.json)
             repo_path = Path(config.local_repo_dir_path)
             cache_files = [
                 repo_path / "journal_records.json",  # Local journal database
@@ -206,7 +181,7 @@ def main(
             if moved_count > 0:
                 cache_summary_message = (
                     f"🧹 Local cache cleared ({moved_count} file"
-                    "(s) safely archived with suffix '.bak_{timestamp}')."
+                    f"(s) safely archived with suffix '.bak_{timestamp}')."
                 )
             else:
                 cache_summary_message = "ℹ️  No active cache files were found to clear."
@@ -231,128 +206,22 @@ def main(
         anomalies = {}
         export_metadata = {}
 
-        # Mode non-verbose: display of a progress bar with execution time and estimated
+        # ProgressBarContext handles internal log interception, threading, lock sync,
+        # and silent mode when verbose > 0
+        # The progressbar displays with execution time and estimated
         # time of completion (ETA)
-        if verbose == 0:
-            start_global_time = time.time()
+        progress_context = ProgressBarContext(verbose_level=verbose, bar_width=30)
 
-            state = {
-                "message": "Initializing...",
-                "current_step": 0,
-                "total_steps": 4,
-                "running": True,
-            }
-
-            def generate_bar_string(current, total, elapsed_time, width=30):
-                percent = int((current / total) * 100) if total > 0 else 0
-                filled_length = int(width * current // total) if total > 0 else 0
-
-                fill_char = click.style("█", fg="cyan")
-                empty_char = "░"
-                bar = (fill_char * filled_length) + (
-                    empty_char * (width - filled_length)
-                )
-
-                if current == 0 or total == 0:
-                    eta_str = "--:--"
-                elif current == total:
-                    eta_str = "00:00"
-                else:
-                    remaining_steps = total - current
-                    estimated_remaining_seconds = int(
-                        (remaining_steps * elapsed_time) / current
-                    )
-                    eta_min, eta_sec = divmod(estimated_remaining_seconds, 60)
-                    eta_str = f"{eta_min:02d}:{eta_sec:02d}"
-
-                return f"[{bar}] {percent}% (ETA: {eta_str})"
-
-            def draw_line():
-                elapsed = int(time.time() - start_global_time)
-                minutes, seconds = divmod(elapsed, 60)
-                time_str = f"[{minutes:02d}:{seconds:02d}]"
-
-                bar_text = generate_bar_string(
-                    state["current_step"], state["total_steps"], elapsed
-                )
-                full_line = f"\r\033[K{time_str} {state['message']:<55} {bar_text}"
-
-                sys.stderr.write(full_line)
-                sys.stderr.flush()
-
-            # --- INJECTION OF LOGGING HANDLER ---
-            root_logger = logging.getLogger()
-            # Temporary removal of default handlers to prevent duplicate logs
-            old_handlers = root_logger.handlers[:]
-            for h in old_handlers:
-                root_logger.removeHandler(h)
-
-            custom_handler = QueueHandler(draw_callback=draw_line)
-            custom_handler.setFormatter(
-                logging.Formatter(
-                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-                )
-            )
-            root_logger.addHandler(custom_handler)
-
-            # BACKGROUND TIMER THREAD
-            def timer_ticker():
-                while state["running"]:
-                    draw_line()
-                    time.sleep(1.0)
-
-            ticker_thread = threading.Thread(target=timer_ticker, daemon=True)
-            ticker_thread.start()
-
-            # MAIN THREAD CALLBACK
-            def cli_progress_handler(step: ProgressStep):
-                state["message"] = step.message
-                state["total_steps"] = step.total
-                if step.status == "completed":
-                    state["current_step"] = step.current
-                    draw_line()
-
-            success = False
-            try:
-                anomalies, export_metadata = run(
-                    input_file_path=input_file,
-                    input_text=text,
-                    output_filepath=output_file,
-                    config=config,
-                    style=style,
-                    progress_callback=cli_progress_handler,
-                    skip_journal_update=skip_journal_update,
-                    skip_work_update=skip_work_update,
-                )
-                success = True
-            finally:
-                # Cut thread to freeze display
-                state["running"] = False
-                ticker_thread.join(timeout=1.0)
-
-                if success:
-                    state["current_step"] = state["total_steps"]
-                    state["message"] = "Completed."
-                    draw_line()
-                    sys.stderr.write("\n")
-                else:
-                    # Crash: force end of line to free the progress bar line before
-                    # traceback print
-                    sys.stderr.write("\n")
-                sys.stderr.flush()
-
-                # Restauration of original handlers for safety
-                root_logger.removeHandler(custom_handler)
-                for h in old_handlers:
-                    root_logger.addHandler(h)
-        else:
+        with progress_context as ctx_manager:
+            # Under verbose mode, ctx_manager.update is a safe no-op.
+            # Under standard mode, it safely routes updates and protects stderr via its inner lock.
             anomalies, export_metadata = run(
                 input_file_path=input_file,
                 input_text=text,
                 output_filepath=output_file,
                 config=config,
                 style=style,
-                progress_callback=None,
+                progress_callback=ctx_manager.update if ctx_manager.is_active else None,
                 skip_journal_update=skip_journal_update,
                 skip_work_update=skip_work_update,
             )
@@ -407,7 +276,7 @@ def main(
                 bold=True,
             )
 
-            # 1. Affichage des statistiques de synthèse
+            # Synthesis statistics
             click.echo("")
             click.secho("📊 Export Summary:", bold=True)
             click.echo(f"  • Valid references (OK)   : {export_metadata.ok_count}")
@@ -416,8 +285,7 @@ def main(
                 f"  • Ambiguous matches       : {export_metadata.duplicate_count}"
             )
 
-            # 2. Construction de la section "CSV Preview"
-            # On rassemble les échantillons disponibles dans l'ordre (OK, puis Missing, puis Duplicates)
+            # CSV Preview layout construction
             preview_rows = []
             if export_metadata.sample_ok:
                 preview_rows.append(export_metadata.sample_ok)
@@ -430,7 +298,6 @@ def main(
                 click.echo("")
                 click.secho("📝 CSV Preview:", bold=True, fg="cyan")
 
-                # Définition des largeurs fixes de colonnes
                 col1_w, col2_w, col3_w = 25, 32, 60
                 header = f"{'Citation':<{col1_w}} | {'Status':<{col2_w}} | {'Reference Preview':<{col3_w}}"
 
@@ -438,7 +305,6 @@ def main(
                 click.secho("-" * len(header), fg="cyan")
 
                 for row in preview_rows:
-                    # Simplification des statuts pour le tableau
                     status_text = row.get("Status", "")
                     if "No doi or reference" in status_text:
                         status_text = "Warning: Missing metadata"
@@ -447,23 +313,22 @@ def main(
 
                     ref_text = row.get("Reference") or "None"
 
-                    # Découpage automatique de la référence en morceaux de 60 caractères max
                     ref_lines = textwrap.wrap(ref_text, width=col3_w) or ["None"]
 
-                    # Première ligne : contient la Citation, le Statut et le début de la Référence
+                    # First row line containing metadata elements
                     click.echo(
                         f"{row['Citation']:<{col1_w}} | "
                         f"{status_text:<{col2_w}} | "
                         f"{ref_lines[0]:<{col3_w}}"
                     )
 
-                    # Lignes suivantes : on laisse les deux premières colonnes vides
+                    # Consecutive wrapped reference lines
                     for extra_line in ref_lines[1:]:
                         click.echo(
                             f"{'':<{col1_w}} | {'':<{col2_w}} | {extra_line:<{col3_w}}"
                         )
 
-                # 3. Messages informatifs d'aide à la post-édition
+                # Post-edition recommendations guidelines
                 click.echo("")
                 click.secho("💡 Next Steps & Recommendations:", bold=True, fg="yellow")
 
