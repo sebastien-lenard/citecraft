@@ -72,7 +72,23 @@ The tool will display a confirmation message.
 * `--skip-journal-update` : Skips the remote Crossref API lookup for journal metadata and ISSNs. New journal titles are still registered locally, but without fetching remote metadata. Useful to bypass API latency when no new journals have been added to the manuscript.
 * `--skip-work-update` : Skips the remote Crossref API lookup for work DOIs. Existing local records are processed normally, but no network calls are made to fetch missing DOIs. Useful to speed up re-runs when no new citations have been added to the manuscript.
 
+**Input**
+
+A manuscript with work citations using the APA style: format author last name 1 et al., year; author last name 1 and/et author last name 2, year; author last name 1, year. A suffix (e.g. a or b) works. The tool cannot parse other citation styles, such as bracketed numbers (IEEE), superscript numbers (Chicago history), author last name page number (MLA).
+
+The manuscript should have a section Journals at its end, which list the journal titles on which the work lookup will be carried out. The tool currently cannot find a work published in a journal not in this section. For instance:
+```
+
+Journals
+Nature Geoscience
+Geomorphology
+
+```
+
+Alternatively, a raw text with similar characteristics can be provided to the tool.
+
 **Output**
+
 At the end of the execution, the console can display warnings for journals without ISSN. Several cases may occur: Journal title not found in the remote API, title found without ISSN, title found with an ISSN but without published work associated to this ISSN. The lookup for DOIs is carried out only on journal titles that have at least one ISSN with published work.
 
 The console also displays a preview of the CSV output, with instances of the three possible lookup status:
