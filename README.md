@@ -74,7 +74,7 @@ The tool will display a confirmation message.
 
 **Input**
 
-A manuscript with work citations using the APA style: format author last name 1 et al., year; author last name 1 and/et author last name 2, year; author last name 1, year. A suffix (e.g. a or b) works. The tool cannot parse other citation styles, such as bracketed numbers (IEEE), superscript numbers (Chicago history), author last name page number (MLA).
+A manuscript with in-text citations of works following the APA style: format author last name 1 et al., year; author last name 1 and/et author last name 2, year; author last name 1, year. A suffix (e.g. a or b) works. The tool cannot parse other in-text citation styles, such as bracketed numbers (IEEE), superscript numbers (Chicago history), author last name page number (MLA).
 
 The manuscript should have a section Journals at its end, which list the journal titles on which the work lookup will be carried out. The tool currently cannot find a work published in a journal not in this section. For instance:
 ```
