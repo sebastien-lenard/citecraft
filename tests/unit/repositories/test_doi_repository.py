@@ -12,6 +12,48 @@ def repo() -> DoiRepository:
     return DoiRepository()
 
 
+def test_get_metadata_success(repo: DoiRepository) -> None:
+    """Verify that CSL-JSON metadata is returned correctly as a dictionary."""
+    mock_json_data = {
+        "id": "10.1000/182",
+        "type": "article-journal",
+        "title": "Title of the Paper",
+        "author": [{"family": "Doe", "given": "J."}],
+    }
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_json_data
+
+    with patch.object(
+        repo.http_client_wrapper, "get", return_value=mock_response
+    ) as mock_get:
+        doi = "10.1000/182"
+        result = repo.get_metadata(doi)
+
+        assert result == mock_json_data
+        assert isinstance(result, dict)
+
+        _, kwargs = mock_get.call_args
+        assert "headers" in kwargs
+        assert kwargs["headers"]["Accept"] == "application/vnd.citationstyles.csl+json"
+
+
+def test_get_metadata_not_found(repo: DoiRepository) -> None:
+    """Verify an empty dictionary is returned when a 404 error occurs for CSL-JSON."""
+    mock_request = httpx.Request("GET", "https://doi.org/invalid/doi")
+    mock_response = httpx.Response(status_code=404, request=mock_request)
+
+    error = httpx.HTTPStatusError(
+        message="Client Error: 404 Not Found",
+        request=mock_request,
+        response=mock_response,
+    )
+    with patch.object(repo.http_client_wrapper, "get", side_effect=error):
+        result = repo.get_metadata("invalid/doi")
+        assert result == {}
+
+
 def test_get_reference_success(repo: DoiRepository) -> None:
     """Verify formatted reference is returned correctly with proper headers."""
 

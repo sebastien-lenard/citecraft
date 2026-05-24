@@ -21,6 +21,40 @@ class DoiRepository:
         registry = registry or get_http_client_registry()
         self.http_client_wrapper = registry.get_client("doi")
 
+    def get_metadata(self, doi: str) -> dict[str, any]:
+        """Gets the metadata of a work in CSL-JSON format via content negotiation."""
+        headers = {"Accept": "application/vnd.citationstyles.csl+json"}
+
+        try:
+            res = self.http_client_wrapper.get(
+                self.config.doi_api_url.replace("{doi}", str(doi)), headers=headers
+            )
+            csl_data = res.json()
+            logger.debug(
+                "Successfully resolved CSL-JSON metadata for DOI: %s",
+                doi,
+                extra={
+                    "status": "OK",
+                    "event": "doi_csl_json_success",
+                    "doi": doi,
+                },
+            )
+            return csl_data
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                logger.warning(
+                    "DOI not found (404) for CSL-JSON: %s",
+                    doi,
+                    extra={
+                        "status": "KO",
+                        "event": "doi_csl_json_not_found",
+                        "doi": doi,
+                        "status_code": 404,
+                    },
+                )
+                return {}
+            raise e
+
     def get_reference(self, doi: str, style: str = "apa") -> str:
         """Gets the reference formatted to a style and ready to include in a
         bibliography.
