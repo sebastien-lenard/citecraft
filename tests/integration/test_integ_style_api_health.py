@@ -5,23 +5,20 @@ from manuscript_reference_lister.repositories import StyleRepository
 
 @pytest.mark.integration
 @pytest.mark.vcr
-def test_style_api_health() -> None:
-    """Check Crossref Style API health and verify Polite Pool headers via VCR."""
-
+def test_style_repository_integration() -> None:
+    """Verify real CSL file extraction from the remote repository and structure
+    compliance."""
     repo = StyleRepository("apa")
-    headers = {
-        "User-Agent": f"ManuscriptRefLister/1.0 (mailto:"
-        f"{repo.config.crossref_api_email})"
-    }
 
+    # 1. Fetch metadata from the real repository endpoint
+    repo.fetch_style_metadata()
+    assert repo.csl_content is not None, (
+        "Failed to download the remote CSL filecontent."
+    )
+
+    # 2. Validate structural constraints on real data
     repo.validate_favored_style()
     assert repo.favored_style_is_valid is True, (
-        "APA style was not found or API call failed."
+        f"The downloaded CSL for '{repo.favored_style}' did not meet structure"
+        f"boundaries."
     )
-
-    response = repo.http_client_wrapper.get(
-        repo.config.crossref_api_styles_url, headers=headers
-    )
-
-    limit = response.headers.get("X-Rate-Limit-Limit")
-    assert limit is not None, "X-Rate-Limit-Limit header is missing from the response."

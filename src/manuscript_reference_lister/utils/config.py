@@ -39,6 +39,9 @@ class AppConfig(BaseSettings):
     doi_api_timeout: float = 10.0
     doi_api_max_retry: int = 10
 
+    # Style repo
+    style_repo_url: str
+
     # Other Logic
     context_keywords: str = ""
     journal_update_days: int = 30
