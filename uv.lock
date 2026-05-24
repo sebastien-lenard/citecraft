@@ -34,6 +34,18 @@ wheels = [
 ]
 
 [[package]]
+name = "citeproc-py"
+version = "0.9.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lxml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5c/76/1d3dadd2f4ef56543c3107ea05be1ed20286a6647536547fe9cb8f7c31b6/citeproc_py-0.9.3.tar.gz", hash = "sha256:8cf1bdb89e629075051ff225ae4b4edf485dab08a1ffe656506357a61a658649", size = 162441, upload-time = "2026-04-30T15:57:06.331Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/52/c1/c5243f5520685e4dbfc8062ee02b24ce5a30dc5aab2c38d2dc5f1474bfd3/citeproc_py-0.9.3-py3-none-any.whl", hash = "sha256:963c3ef62ecee022899d5760667753b3321ec2b34e872027a2a2fc0a603356c2", size = 183041, upload-time = "2026-04-30T15:57:04.803Z" },
+]
+
+[[package]]
 name = "click"
 version = "8.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -216,6 +228,7 @@ name = "manuscript-reference-lister"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "citeproc-py" },
     { name = "click" },
     { name = "email-validator" },
     { name = "httpx" },
@@ -236,6 +249,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "citeproc-py", specifier = ">=0.9.3" },
     { name = "click", specifier = ">=8.3.3" },
     { name = "email-validator", specifier = ">=2.3.0" },
     { name = "httpx", specifier = ">=0.28.1" },
