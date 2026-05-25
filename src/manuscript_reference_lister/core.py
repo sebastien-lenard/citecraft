@@ -86,6 +86,7 @@ class ParsingStep:
         if not ctx.input_text:
             raise ValueError("No manuscript text or input file provided.")
         ctx.style_repo = StyleRepository(ctx.style, config=ctx.config)
+        ctx.style_repo.fetch_style_metadata()
         ctx.style_repo.validate_favored_style()
         if not ctx.style_repo.favored_style_is_valid:
             raise ValueError(
@@ -155,6 +156,7 @@ class ReferenceFormattingStep:
         reference_service.fill_missing_references(
             records=ctx.work_repo.records,
             doi_repo=ctx.doi_repo,
+            csl_style_content=ctx.style_repo.csl_content,
             target_style=ctx.style_repo.favored_style,
         )
         ctx.work_repo.save_all()

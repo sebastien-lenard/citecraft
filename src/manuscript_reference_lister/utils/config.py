@@ -79,6 +79,35 @@ class AppConfig(BaseSettings):
         ]
     )
 
+    work_cls_schema_blacklist_fields: list[str] = Field(
+        default_factory=lambda: [
+            "URL",
+            "alternative-id",
+            "assertion",
+            "content-domain",
+            "is-referenced-by-count",
+            "license",
+            "link",
+            "member",
+            "prefix",
+            "reference",
+            "reference-count",
+            "references-count",
+            "score",
+            "source",
+            "update-policy",
+        ]
+    )
+
+    author_cls_schema_blacklist_fields: list[str] = Field(
+        default_factory=lambda: [
+            "ORCID",
+            "affiliation",
+            "authenticated-orcid",
+            "role",
+        ]
+    )
+
     # HTML Cleaning Configuration
     # Structural tags to explicitly preserve in the local repository
     preserved_html_tags: set[str] = Field(default={"sup", "sub"})
