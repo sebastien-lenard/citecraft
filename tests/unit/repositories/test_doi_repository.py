@@ -40,26 +40,6 @@ def test_get_metadata_success(repo: DoiRepository) -> None:
         assert kwargs["headers"]["Accept"] == "application/vnd.citationstyles.csl+json"
 
 
-def test_get_metadata_success_with_id_injection(repo: DoiRepository) -> None:
-    """Verify that 'id' is correctly inferred from 'DOI' if missing initially."""
-    mock_json_data = {
-        "DOI": "10.1038/s41561-020-0585-2",
-        "type": "article-journal",
-        "title": "Title of the Paper",
-    }
-
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = mock_json_data
-
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_response):
-        result = repo.get_metadata("10.1038/s41561-020-0585-2")
-
-        # L'id doit avoir été injecté à partir du DOI
-        assert result["id"] == "10.1038/s41561-020-0585-2"
-        assert result["DOI"] == "10.1038/s41561-020-0585-2"
-
-
 def test_get_metadata_missing_both_id_and_doi(repo: DoiRepository) -> None:
     """Verify that an empty dict is returned and warning logged if identity fields are
     absent."""
@@ -175,7 +155,6 @@ def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> No
 
         # Verify cleaning of work root fields
         assert "DOI" in filtered_result
-        assert "id" in filtered_result
         assert "title" in filtered_result
         assert "ISSN" not in filtered_result
         assert "is-referenced-by-count" not in filtered_result

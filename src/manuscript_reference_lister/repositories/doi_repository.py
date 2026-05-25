@@ -24,9 +24,8 @@ class DoiRepository:
 
     def get_metadata(self, doi: str) -> dict[str, any]:
         """Gets the metadata of a work in CSL-JSON format via content negotiation.
-        Ensures that metadata contains an attribute id, necessary to get a reference
-        using ReferenceService::get_reference() and not supplied by default using
-        DOI negotiation.
+        Ensures that metadata contains an attribute id or DOI, necessary for
+        CSLReference validation.
         """
         headers = {"Accept": "application/vnd.citationstyles.csl+json"}
 
@@ -37,33 +36,29 @@ class DoiRepository:
             res.raise_for_status()
             csl_metadata = res.json()
 
-            if "id" not in csl_metadata:
-                if "DOI" in csl_metadata:
-                    csl_metadata["id"] = csl_metadata["DOI"]
-                else:
-                    compact_json = json.dumps(csl_metadata, separators=(",", ":"))
-                    logger.debug(
-                        "Invalid CSL-JSON content: %s",
-                        compact_json,
-                        extra={
-                            "status": "KO",
-                            "event": "doi_csl_json_dump",
-                            "doi": doi,
-                        },
-                    )
-                    logger.warning(
-                        (
-                            "CSL-JSON metadata invalid (missing 'id' and 'DOI' field) for"
-                            " DOI:%s"
-                        ),
-                        doi,
-                        extra={
-                            "status": "KO",
-                            "event": "doi_csl_json_invalid_id_and_doi",
-                            "doi": doi,
-                        },
-                    )
-                    return {}
+            if "id" not in csl_metadata and "DOI" not in csl_metadata:
+                logger.debug(
+                    "Invalid CSL-JSON content: %s",
+                    json.dumps(csl_metadata, separators=(",", ":")),
+                    extra={
+                        "status": "KO",
+                        "event": "doi_csl_json_dump",
+                        "doi": doi,
+                    },
+                )
+                logger.warning(
+                    (
+                        "CSL-JSON metadata invalid (missing 'id' and 'DOI' field) for"
+                        " DOI:%s"
+                    ),
+                    doi,
+                    extra={
+                        "status": "KO",
+                        "event": "doi_csl_json_invalid_id_and_doi",
+                        "doi": doi,
+                    },
+                )
+                return {}
 
             work_blacklist_fields = getattr(
                 self.config, "work_cls_schema_blacklist_fields", []

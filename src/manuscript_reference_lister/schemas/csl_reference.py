@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .csl_date import CSLDate
 from .csl_name import CSLName
@@ -52,3 +52,23 @@ class CSLReference(BaseModel):
     abstract: str | None = None
     note: str | None = None
     language: str | None = None
+
+    @field_validator("ISSN", mode="before")
+    @classmethod
+    def handle_crossref_issn_array(cls, value: any) -> str | None:
+        """Intercepts the incoming ISSN data.
+        If an array, extracts the first available string.
+        """
+        if isinstance(value, list):
+            return str(value[0]) if value else None
+        return value
+
+    @model_validator(mode="before")
+    @classmethod
+    def clean_crossref_metadata(cls, data: any) -> any:
+        """Runs before any field-level validation to sanitize raw input."""
+        if isinstance(data, dict):
+            if "id" not in data and "DOI" in data:
+                data["id"] = data["DOI"]
+
+        return data
