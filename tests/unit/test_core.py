@@ -19,7 +19,7 @@ def mock_config(tmp_path: Path) -> AppConfig:
         crossref_api_journals_url="http://mock-crossref/journals",
         crossref_api_styles_url="http://mock-crossref/styles",
         crossref_api_works_url="http://mock-crossref/works",
-        doi_api_url="http://mock-doi",
+        doi_api_url="http://mock-doi/{doi}",
         local_repo_dir_path=tmp_path / "repo",
         output_dir_path=tmp_path / "output",
     )
