@@ -21,7 +21,7 @@ class WorkMetadata(BaseSchema):
     )
     style: str | None = None  # e.g. apa
     DOI: str | None = None  # e.g. 10.1038/s41561-020-0585-2
-    csl_metadata: str | None = None  # CSL-json metadata of the work
+    csl_metadata: dict | None = None  # CSL-dict metadata of the work
     type: str | None = None  # e.g. journal-article
 
     @field_validator("DOI", mode="before")
