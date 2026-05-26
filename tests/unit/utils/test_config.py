@@ -21,6 +21,8 @@ def mock_env_file():
         os.environ["DOI_API_URL"] = "https://example.com/{doi}"
         os.environ["STYLE_REPO_URL"] = "https://example.com/{style}"
         os.environ["ALL_STYLES_REPO_URL"] = "https://example.com"
+        os.environ["CHILD_STYLE_REPO_URL"] = "https://example.com/{style}"
+        os.environ["CSL_XML_NAMESPACES"] = '{"cs": "http://citationstyles.org/ns/"}'
         yield
 
 

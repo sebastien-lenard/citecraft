@@ -38,7 +38,10 @@ class AppConfig(BaseSettings):
 
     # --- Style Repositories ---
     style_repo_url: str  # Contains template {style}
+    child_style_repo_url: str  # Contains template {style}
     all_styles_repo_url: HttpUrl
+    csl_xml_namespaces: dict[str, str]
+    # Warning: csl_xml_namespaces with no HttpUrl type that Pydantic could alterate
 
     # --- Core Logic Settings ---
     context_keywords: str = ""
