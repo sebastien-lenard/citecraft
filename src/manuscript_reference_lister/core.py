@@ -85,7 +85,7 @@ class ParsingStep:
             ctx.input_text = DataLoader(ctx.input_file_path).extract_text_from_docx()
         if not ctx.input_text:
             raise ValueError("No manuscript text or input file provided.")
-        ctx.style_repo = StyleRepository(ctx.style, config=ctx.config)
+        ctx.style_repo = StyleRepository(favored_style=ctx.style, config=ctx.config)
         ctx.style_repo.fetch_style_metadata()
         ctx.style_repo.validate_favored_style()
         if not ctx.style_repo.favored_style_is_valid:

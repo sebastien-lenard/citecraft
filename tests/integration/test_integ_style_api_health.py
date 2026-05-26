@@ -5,20 +5,27 @@ from manuscript_reference_lister.repositories import StyleRepository
 
 @pytest.mark.integration
 @pytest.mark.vcr
-def test_style_repository_integration() -> None:
+def test_style_api_health() -> None:
     """Verify real CSL file extraction from the remote repository and structure
     compliance."""
-    repo = StyleRepository("apa")
 
-    # 1. Fetch metadata from the real repository endpoint
+    # --- Validate fetch csl metadata + xml structural constraints for a style name ---
+    repo = StyleRepository(favored_style="apa")
+
     repo.fetch_style_metadata()
     assert repo.csl_content is not None, (
         "Failed to download the remote CSL filecontent."
     )
 
-    # 2. Validate structural constraints on real data
     repo.validate_favored_style()
     assert repo.favored_style_is_valid is True, (
         f"The downloaded CSL for '{repo.favored_style}' did not meet structure"
         f"boundaries."
+    )
+
+    # --- Validate fetch parent style for a journal title ---
+    repo = StyleRepository(favored_journal_title="Nature Geoscience")
+    repo.fetch_style_metadata()
+    assert repo.csl_content is not None, (
+        "Failed to download the remote CSL filecontent."
     )

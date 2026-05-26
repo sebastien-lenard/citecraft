@@ -43,7 +43,8 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             return current_time
         return last_time
 
-    def _normalize_title(self, title: str) -> str:
+    @classmethod
+    def normalize_title(cls, title: str) -> str:
         """Normalize title for fuzzy matching (case, plurals, and delimiters)."""
         if not title:
             return ""
@@ -74,13 +75,13 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             return []
 
         # Normalize and put in a set (O(1) search)
-        required_normalized = {self._normalize_title(t) for t in titles if t}
+        required_normalized = {self.normalize_title(t) for t in titles if t}
 
         # Cache filter (O(N))
         unique_issns: set[str] = set()
         for record in self.records:
             if record.ISSN:
-                if self._normalize_title(record.input_title) in required_normalized:
+                if self.normalize_title(record.input_title) in required_normalized:
                     unique_issns.add(record.ISSN)
 
         return sorted(list(unique_issns))
@@ -146,13 +147,13 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             working_items = [exact_matches[0]]
         else:
             # Look for potential matches based on flexible business rules
-            target_norm = self._normalize_title(input_title)
+            target_norm = self.normalize_title(input_title)
             similar_items = []
             raw_similar_titles = []
 
             for item in items:
                 raw_title = item.get("title", "").strip()
-                if raw_title and self._normalize_title(raw_title) == target_norm:
+                if raw_title and self.normalize_title(raw_title) == target_norm:
                     similar_items.append(item)
                     raw_similar_titles.append(raw_title)
 

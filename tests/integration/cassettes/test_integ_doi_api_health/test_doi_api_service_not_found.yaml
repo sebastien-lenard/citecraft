@@ -1,0 +1,107 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Accept:
+      - application/vnd.citationstyles.csl+json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Host:
+      - doi.org
+      User-Agent:
+      - python-httpx/0.28.1
+    method: GET
+    uri: https://doi.org/10.1000/xyz123_non_existent_doi?mailto=sebastien.lenard%40gmail.com
+  response:
+    body:
+      string: !!binary |
+        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
+    headers:
+      CF-RAY:
+      - a019b631a9bb50df-YVR
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/html;charset=utf-8
+      Date:
+      - Tue, 26 May 2026 03:32:16 GMT
+      Nel:
+      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
+      Report-To:
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=wGih6LB%2BWKQy75jHBoCw7n9kugY4PNR%2FMBsjx%2FVxo8mAjhV3y8%2Flark5FXoQHK0LA5RROJEYDkDLigh1ZV6Ey7XBVIcKdN%2Feb6k6CYBtZipMcsfizL1okPabRHYk21%2FM%2BY47rRc%3D"}]}'
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      vary:
+      - Origin
+      - accept-encoding
+    status:
+      code: 404
+      message: Not Found
+version: 1

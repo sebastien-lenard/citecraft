@@ -13,7 +13,7 @@ class HTTPClientRegistry:
     def get_client(self, domain_key: str) -> HTTPClientWrapper:
         """Return an existing wrapper or create a new one for domain_key."""
         if domain_key not in self._registry:
-            if domain_key in ["crossref", "github"]:
+            if domain_key in ["crossref", "default"]:
                 self._registry[domain_key] = HTTPClientWrapper(
                     delay=self.config.crossref_api_delay,
                     email=self.config.crossref_api_email,

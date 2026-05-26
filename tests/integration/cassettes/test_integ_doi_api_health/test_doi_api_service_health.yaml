@@ -3,7 +3,7 @@ interactions:
     body: ''
     headers:
       Accept:
-      - text/x-bibliography; style=apa
+      - application/vnd.citationstyles.csl+json
       Accept-Encoding:
       - gzip, deflate
       Connection:
@@ -21,17 +21,17 @@ interactions:
         <body><a href="https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform">https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform</a></body></html>'
     headers:
       CF-RAY:
-      - 9fc61a333efa5c9d-YVR
+      - a019b62abc344d45-YVR
       Connection:
       - keep-alive
       Content-Type:
       - text/html;charset=utf-8
       Date:
-      - Sat, 16 May 2026 00:00:28 GMT
+      - Tue, 26 May 2026 03:32:15 GMT
       Nel:
       - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
       Report-To:
-      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=dGtgndZlM2yMpGjCuHq%2Bcmos40lAwS3hcmSScieHlhCAZwX3MrDUx38XekYPFdjzlKqa3%2B5gJGTiznPlm75yxAmZYalVcSWu9fLc6L1NO3afT0o%2BCvIwnwz7MwML5JP2om4Qjjk%3D"}]}'
+      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=LQcFvmIOca5tTe2suoBbhvpahqMQRgMprDTrFyJ8l6TDgrWIsyXzkMMho%2FT20EETvbVrwuW1zNyWcSG8gv1L%2BIW5TmKyeGS8Bl7klyKMxScWvUPseWVyvEm5ch1fF7oPMJilenU%3D"}]}'
       Server:
       - cloudflare
       Strict-Transport-Security:
@@ -43,7 +43,7 @@ interactions:
       cf-cache-status:
       - DYNAMIC
       expires:
-      - Sat, 16 May 2026 00:50:20 GMT
+      - Tue, 26 May 2026 03:49:38 GMT
       location:
       - https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
       permissions-policy:
@@ -58,7 +58,7 @@ interactions:
     body: ''
     headers:
       Accept:
-      - text/x-bibliography; style=apa
+      - application/vnd.citationstyles.csl+json
       Accept-Encoding:
       - gzip, deflate
       Connection:
@@ -71,19 +71,202 @@ interactions:
     uri: https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
   response:
     body:
-      string: "Lenard, S. J. P., Lav\xE9, J., France-Lanord, C., Auma\xEEtre, G.,
-        Bourl\xE8s, D. L., & Keddadouche, K. (2020). Steady erosion rates in the Himalayas
-        through late Cenozoic climatic changes. Nature Geoscience, 13(6), 448\u2013452.
-        https://doi.org/10.1038/s41561-020-0585-2\n"
+      string: !!binary |
+        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
     headers:
       Connection:
       - keep-alive
+      Content-Length:
+      - '10595'
       Content-Type:
-      - text/x-bibliography
+      - application/vnd.citationstyles.csl+json
       Date:
-      - Sat, 16 May 2026 00:00:29 GMT
-      Transfer-Encoding:
-      - chunked
+      - Tue, 26 May 2026 03:32:15 GMT
       access-control-allow-headers:
       - X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language,
         Accept-Ranges, Cache-Control
@@ -91,448 +274,14 @@ interactions:
       - '*'
       access-control-expose-headers:
       - Link
+      content-encoding:
+      - gzip
       permissions-policy:
       - interest-cohort=()
       server:
       - Jetty(9.4.40.v20210413)
       vary:
-      - Accept
-      x-api-pool:
-      - public
-      x-concurrency-limit:
-      - '1'
-      x-rate-limit-interval:
-      - 1s
-      x-rate-limit-limit:
-      - '5'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - doi.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://doi.org/10.1038/s41561-020-0585-2?mailto=sebastien.lenard%40gmail.com
-  response:
-    body:
-      string: '<html><head><title>Handle Redirect</title></head>
-
-        <body><a href="https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform">https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform</a></body></html>'
-    headers:
-      CF-RAY:
-      - 9fc623df4ab883f9-YVR
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/html;charset=utf-8
-      Date:
-      - Sat, 16 May 2026 00:07:04 GMT
-      Nel:
-      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
-      Report-To:
-      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=5euOdjULc9ET1si7vem05KXbrG0rmpnzGzldFmrtNN%2FszKp56bkbiBQdH8YfOFHAd4xpo8OXu9Zg%2Bv8rX0%2FaM3JKU57vNw3OUNnPU7uMZuuO6FUCE8i%2BiqUHd5GHhJQMDPse2tE%3D"}]}'
-      Server:
-      - cloudflare
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      Transfer-Encoding:
-      - chunked
-      alt-svc:
-      - h3=":443"; ma=86400
-      cf-cache-status:
-      - DYNAMIC
-      expires:
-      - Sat, 16 May 2026 00:50:20 GMT
-      location:
-      - https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-      permissions-policy:
-      - interest-cohort=(),browsing-topics=()
-      vary:
-      - Origin
-      - Accept
-    status:
-      code: 302
-      message: Found
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - api.crossref.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-  response:
-    body:
-      string: "Lenard, S. J. P., Lav\xE9, J., France-Lanord, C., Auma\xEEtre, G.,
-        Bourl\xE8s, D. L., & Keddadouche, K. (2020). Steady erosion rates in the Himalayas
-        through late Cenozoic climatic changes. Nature Geoscience, 13(6), 448\u2013452.
-        https://doi.org/10.1038/s41561-020-0585-2\n"
-    headers:
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/x-bibliography
-      Date:
-      - Sat, 16 May 2026 00:07:05 GMT
-      Transfer-Encoding:
-      - chunked
-      access-control-allow-headers:
-      - X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language,
-        Accept-Ranges, Cache-Control
-      access-control-allow-origin:
-      - '*'
-      access-control-expose-headers:
-      - Link
-      permissions-policy:
-      - interest-cohort=()
-      server:
-      - Jetty(9.4.40.v20210413)
-      vary:
-      - Accept
-      x-api-pool:
-      - public
-      x-concurrency-limit:
-      - '1'
-      x-rate-limit-interval:
-      - 1s
-      x-rate-limit-limit:
-      - '5'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - doi.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://doi.org/10.1038/s41561-020-0585-2?mailto=sebastien.lenard%40gmail.com
-  response:
-    body:
-      string: '<html><head><title>Handle Redirect</title></head>
-
-        <body><a href="https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform">https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform</a></body></html>'
-    headers:
-      CF-RAY:
-      - 9fc629e18a366052-YVR
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/html;charset=utf-8
-      Date:
-      - Sat, 16 May 2026 00:11:10 GMT
-      Nel:
-      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
-      Report-To:
-      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=EoBZJPKAomAS60727B0t1%2FwWjPOJ6cIl6mxXP7y389FmMa3F4mET5rlnu1ufCHTX99GJmCvDYiTho122ogmynQGem74KmWWIHj%2Ff0Pkx%2F9%2B%2FH%2BzWAAq%2BdzPtpmWcjE6n8p23hQA%3D"}]}'
-      Server:
-      - cloudflare
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      Transfer-Encoding:
-      - chunked
-      alt-svc:
-      - h3=":443"; ma=86400
-      cf-cache-status:
-      - DYNAMIC
-      expires:
-      - Sat, 16 May 2026 00:47:10 GMT
-      location:
-      - https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-      permissions-policy:
-      - interest-cohort=(),browsing-topics=()
-      vary:
-      - Origin
-      - Accept
-    status:
-      code: 302
-      message: Found
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - api.crossref.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-  response:
-    body:
-      string: "Lenard, S. J. P., Lav\xE9, J., France-Lanord, C., Auma\xEEtre, G.,
-        Bourl\xE8s, D. L., & Keddadouche, K. (2020). Steady erosion rates in the Himalayas
-        through late Cenozoic climatic changes. Nature Geoscience, 13(6), 448\u2013452.
-        https://doi.org/10.1038/s41561-020-0585-2\n"
-    headers:
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/x-bibliography
-      Date:
-      - Sat, 16 May 2026 00:11:11 GMT
-      Transfer-Encoding:
-      - chunked
-      access-control-allow-headers:
-      - X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language,
-        Accept-Ranges, Cache-Control
-      access-control-allow-origin:
-      - '*'
-      access-control-expose-headers:
-      - Link
-      permissions-policy:
-      - interest-cohort=()
-      server:
-      - Jetty(9.4.40.v20210413)
-      vary:
-      - Accept
-      x-api-pool:
-      - public
-      x-concurrency-limit:
-      - '1'
-      x-rate-limit-interval:
-      - 1s
-      x-rate-limit-limit:
-      - '5'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - doi.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://doi.org/10.1038/s41561-020-0585-2?mailto=roger.dupont%40gmail.com
-  response:
-    body:
-      string: '<html><head><title>Handle Redirect</title></head>
-
-        <body><a href="https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform">https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform</a></body></html>'
-    headers:
-      CF-RAY:
-      - 9fcea9bcce802c3d-YVR
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/html;charset=utf-8
-      Date:
-      - Sun, 17 May 2026 00:56:34 GMT
-      Nel:
-      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
-      Report-To:
-      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=4bMx1GCS5oURJ%2B0ROCbu2oiB4hPrbn6PiZR9C2fnUL6bWJTRtqa%2BPElZNQvMhbRc59ZFXtXpY9wVYZ%2BbLx95d%2Bsd98CACRRWxnVf7UKwP4NJi4DThHFsV4Id39X8fVtJUHhAniA%3D"}]}'
-      Server:
-      - cloudflare
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      Transfer-Encoding:
-      - chunked
-      alt-svc:
-      - h3=":443"; ma=86400
-      cf-cache-status:
-      - DYNAMIC
-      expires:
-      - Sun, 17 May 2026 01:49:42 GMT
-      location:
-      - https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-      permissions-policy:
-      - interest-cohort=(),browsing-topics=()
-      vary:
-      - Origin
-      - Accept
-    status:
-      code: 302
-      message: Found
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - api.crossref.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-  response:
-    body:
-      string: "Lenard, S. J. P., Lav\xE9, J., France-Lanord, C., Auma\xEEtre, G.,
-        Bourl\xE8s, D. L., & Keddadouche, K. (2020). Steady erosion rates in the Himalayas
-        through late Cenozoic climatic changes. Nature Geoscience, 13(6), 448\u2013452.
-        https://doi.org/10.1038/s41561-020-0585-2\n"
-    headers:
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/x-bibliography
-      Date:
-      - Sun, 17 May 2026 00:56:34 GMT
-      Transfer-Encoding:
-      - chunked
-      access-control-allow-headers:
-      - X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language,
-        Accept-Ranges, Cache-Control
-      access-control-allow-origin:
-      - '*'
-      access-control-expose-headers:
-      - Link
-      permissions-policy:
-      - interest-cohort=()
-      server:
-      - Jetty(9.4.40.v20210413)
-      vary:
-      - Accept
-      x-api-pool:
-      - public
-      x-concurrency-limit:
-      - '1'
-      x-rate-limit-interval:
-      - 1s
-      x-rate-limit-limit:
-      - '5'
-    status:
-      code: 200
-      message: OK
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - doi.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://doi.org/10.1038/s41561-020-0585-2?mailto=sebastien.lenard%40gmail.com
-  response:
-    body:
-      string: '<html><head><title>Handle Redirect</title></head>
-
-        <body><a href="https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform">https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform</a></body></html>'
-    headers:
-      CF-RAY:
-      - a00f9a6caadd6951-YVR
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/html;charset=utf-8
-      Date:
-      - Sun, 24 May 2026 22:05:41 GMT
-      Nel:
-      - '{"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}'
-      Report-To:
-      - '{"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=UiJanXE2NmOgkLWUZ2h0AdxXaaS2ox1zshTj%2B%2FXIvL6EBAjbGKWTjN9PqPhWhf%2BCTYj5proLQXixD6YmE2d%2BjfU4PzkXScwyb1gf6DONtKeEFiY%2FAWuKnL370A95D3YfG0yCu5g%3D"}]}'
-      Server:
-      - cloudflare
-      Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      Transfer-Encoding:
-      - chunked
-      alt-svc:
-      - h3=":443"; ma=86400
-      cf-cache-status:
-      - DYNAMIC
-      expires:
-      - Sun, 24 May 2026 22:49:34 GMT
-      location:
-      - https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-      permissions-policy:
-      - interest-cohort=(),browsing-topics=()
-      vary:
-      - Origin
-      - Accept
-    status:
-      code: 302
-      message: Found
-- request:
-    body: ''
-    headers:
-      Accept:
-      - text/x-bibliography; style=apa
-      Accept-Encoding:
-      - gzip, deflate
-      Connection:
-      - keep-alive
-      Host:
-      - api.crossref.org
-      User-Agent:
-      - python-httpx/0.28.1
-    method: GET
-    uri: https://api.crossref.org/v1/works/10.1038%2Fs41561-020-0585-2/transform
-  response:
-    body:
-      string: "Lenard, S. J. P., Lav\xE9, J., France-Lanord, C., Auma\xEEtre, G.,
-        Bourl\xE8s, D. L., & Keddadouche, K. (2020). Steady erosion rates in the Himalayas
-        through late Cenozoic climatic changes. Nature Geoscience, 13(6), 448\u2013452.
-        https://doi.org/10.1038/s41561-020-0585-2\n"
-    headers:
-      Connection:
-      - keep-alive
-      Content-Type:
-      - text/x-bibliography
-      Date:
-      - Sun, 24 May 2026 22:05:41 GMT
-      Transfer-Encoding:
-      - chunked
-      access-control-allow-headers:
-      - X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language,
-        Accept-Ranges, Cache-Control
-      access-control-allow-origin:
-      - '*'
-      access-control-expose-headers:
-      - Link
-      permissions-policy:
-      - interest-cohort=()
-      server:
-      - Jetty(9.4.40.v20210413)
-      vary:
-      - Accept
+      - Accept, Accept-Encoding
       x-api-pool:
       - public
       x-concurrency-limit:
