@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 @click.group()
 @click.pass_context
 def cli(ctx: click.Context) -> None:
-    """CLI main entry point."""
+    """CLI entry point for manuscript citation processing."""
     # Load config here at execution, not import
     ctx.ensure_object(dict)
     if "config" not in ctx.obj:
@@ -29,14 +29,20 @@ def cli(ctx: click.Context) -> None:
 @cli.command()
 @click.pass_context
 @click.option(
-    "-f", "--input_file", type=str, default=None, help="Filepath to docx manuscript"
+    "-f",
+    "--input-file",
+    "--input_file",
+    type=str,
+    default=None,
+    help="Filepath to docx manuscript",
 )
 @click.option(
     "-t", "--text", type=str, default=None, help="Text to parse (can also be piped)"
 )
 @click.option(
     "-o",
-    "--output_file",
+    "--output-file",
+    "output_file",
     type=str,
     default=None,
     help="Filepath for the output Bibliography CSV",
@@ -84,7 +90,8 @@ def main(
     clear_cache: bool,
 ) -> None:
     """\b
-    CLI entry point.
+    CLI entry point. Run core manuscript extraction pipeline with Click command
+    configurations.
     Examples:
         # Process a file and specify output
         $ uv run python -m manuscript_reference_lister \
@@ -110,7 +117,7 @@ def main(
     log_dir = setup_logging(verbose_level=verbose)
     logger.info("Starting manuscript-reference-lister...")
     logger.debug("Current working directory: %s", os.getcwd())
-    logger.debug("Logs are being written to: %s", log_dir)
+    logger.debug("Logs are being written to: %s", str(log_dir))
 
     cache_summary_message = None
 
@@ -137,7 +144,7 @@ def main(
                 sys.exit(0)
 
             # Define cache files from configuration paths
-            repo_path = Path(config.local_repo_dir_path)
+            repo_path = Path(config.local_repo_dir_path).resolve()
             cache_files = [
                 repo_path / "journal_records.json",  # Local journal database
                 repo_path / "work_records.json",  # Local works repository
@@ -161,7 +168,9 @@ def main(
                         moved_count += 1
                     except Exception as e:
                         logger.error(
-                            "Failed to archive cache file %s: %s", cache_file.name, e
+                            "Failed to archive cache file %s: %s",
+                            cache_file.name,
+                            str(e),
                         )
                         click.secho(
                             f"Error archiving {cache_file.name}: {e}",
@@ -204,7 +213,7 @@ def main(
         style = style if style else config.default_reference_style
 
         anomalies = {}
-        export_metadata = {}
+        export_metadata = None
 
         # ProgressBarContext handles internal log interception, threading, lock sync,
         # and silent mode when verbose > 0
@@ -312,7 +321,6 @@ def main(
                         status_text = "Warning: Multiple matches"
 
                     ref_text = row.get("Reference") or "None"
-
                     ref_lines = textwrap.wrap(ref_text, width=col3_w) or ["None"]
 
                     # First row line containing metadata elements
@@ -367,7 +375,6 @@ def main(
         click.secho(f"Error: An unexpected error occurred: {e}", fg="red", err=True)
 
         if verbose > 0:
-            # If -v or -vv activated, traceback printed
             click.secho("\n--- Debug Traceback ---", fg="yellow", err=True)
             tb_lines = traceback.format_exception(type(e), e, e.__traceback__, limit=3)
             click.echo("".join(tb_lines), err=True)

@@ -1,15 +1,15 @@
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .csl_date import CSLDate
 from .csl_name import CSLName
 
-csl_config = ConfigDict(populate_by_name=True, extra="ignore")
-
 
 class CSLReference(BaseModel):
     """Main schema representing a strict, valid CSL-JSON reference item."""
 
-    model_config = csl_config
+    model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
     # Required structural roots
     id: str
@@ -55,20 +55,17 @@ class CSLReference(BaseModel):
 
     @field_validator("ISSN", mode="before")
     @classmethod
-    def handle_crossref_issn_array(cls, value: any) -> str | None:
-        """Intercepts the incoming ISSN data.
-        If an array, extracts the first available string.
-        """
+    def handle_crossref_issn_array(cls, value: Any) -> str | None:
+        """Intercept the incoming ISSN data and extract the first element if a list."""
         if isinstance(value, list):
             return str(value[0]) if value else None
         return value
 
     @model_validator(mode="before")
     @classmethod
-    def clean_crossref_metadata(cls, data: any) -> any:
-        """Runs before any field-level validation to sanitize raw input."""
+    def clean_crossref_metadata(cls, data: Any) -> Any:
+        """Run sanitize routine to assign ID from DOI if missing."""
         if isinstance(data, dict):
             if "id" not in data and "DOI" in data:
                 data["id"] = data["DOI"]
-
         return data

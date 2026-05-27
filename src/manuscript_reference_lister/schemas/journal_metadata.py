@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Self
+from typing import Self, override
 
 from pydantic import Field, field_validator, model_validator
 
@@ -22,18 +22,16 @@ class JournalMetadata(BaseSchema):
         default_factory=lambda: str(date.today())
     )  # ISO format: YYYY-MM-DD
 
+    @override
     @property
     def identity_key(self) -> tuple[str, str | None]:
-        """Returns the unique identifier used for deduplication."""
+        """Return the unique tuple identifier used for deduplication."""
         return (self.input_title, self.ISSN)
 
     @property
     def is_complete(self) -> bool:
-        """Checks if all core metadata fields are populated.
-        Excludes 'similar_titles' and 'update'.
-        """
+        """Check if all core metadata fields are populated."""
         excluded_fields = {"similar_titles", "update"}
-
         return all(
             getattr(self, field_name) is not None
             for field_name in self.__class__.model_fields
@@ -54,18 +52,19 @@ class JournalMetadata(BaseSchema):
     @field_validator("ISSN")
     @classmethod
     def validate_issn_format(cls, v: str | None) -> str | None:
-        """Validate ISSN."""
+        """Validate and format the ISSN string with a hyphen."""
         if v and len(v) == 8 and "-" not in v:
             return f"{v[:4]}-{v[4:]}"
         return v
 
     @model_validator(mode="after")
     def validate_year_range(self) -> Self:
-        """Validate years."""
+        """Assert that start year is chronologically before end year."""
         if self.start_year and self.end_year:
             if self.start_year > self.end_year:
                 raise ValueError(
                     f"start_year ({self.start_year}) should be lower than end_year"
                     f" ({self.end_year})"
                 )
+            return self
         return self

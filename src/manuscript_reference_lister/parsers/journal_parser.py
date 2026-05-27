@@ -5,14 +5,16 @@ logger = logging.getLogger(__name__)
 
 
 class JournalParser:
-    """Handles extraction of journal titles from raw text."""
+    """Handles extraction of unique journal titles from marked raw text blocks."""
+
+    def __init__(self) -> None:
+        # Pre-compile regex patterns for performance optimization
+        self._journals_marker_regex = re.compile(r"^Journals\s*$", re.MULTILINE)
+        self._double_newline_regex = re.compile(r"\n\s*\n")
 
     def extract_all(self, text: str) -> list[str]:
-        """Extract journal titles in a text. The titles should be positioned below a
-        line containing only the text Journals, and separated by an EOL."""
-        # Matches "Journals" only if it is the only word on the line
-        # re.MULTILINE makes ^ and $ work per line
-        matches = list(re.finditer(r"^Journals\s*$", text, re.MULTILINE))
+        """Extract journal titles listed below the single-line marker 'Journals'."""
+        matches = list(self._journals_marker_regex.finditer(text))
 
         if not matches:
             logger.warning(
@@ -24,13 +26,12 @@ class JournalParser:
             )
             return []
 
-        # Start from the end of the last "Journals" match
+        # Start parsing from the end of the last matched section marker
         start_index = matches[-1].end()
         remaining_text = text[start_index:]
 
-        # Look for the first occurrence of two newlines (the "break")
-        # \n\s*\n matches a newline, any whitespace/tabs, then another newline
-        break_match = re.search(r"\n\s*\n", remaining_text)
+        # Locate the terminating empty double newline boundary
+        break_match = self._double_newline_regex.search(remaining_text)
 
         logger.debug(
             "Journal block delimited (Stop on double newline: %s)",
@@ -47,9 +48,10 @@ class JournalParser:
             remaining_text[: break_match.start()] if break_match else remaining_text
         )
 
-        # Split into lines, strip whitespace, and filter out empty strings
-        results = [line.strip() for line in relevant_block.splitlines() if line.strip()]
-        results = list(dict.fromkeys(results))  # unique titles
+        # Isolate lines, discard empty lines, and preserve insertion-order uniqueness
+        raw_lines = (line.strip() for line in relevant_block.splitlines())
+        results = list(dict.fromkeys(line for line in raw_lines if line))
+
         logger.info(
             "Extracted %d unique journal titles from section",
             len(results),

@@ -9,7 +9,7 @@ class BaseSchema(BaseModel):
     )
 
     @property
-    def identity_key(self):
+    def identity_key(self) -> str:
         """Return a unique identifier for deduplication."""
         raise NotImplementedError("Subclasses must implement identity_key")
 

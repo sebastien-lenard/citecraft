@@ -8,16 +8,18 @@ logger = logging.getLogger(__name__)
 
 
 class CitationParser:
-    """Handles extraction of citations from raw text."""
+    """Handles extraction of narrative and parenthetical academic citations from raw text."""
 
     def __init__(
-        self, blacklist: list[str] | None = None, config: AppConfig | None = None
-    ):
+        self,
+        blacklist: list[str] | None = None,
+        config: AppConfig | None = None,
+    ) -> None:
         # Extended blacklist to avoid confusion with figures/tables
         config = config or get_config()
-        self.blacklist = blacklist or config.parser_blacklist
+        self.blacklist: list[str] = blacklist or config.parser_blacklist
 
-        # Universal dash handling (standard, unicode 2010-2015)
+        # Unicode and standard dash ranges
         dash_range = r"-\u2010-\u2015"
         dash_class = rf"[{dash_range}]"
 
@@ -40,21 +42,38 @@ class CitationParser:
         name_unit = rf"(?:{name_with_initials}|{name_without_initials})"
 
         # Author pattern logic:
-        # Matches: Author (monograph), Author et al., or Author and/et Author
-        self.author_pattern = (
+        # Matches Author (monograph), Author et al., or Author and/et Author
+        self.author_pattern: str = (
             rf"{name_unit}(?:\s+et\s+al\.|(?:\s+(?:and|et)\s+{name_unit}))?"
         )
 
-        # Matches: 1997 OR 1997a, extended to (1600-2099)
-        self.year_pattern = r"\b(?:16|17|18|19|20)\d{2}[a-z]?\b"
+        # Matches years 1600-2099 optionally followed by a single character suffix
+        self.year_pattern: str = r"\b(?:16|17|18|19|20)\d{2}[a-z]?\b"
+
+        # Pre-compiled regular expressions for runtime efficiency
+        self._narrative_regex = re.compile(
+            rf"({self.author_pattern})\s*\((({self.year_pattern})(?:,\s*{self.year_pattern})*)\)"
+        )
+        self._year_regex = re.compile(self.year_pattern)
+        self._author_comma_regex = re.compile(rf"({self.author_pattern})\s*,")
+
+        # Pre-compiled blacklist search and replace patterns
+        self._blacklist_search = {
+            word: re.compile(rf"\b{word}\b", flags=re.IGNORECASE)
+            for word in self.blacklist
+        }
+        self._blacklist_replace = {
+            word: re.compile(rf"\b{word}\b[. ,]*", flags=re.IGNORECASE)
+            for word in self.blacklist
+        }
 
     def is_blacklisted(self, word: str) -> bool:
-        """Check if a word is in the blacklist using strict matching."""
+        """Check if a word matches any element in the configured blacklist."""
         clean_word = re.sub(r"[.,;]", "", word)
         return clean_word in self.blacklist
 
     def extract_all(self, text: str) -> list[CitationMetadata]:
-        """
+        """Extract narrative and parenthetical citations from raw text strings.
         Extract narrative (e.g. Hamling (2020)) and parenthetical (e.g. (Lenard et al.,
         2020)) citations (can be duplicates).
         Handles complex cases:
@@ -69,19 +88,14 @@ class CitationParser:
         - citations with ancillary words (blacklist, e.g. Fig., see, Table)
         - don't capture isolated years (e.g. (2020)) or dates (March 6, 2020)
         """
-        results = []
+        results: list[CitationMetadata] = []
 
         # 1. NARRATIVE CITATIONS: Hovius et al. (1997, 1999)
         # Handles one or multiple years inside the parentheses following an author.
-        narrative_regex = (
-            rf"({self.author_pattern})\s*"
-            rf"\((({self.year_pattern})(?:,\s*{self.year_pattern})*)\)"
-        )
-
-        for match in re.finditer(narrative_regex, text):
+        for match in self._narrative_regex.finditer(text):
             author_name = match.group(1).strip()
             # Capture all years listed (e.g., ['2017', '2019'])
-            years = re.findall(self.year_pattern, match.group(2))
+            years = self._year_regex.findall(match.group(2))
             for y in years:
                 results.append(
                     CitationMetadata(
@@ -99,13 +113,11 @@ class CitationParser:
             groups = block.split(";")
             for group in groups:
                 clean_group = group.strip()
-                # Clean the group of blacklist words
+                # Optimize search & replace via pre-compiled regex structures
                 for word in self.blacklist:
-                    if re.search(rf"\b{word}\b", clean_group, flags=re.IGNORECASE):
+                    if self._blacklist_search[word].search(clean_group):
                         previous_group = clean_group
-                        clean_group = re.sub(
-                            rf"\b{word}\b[. ,]*", "", clean_group, flags=re.IGNORECASE
-                        )
+                        clean_group = self._blacklist_replace[word].sub("", clean_group)
                         logger.debug(
                             "Blacklist word '%s' stripped from parenthetical group",
                             word,
@@ -120,10 +132,10 @@ class CitationParser:
 
                 # Requirement: Group must contain an author pattern followed by year(s).
                 # This prevents capturing isolated dates like (2020) or (in 2020).
-                author_match = re.search(rf"({self.author_pattern})\s*,", clean_group)
+                author_match = self._author_comma_regex.search(clean_group)
                 if author_match:
                     author_name = author_match.group(1).strip()
-                    years = re.findall(f"({self.year_pattern})", clean_group)
+                    years = self._year_regex.findall(clean_group)
                     for y in years:
                         results.append(
                             CitationMetadata(
@@ -132,6 +144,7 @@ class CitationParser:
                                 type="parenthetical",
                             )
                         )
+
         logger.info(
             "Extracted %d raw citations from text",
             len(results),

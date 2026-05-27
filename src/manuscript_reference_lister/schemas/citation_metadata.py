@@ -1,6 +1,6 @@
 from typing import Literal, override
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from .base_schema import BaseSchema
 
@@ -8,7 +8,7 @@ from .base_schema import BaseSchema
 class CitationMetadata(BaseSchema):
     """Represents validated metadata for a citation in a manuscript."""
 
-    model_config = {"frozen": True}
+    model_config = ConfigDict(frozen=True)
 
     first_authors_txt: str = Field(
         min_length=1
@@ -19,5 +19,5 @@ class CitationMetadata(BaseSchema):
     @override
     @property
     def identity_key(self) -> tuple[str, str]:
-        """Returns the unique identifier used for deduplication."""
+        """Returns the unique tuple identifier used for deduplication."""
         return (self.first_authors_txt, self.year_and_suffix)

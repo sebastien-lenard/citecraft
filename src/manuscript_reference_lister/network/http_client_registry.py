@@ -6,14 +6,14 @@ from .http_client_wrapper import HTTPClientWrapper
 
 
 class HTTPClientRegistry:
-    def __init__(self, config: AppConfig | None = None):
-        self.config = config or get_config()
+    def __init__(self, config: AppConfig | None = None) -> None:
+        self.config: AppConfig = config or get_config()
         self._registry: dict[str, HTTPClientWrapper] = {}
 
     def get_client(self, domain_key: str) -> HTTPClientWrapper:
-        """Return an existing wrapper or create a new one for domain_key."""
+        """Return an existing HTTP client wrapper or initialize a new instance."""
         if domain_key not in self._registry:
-            if domain_key in ["crossref", "default"]:
+            if domain_key in ("crossref", "default"):
                 self._registry[domain_key] = HTTPClientWrapper(
                     delay=self.config.crossref_api_delay,
                     email=self.config.crossref_api_email,
@@ -35,7 +35,7 @@ class HTTPClientRegistry:
         return self._registry[domain_key]
 
     def close_all(self) -> None:
-        """Close all open HTTP clients and clear the registry."""
+        """Close all active registered HTTP clients and clear registry entries."""
         for wrapper in self._registry.values():
             wrapper.close()
         self._registry.clear()
@@ -43,5 +43,5 @@ class HTTPClientRegistry:
 
 @lru_cache(maxsize=1)
 def get_http_client_registry() -> HTTPClientRegistry:
-    """Gets the single, cached HTTPClientRegistry instance for the application."""
+    """Get the globally cached HTTP client registry instance."""
     return HTTPClientRegistry()

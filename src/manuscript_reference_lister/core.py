@@ -5,6 +5,8 @@ from typing import Any, NamedTuple, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
+from manuscript_reference_lister.schemas import CitationMetadata
+
 from .network import get_http_client_registry
 from .parsers import CitationParser, JournalParser
 from .repositories import (
@@ -13,7 +15,7 @@ from .repositories import (
     StyleRepository,
     WorkRepository,
 )
-from .services import BibliographyService, ReferenceService
+from .services import BibliographyService, ExportResult, ReferenceService
 from .utils import DataLoader
 from .utils.config import AppConfig, get_config
 
@@ -33,7 +35,7 @@ class PipelineContext(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    # Input
+    # Input parameters
     input_file_path: str | None = None
     input_text: str | None = None
     style: str = "apa"
@@ -42,8 +44,8 @@ class PipelineContext(BaseModel):
     skip_journal_update: bool = False
     skip_work_update: bool = False
 
-    # Intermediary data
-    citations: list[Any] = []
+    # Intermediate state data
+    citations: list[CitationMetadata] = []
     journal_required_titles: list[str] = []
 
     # Repositories and services
@@ -52,9 +54,9 @@ class PipelineContext(BaseModel):
     work_repo: WorkRepository | None = None
     doi_repo: DoiRepository | None = None
 
-    # Output
+    # Output payloads
     anomalies_map: dict[str, Any] = {}
-    export_result: dict[str, Any] = {}
+    export_result: ExportResult | dict[str, Any] = {}
 
 
 class PipelineStep(Protocol):
@@ -67,7 +69,7 @@ class PipelineStep(Protocol):
     def message(self) -> str: ...
 
     def execute(self, ctx: PipelineContext) -> None:
-        """Process the stepC."""
+        """Run standard step logic and update state context."""
         ...
 
 
@@ -77,8 +79,8 @@ class PipelineStep(Protocol):
 
 
 class ParsingStep:
-    name = "parsing"
-    message = "Parsing manuscript and checking style..."
+    name: str = "parsing"
+    message: str = "Parsing manuscript and checking style..."
 
     def execute(self, ctx: PipelineContext) -> None:
         if not ctx.input_text and ctx.input_file_path:
@@ -98,8 +100,8 @@ class ParsingStep:
 
 
 class JournalUpdateStep:
-    name = "journals"
-    message = "Updating journal metadata..."
+    name: str = "journals"
+    message: str = "Updating journal metadata..."
 
     def execute(self, ctx: PipelineContext) -> None:
         ctx.journal_repo = JournalRepository(config=ctx.config)
@@ -114,8 +116,8 @@ class JournalUpdateStep:
 
 
 class WorkUpdateStep:
-    name = "works"
-    message = "Finding and linking work DOI to citations..."
+    name: str = "works"
+    message: str = "Finding and linking work DOI to citations..."
 
     def execute(self, ctx: PipelineContext) -> None:
         if ctx.journal_repo is None:
@@ -136,8 +138,8 @@ class WorkUpdateStep:
 
 
 class ReferenceFormattingStep:
-    name = "references"
-    message = "Formatting bibliographic references..."
+    name: str = "references"
+    message: str = "Formatting bibliographic references..."
 
     def execute(self, ctx: PipelineContext) -> None:
         if ctx.journal_repo is None:
@@ -163,8 +165,8 @@ class ReferenceFormattingStep:
 
 
 class ExportStep:
-    name = "export"
-    message = "Exporting bibliography to CSV..."
+    name: str = "export"
+    message: str = "Exporting bibliography to CSV..."
 
     def execute(self, ctx: PipelineContext) -> None:
         if ctx.work_repo is None:
@@ -211,14 +213,15 @@ class ExportStep:
 def run(
     input_file_path: str | None,
     input_text: str | None,
+    *,
     style: str = "apa",
     output_filepath: str | Path | None = None,
     config: AppConfig | None = None,
     progress_callback: Callable[[ProgressStep], None] | None = None,
     skip_journal_update: bool = False,
     skip_work_update: bool = False,
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Orchestration of the manuscript-reference-lister pipeline using a step system.
+) -> tuple[dict[str, Any], ExportResult | dict[str, Any]]:
+    """Orchestrate the linear citation processing pipeline step-by-step.
     Returns a tuple: (anomalies_map, export_metadata), with map of problematic journals
     and bibliography export information."""
     app_config = config or get_config()

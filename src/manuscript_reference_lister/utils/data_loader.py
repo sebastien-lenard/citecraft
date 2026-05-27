@@ -1,6 +1,8 @@
 import json
 import logging
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 from zipfile import BadZipFile
 
 from docx import Document
@@ -10,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class DataLoader:
-    """Handles data loading and text extraction for DOCX and JSON files.
+    """Handles secure data loading and content extraction for DOCX and JSON sources.
 
     Attributes:
         file_path: Path to the source file.
@@ -18,16 +20,17 @@ class DataLoader:
             otherwise, logs a warning.
     """
 
-    def __init__(self, file_path: str | Path, raise_exception: bool = True):
-        self.file_path = Path(file_path)
-        self.raise_exception = raise_exception
+    def __init__(self, file_path: str | Path, *, raise_exception: bool = True) -> None:
+        self.file_path: Path = Path(file_path).resolve()
+        self.raise_exception: bool = raise_exception
+
         if not self.file_path.is_file():
             msg = f"Input file not found: {self.file_path}"
             if self.raise_exception:
                 raise FileNotFoundError(msg)
             logger.warning(
                 "Input file not found: %s",
-                self.file_path,
+                str(self.file_path),
                 extra={
                     "status": "KO",
                     "event": "file_not_found",
@@ -36,7 +39,7 @@ class DataLoader:
             )
 
     def extract_text_from_docx(self) -> str | None:
-        """Parses a .docx file and joins paragraphs with newlines."""
+        """Parse a .docx file and join paragraphs with newlines."""
         if not self.file_path.is_file():
             return None
         try:
@@ -47,7 +50,7 @@ class DataLoader:
                 raise
             logger.warning(
                 "Invalid or corrupted .docx: %s",
-                self.file_path,
+                str(self.file_path),
                 extra={
                     "status": "KO",
                     "event": "docx_corruption_detected",
@@ -56,9 +59,10 @@ class DataLoader:
             )
             return None
 
-    def load_json(self, validator=None) -> dict | list | None:
-        """Loads and parses JSON data. Returns None if file corrupted and if a list not
-        records not validated by the validator function."""
+    def load_json[T](
+        self, validator: Callable[[T], bool] | None = None
+    ) -> list[T] | dict[str, Any] | None:
+        """Load, parse, and optionally validate list item schemas from a JSON source."""
         if not self.file_path.is_file():
             return None
         try:
@@ -68,7 +72,7 @@ class DataLoader:
                 raise
             logger.warning(
                 "Invalid JSON format: %s",
-                self.file_path,
+                str(self.file_path),
                 extra={
                     "status": "KO",
                     "event": "json_decode_error",
@@ -90,7 +94,7 @@ class DataLoader:
                     raise ValueError(msg)
                 logger.warning(
                     "Schema validation failed for item in: %s",
-                    self.file_path,
+                    str(self.file_path),
                     extra={
                         "status": "KO",
                         "event": "json_schema_validation_failed",

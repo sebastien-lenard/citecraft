@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import httpx
 
 from manuscript_reference_lister.network import (
+    HTTPClientRegistry,
     HTTPClientWrapper,
     get_http_client_registry,
 )
@@ -16,26 +17,26 @@ logger = logging.getLogger(__name__)
 
 
 class StyleRepository:
-    """Handles information about reference styles by fetching CSL files."""
+    """Handles downloading, matching, and validating reference styles via CSL files."""
 
     def __init__(
         self,
         favored_journal_title: str | None = None,
         favored_style: str | None = None,
         config: AppConfig | None = None,
-        registry: HTTPClientWrapper | None = None,
+        registry: HTTPClientRegistry | None = None,
     ) -> None:
         """Examples of styles:
         apa (AGU, Wiley), copernicus-publications (EGU), elsevier-harvard (Elsevier),
         chicago-author-date (Taylor & Francis), springer-basic-author-date (Springer),
         etc.
         """
-        self.config = config or get_config()
+        self.config: AppConfig = config or get_config()
         registry = registry or get_http_client_registry()
-        self.http_client_wrapper = registry.get_client("default")
-        self.headers = {"User-Agent": "ManuscriptRefLister/1.0"}
-        self.favored_journal_title = favored_journal_title
-        self.favored_style = (
+        self.http_client_wrapper: HTTPClientWrapper = registry.get_client("default")
+        self.headers: dict[str, str] = {"User-Agent": "ManuscriptRefLister/1.0"}
+        self.favored_journal_title: str | None = favored_journal_title
+        self.favored_style: str | None = (
             "apa"
             if not favored_journal_title and not favored_style
             else favored_style
@@ -46,7 +47,7 @@ class StyleRepository:
         self.csl_content: str | None = None
 
     def fetch_style_metadata(self) -> None:
-        """Fetches the CSL file content for the favored style from the repository."""
+        """Fetch the CSL style content for the target style from remote repository."""
         if not self.favored_style and self.favored_journal_title:
             self.favored_style = self.get_style(self.favored_journal_title)
         if not self.favored_style:
@@ -79,7 +80,9 @@ class StyleRepository:
             raise e
 
     def get_style(self, journal_title: str) -> str | None:
-        """Fetch the style name/code for a journal (e.g. "nature" for journal "Nature"),
+        """Locate style code for a journal title, resolving independent parent style if
+        child.
+        Fetch the style name/code for a journal (e.g. "nature" for journal "Nature"),
         and if style is dependent (=child) fetch the parent style name/code (e.g.
         "american-geophysical-union" for journal
         "Journal of Geophysical Research: Solid Earth".
@@ -100,7 +103,7 @@ class StyleRepository:
         normalized_target = JournalRepository.normalize_title(journal_title)
 
         # 1. Fetch remote Zotero styles index
-        url = self.config.all_styles_repo_url
+        url = str(self.config.all_styles_repo_url)
         try:
             response = self.http_client_wrapper.get(url, headers=self.headers)
             response.raise_for_status()
@@ -124,7 +127,8 @@ class StyleRepository:
                 },
             )
             raise TypeError(
-                f"Unexpected schema format: index root is not a JSON list. Got: {type(styles_list).__name__}"
+                f"Unexpected schema format: index root is not a list. Got: "
+                f"{type(styles_list).__name__}"
             )
 
         # 2. Perform fuzzy lookup on the index
@@ -171,8 +175,7 @@ class StyleRepository:
         return matched_style_name
 
     def _resolve_independent_parent(self, child_style_name: str) -> str | None:
-        """Downloads a dependent CSL file and extracts its independent-parent code."""
-
+        """Parse a dependent CSL file and extract its parent layout slug identifier."""
         url = self.config.child_style_repo_url.replace("{style}", child_style_name)
 
         try:
@@ -254,7 +257,7 @@ class StyleRepository:
         return None
 
     def validate_favored_style(self) -> None:
-        """Check if the favored reference style content is structurally valid."""
+        """Verify that loaded favored reference style meets CSL XML boundaries."""
         if not self.csl_content:
             self.favored_style_is_valid = False
             logger.warning(
@@ -272,7 +275,8 @@ class StyleRepository:
         )
         end_marker = "</style>"
 
-        if content.replace("\r\n", "\n").startswith(start_marker) and content.endswith(
+        normalized_content = content.replace("\r\n", "\n")
+        if normalized_content.startswith(start_marker) and normalized_content.endswith(
             end_marker
         ):
             self.favored_style_is_valid = True

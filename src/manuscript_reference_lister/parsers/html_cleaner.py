@@ -2,11 +2,11 @@ import html
 import re
 from html.parser import HTMLParser
 
-from manuscript_reference_lister.utils.config import AppConfig, get_config
+from manuscript_reference_lister.utils import AppConfig, get_config
 
 
 class HtmlCleaner(HTMLParser):
-    """Parses and sanitizes HTML-polluted text."""
+    """Parses and sanitizes HTML-polluted text according to a style specification."""
 
     def __init__(self, config: AppConfig | None = None) -> None:
         super().__init__()
@@ -16,24 +16,33 @@ class HtmlCleaner(HTMLParser):
         self._discarded_tags = self._config.discarded_html_tags
         self._result_parts: list[str] = []
 
+        # Pre-compiled regular expressions for runtime efficiency
+        self._whitespace_regex = re.compile(r"\s+")
+
+        self._start_tag_space_regex = None
+        self._end_tag_space_regex = None
+        if self._preserved_tags:
+            tags_pattern = "|".join(map(re.escape, self._preserved_tags))
+            self._start_tag_space_regex = re.compile(f"<({tags_pattern})>\\s?")
+            self._end_tag_space_regex = re.compile(f"\\s?</({tags_pattern})>")
+
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        """Callback to handle the opening of an HTML tag."""
+        """Inject preserved opening tags into the result stream."""
         if tag in self._preserved_tags:
             self._result_parts.append(f"<{tag}>")
 
     def handle_endtag(self, tag: str) -> None:
-        """Callback to handle the closing of an HTML tag."""
+        """Inject preserved closing tags into the result stream."""
         if tag in self._preserved_tags:
             self._result_parts.append(f"</{tag}>")
 
     def handle_data(self, data: str) -> None:
-        """Callback to handle raw text content between or outside tags."""
-        # Convert non-breaking spaces to standard spaces
+        """Convert non-breaking spaces and append raw text data."""
         clean_data = data.replace("\xa0", " ")
         self._result_parts.append(clean_data)
 
     def handle_entityref(self, name: str) -> None:
-        """Callback to handle HTML entities (e.g., &amp;, &quot;)."""
+        """Resolve HTML entities to their raw Unicode representation."""
         resolved = html.unescape(f"&{name};")
         self._result_parts.append(resolved)
 
@@ -51,14 +60,14 @@ class HtmlCleaner(HTMLParser):
         self.feed(raw_reference)
         parsed_str = "".join(self._result_parts)
 
-        # Normalize all spaces and newlines
-        # This converts any sequence of tabs, newlines (\n), and spaces into one single standard space.
-        parsed_str = re.sub(r"\s+", " ", parsed_str)
+        # Collapse whitespaces
+        parsed_str = self._whitespace_regex.sub(" ", parsed_str)
 
-        # Collapse remaining internal tag spacing
+        # Collapse internal tag spacing
         if self._preserved_tags:
-            tags_pattern = "|".join(map(re.escape, self._preserved_tags))
-            parsed_str = re.sub(f"<({tags_pattern})>\\s?", r"<\1>", parsed_str)
-            parsed_str = re.sub(f"\\s?</({tags_pattern})>", r"</\1>", parsed_str)
+            if self._start_tag_space_regex:
+                parsed_str = self._start_tag_space_regex.sub(r"<\1>", parsed_str)
+            if self._end_tag_space_regex:
+                parsed_str = self._end_tag_space_regex.sub(r"</\1>", parsed_str)
 
         return parsed_str.strip()

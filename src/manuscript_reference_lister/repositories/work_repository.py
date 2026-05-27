@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 
 
 class WorkRepository(BaseRepository[WorkMetadata]):
-    """Handles published work metadata records (for articles, book chapters, etc.)."""
+    """Manages local storage and Crossref resolution for published academic works."""
 
     def __init__(
         self, local_filename: str = "work_records.json", config: AppConfig | None = None
-    ):
+    ) -> None:
         super().__init__(local_filename, model_class=WorkMetadata, config=config)
 
     def get_work_metadata(
@@ -30,7 +30,8 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         keywords: str = "",
         get_limit: int | None = None,
     ) -> list[WorkMetadata]:
-        """Get work metadata, including dois, from unstructured info combining the
+        """Query Crossref API to retrieve and validate metadata for a given citation.
+        Get work metadata, including dois, from unstructured info combining the
         first_authors of input_citation_metadata and keywords, with results filtered on
         the year of input_citation_metadata and input_ISSN. Number of results is capped
         by get_limit. Works without authors are excluded.
@@ -68,7 +69,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             f"issn:{input_ISSN}",
         }
         response = self.http_client_wrapper.get(
-            self.config.crossref_api_works_url, headers=self.headers, params=params
+            str(self.config.crossref_api_works_url), headers=self.headers, params=params
         )
         response.raise_for_status()
         data = response.json()
@@ -100,9 +101,9 @@ class WorkRepository(BaseRepository[WorkMetadata]):
     def _log_heartbeat_if_needed(
         self, processed: int, total: int, last_time: float
     ) -> float:
-        """Helper to log heartbeat every 10 seconds."""
+        """Log progress status every 10 seconds of processing time."""
         current_time = time.time()
-        if current_time - last_time > 10:
+        if current_time - last_time > 10.0:
             remaining = total - processed
             logger.info(
                 "Batch update status: %d updates remaining out of %d",
@@ -119,8 +120,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         return last_time
 
     def _normalize_string(self, text: str) -> str:
-        """
-        Transliterates unicode string to its closest ASCII representation in lowercase.
+        """Transliterate Unicode strings to lowercase closest ASCII representation.
         Example: 'Lénárd' becomes 'lenard', 'Łukasiewicz' becomes 'lukasiewicz'.
         Warning: ü becomes u and not ue (as sometimes found in bibliographies)
         """
@@ -133,9 +133,10 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         crossref_authors: list[CrossrefAuthor],
         input_first_authors: list[str],
         input_first_authors_count: int | None = None,
+        *,
         is_et_al: bool = False,
     ) -> bool:
-        """
+        """Validate if the parsed Crossref author metadata matches input criteria.
         Validates if the first crossref_authors match the input_first_authors, and if
         number of authors match too if 1 or 2 authors only. Filters out single-author
         works if citation is 'et al.', and prevents matching an expected family name
@@ -187,7 +188,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         return True
 
     def merge_new_works(self, citations: list[CitationMetadata]) -> None:
-        """Merge new citations into the existing records as empty templates
+        """Merge fresh citations into local records as template placeholders.
         (placeholders without doi and input_issn).
         Avoids adding a template if a record with the same author/year already exists,
         using a custom identity key.
@@ -222,8 +223,8 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         )
 
     def update_all(self, ISSNs: list[str]) -> None:
-        """Attempt to find DOIs for all records currently missing them.
-        Iterates through provided ISSNs to filter Crossref API results.
+        """Query Crossref API to find and commit DOIs for unpopulated works.
+        ISSNs allow to filter Crossref API results.
         """
         # 1. Identify templates needing info
         templates_to_process = [r for r in self.records if not r.DOI]

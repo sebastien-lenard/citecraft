@@ -12,22 +12,22 @@ logger = logging.getLogger(__name__)
 
 
 class JournalRepository(BaseRepository[JournalMetadata]):
-    """Handles journal metadata records."""
+    """Handles persistence and retrieval workflows for journal metadata records."""
 
     def __init__(
         self,
         local_filename: str = "journal_records.json",
         config: AppConfig | None = None,
-    ):
+    ) -> None:
         super().__init__(local_filename, model_class=JournalMetadata, config=config)
-        self.has_pending_updates = False
+        self.has_pending_updates: bool = False
 
     def _log_heartbeat_if_needed(
         self, processed: int, total: int, last_time: float
     ) -> float:
-        """Helper to log heartbeat every 10 seconds."""
+        """Log update batch progress status every 10 seconds of processing time."""
         current_time = time.time()
-        if current_time - last_time > 10:
+        if current_time - last_time > 10.0:
             remaining = total - processed
             logger.info(
                 "Batch update status: %d updates remaining out of %d",
@@ -54,8 +54,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return " ".join(words)
 
     def get_issns_by_input_title(self, input_title: str) -> list[str]:
-        """Return the list of all unique, non-null ISSNs present in records
-        for a given input_title."""
+        """Return unique, non-null ISSNs present in records for a specific title."""
         return sorted(
             list(
                 {
@@ -67,10 +66,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         )
 
     def get_unique_issns_for_titles(self, titles: list[str]) -> list[str]:
-        """Extract a consolidated list of unique, non-null ISSNs for a batch of titles.
-        Utilizes the internal title normalization to ensure robust matching against
-        the cached records.
-        """
+        """Extract unique, non-null ISSNs for a validated list of titles."""
         if not titles:
             return []
 
@@ -79,6 +75,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
         # Cache filter (O(N))
         unique_issns: set[str] = set()
+
         for record in self.records:
             if record.ISSN:
                 if self.normalize_title(record.input_title) in required_normalized:
@@ -87,7 +84,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return sorted(list(unique_issns))
 
     def get_journal_metadata(self, input_title: str) -> list[JournalMetadata]:
-        """
+        """Retrieve and process journal metadata maps from the remote Crossref database.
         Get journal metadata filtered on the exact match or similar matches of the title
         (input_title). A title can correspond to several
         records or none, each of them identified by a unique ISSN.
@@ -116,13 +113,15 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
         journal_records = []
         response = self.http_client_wrapper.get(
-            self.config.crossref_api_journals_url, params=params, headers=self.headers
+            str(self.config.crossref_api_journals_url),
+            params=params,
+            headers=self.headers,
         )
         response.raise_for_status()
 
         items = response.json().get("message", {}).get("items", [])
 
-        # Identify exact matches
+        # Filter exact title representations
         exact_matches = [
             item for item in items if item.get("title", "").strip() == input_title
         ]
@@ -276,16 +275,17 @@ class JournalRepository(BaseRepository[JournalMetadata]):
     def get_issn_year_endpoint(
         self, issn: str, order: Literal["asc", "desc"]
     ) -> int | None:
-        """Get the year of the oldest (order: asc) or the newest (order: desc) published
-        work (no distinction print or online) for the ISSN."""
+        """Get publication endpoints based on the oldest (asc) or newest (desc) work,
+        (no distinction print or online) for the ISSN."""
         params = {
             "sort": "published",
             "order": order,
             "rows": 1,
             "mailto": self.config.crossref_api_email,
         }
+        url = self.config.crossref_api_journals_issn_url.replace("{issn}", str(issn))
         response = self.http_client_wrapper.get(
-            self.config.crossref_api_journals_issn_url.replace("{issn}", str(issn)),
+            url,
             params=params,
             headers=self.headers,
         )
@@ -304,7 +304,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return min(years) if order == "asc" and years else max(years) if years else None
 
     def get_sync_status(self) -> dict[str, int | bool]:
-        """Analyze the current state of records to determine sync problems.
+        """Analyze local records completeness and update status against thresholds.
         Returns a status dictionary useful for control flow in core.py.
         TODO: Check if we still need this method (after the development of catching
         metadata from similar titles)
@@ -329,15 +329,15 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         }
 
     def update_all(self) -> None:
-        """Update the records missing metadata (Priority 1) and records with expired
+        """Sync and update outdated journal records up to configured limits.
+        Update the records missing metadata (Priority 1) and records with expired
         metadata (Priority 2) with up-to-date metatata from the remote repo.
         Warning: Update restricted to a max number of journals, doesn't include
         regular local saving of the updates."""
-
         expiration_date = date.today() - timedelta(days=self.config.journal_update_days)
         logger.info(
             "Updating journals without metadata or metadata older than: %s",
-            expiration_date,
+            str(expiration_date),
             extra={
                 "status": "OK",
                 "event": "journal_update_process_started",
@@ -423,8 +423,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
         if self.has_pending_updates:
             logger.warning(
-                "Journal update limit reached. %d records still need updating or "
-                "refreshing.",
+                "Journal update limit reached. %d records still need updating.",
                 skipped_count,
                 extra={
                     "status": "WARNING",
@@ -451,10 +450,8 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         )
 
     def merge_new_titles(self, input_titles: list[str]) -> None:
-        """Merge new titles into the existing records as empty templates.
-        No duplication of titles."""
-        input_titles = list(dict.fromkeys(input_titles))  # unique titles
-        # Set for fast lookup
+        """Merge fresh titles as unpopulated templates without introducing duplicates."""
+        input_titles = list(dict.fromkeys(input_titles))
         existing_titles = {info.input_title for info in self.records}
 
         new_entries = [

@@ -2,17 +2,19 @@ import logging
 import sys
 import threading
 import time
+from collections.abc import Callable
+from types import TracebackType
 from typing import Any
 
 from manuscript_reference_lister.core import ProgressStep
 
 
 class LogInterceptor(logging.Handler):
-    """Handler interceptant les logs pour les insérer proprement au-dessus de la barre."""
+    """Handler that intercepts log records and redirects them cleanly above the progress bar."""
 
-    def __init__(self, draw_callback: Any) -> None:
+    def __init__(self, draw_callback: Callable[[], None]) -> None:
         super().__init__()
-        self.draw_callback = draw_callback
+        self.draw_callback: Callable[[], None] = draw_callback
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
@@ -64,13 +66,13 @@ class ProgressBarContext:
         self._custom_handler: LogInterceptor | None = None
 
     def __enter__(self) -> "ProgressBarContext":
-        """Starts the background execution monitoring loop if active."""
+        """Start the background progress-bar refresh loop."""
         if self.is_active:
             self._start_time = time.time()
             self._state["running"] = True
             self._stop_event.clear()
 
-            # Configuration du détournement des logs
+            # Divert logging to interceptor
             root_logger = logging.getLogger()
             self._old_handlers = root_logger.handlers[:]
             for h in self._old_handlers:
@@ -84,15 +86,20 @@ class ProgressBarContext:
             )
             root_logger.addHandler(self._custom_handler)
 
-            # Lancement du thread de rafraîchissement
+            # Start background worker ticker thread
             self._ticker_thread = threading.Thread(
                 target=self._loop_render, daemon=True
             )
             self._ticker_thread.start()
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Ensures clean teardown of the thread and terminal line management."""
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        """Ensure clean thread teardown and restoration of logging configurations."""
         if not self.is_active:
             return
 
@@ -106,7 +113,7 @@ class ProgressBarContext:
         if self._ticker_thread:
             self._ticker_thread.join(timeout=1.0)
 
-        # Restauration des handlers de logging initiaux
+        # Restore handlers
         root_logger = logging.getLogger()
         if self._custom_handler:
             root_logger.removeHandler(self._custom_handler)
@@ -127,10 +134,7 @@ class ProgressBarContext:
         sys.stderr.flush()
 
     def update(self, step: ProgressStep) -> None:
-        """Callback engine exposed directly to core.run pipeline updates.
-
-        Thread-safe translation layer from Core structures to UI rendering.
-        """
+        """Update current state thread-safely."""
         if not self.is_active:
             return
 
@@ -147,11 +151,11 @@ class ProgressBarContext:
             self._draw_line()
 
     def generate_bar_string(self, current: int, total: int, elapsed_time: float) -> str:
-        """Pure operational function computing mathematical constraints of the UI."""
+        """Compute and return the progress bar visual format and remaining time estimation."""
         percent = int((current / total) * 100) if total > 0 else 0
         filled_length = int(self.bar_width * current // total) if total > 0 else 0
 
-        # Uses explicit cyan ANSI character blocks
+        # Colors cyan block
         fill_char = "\033[36m█\033[0m"
         empty_char = "░"
         bar = (fill_char * filled_length) + (
@@ -173,7 +177,7 @@ class ProgressBarContext:
         return f"[{bar}] {percent}% (ETA: {eta_str})"
 
     def _loop_render(self) -> None:
-        """Background worker iterating at 1 Hz frequency."""
+        """Refresh progress visualization at a 1 Hz interval."""
         while not self._stop_event.is_set():
             with self._lock:
                 if not self._state["running"]:
@@ -184,7 +188,7 @@ class ProgressBarContext:
                 break
 
     def _draw_line(self) -> None:
-        """Physical renderer outputting the unified carriage-return sequence."""
+        """Draw a single carriage-return progress line to stderr."""
         with self._lock:
             current = self._state["current_step"]
             total = self._state["total_steps"]

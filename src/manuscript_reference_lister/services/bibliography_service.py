@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ExportResult:
+    """Data carrier representing metric aggregations and structural outputs of bibliography exports."""
+
     total_rows: int
     output_filepath: Path
     export_format: str = "CSV"
@@ -32,13 +34,13 @@ class ExportResult:
 
 
 class BibliographyService:
-    """Handles bibliographies."""
+    """Coordinates clean reference resolution and automated file export of bibliographies."""
 
     def __init__(
         self,
         config: AppConfig | None = None,
-    ):
-        self.config = config or get_config()
+    ) -> None:
+        self.config: AppConfig = config or get_config()
 
     def export_to_csv(
         self,
@@ -46,8 +48,8 @@ class BibliographyService:
         works: list[WorkMetadata],
         output_path: Path,
     ) -> ExportResult:
-        """Construct a bibliography by filtering valid works against citations,
-        determining statuses, sorting, saving to CSV, and return export data."""
+        """Construct, validate, sort, and serialize a manuscript bibliography to a
+        CSV file."""
         works_by_citation: dict[tuple[str, str], list[WorkMetadata]] = {}
         for work in works:
             if work.status == "OK":
@@ -60,13 +62,13 @@ class BibliographyService:
 
         rows: list[dict[str, Any]] = []
 
+        preserved_tags_regex = None
         if self.config.preserved_html_tags:
             tags_pattern = "|".join(
                 re.escape(tag) for tag in self.config.preserved_html_tags
             )
             preserved_tags_regex = re.compile(rf"<(/)?({tags_pattern})(?:>|\s[^>]*>)")
-        else:
-            preserved_tags_regex = None
+
         for cite in unique_citations:
             citation_str = f"{cite.first_authors_txt}, {cite.year_and_suffix}"
             key = (cite.first_authors_txt, cite.year_and_suffix)
@@ -102,7 +104,6 @@ class BibliographyService:
                     },
                 )
                 status = "Warning: select the right reference"
-
             else:
                 status = "OK"
 
@@ -128,6 +129,7 @@ class BibliographyService:
         )
 
         fieldnames = ["Citation", "Status", "Reference"]
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, mode="w", encoding="utf-8-sig", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
@@ -136,7 +138,7 @@ class BibliographyService:
         logger.info(
             "Generated and saved bibliography with %d rows to %s",
             len(rows),
-            output_path,
+            str(output_path),
             extra={
                 "status": "OK",
                 "event": "bibliography_export_success",

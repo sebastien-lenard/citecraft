@@ -1,4 +1,4 @@
-from typing import override
+from typing import Any, override
 
 from pydantic import Field, field_validator
 
@@ -21,13 +21,13 @@ class WorkMetadata(BaseSchema):
     )
     style: str | None = None  # e.g. apa
     DOI: str | None = None  # e.g. 10.1038/s41561-020-0585-2
-    csl_metadata: dict | None = None  # CSL-dict metadata of the work
+    csl_metadata: dict[str, Any] | None = None  # CSL-dict metadata of the work
     type: str | None = None  # e.g. journal-article
 
     @field_validator("DOI", mode="before")
     @classmethod
     def doi_to_lower(cls, v: str | None) -> str | None:
-        """Ensure DOI stored in lower case."""
+        """Ensure DOI is stored in lower case."""
         if isinstance(v, str):
             return v.lower()
         return v
@@ -35,7 +35,7 @@ class WorkMetadata(BaseSchema):
     @override
     @property
     def identity_key(self) -> tuple[str, str, str | None]:
-        """Returns the unique identifier used for deduplication."""
+        """Return the unique tuple identifier used for deduplication."""
         return (
             self.input_first_authors_txt,
             self.input_year_and_suffix,
@@ -44,7 +44,7 @@ class WorkMetadata(BaseSchema):
 
     @property
     def status(self) -> str:
-        """Status based on the availability of attributes."""
+        """Deduce status based on the availability of essential attributes."""
         if not self.DOI:
             return "Missing DOI"
         if not self.reference:

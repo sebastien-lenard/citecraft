@@ -1,9 +1,11 @@
 import json
 import logging
+from typing import Any
 
 import httpx
 
 from manuscript_reference_lister.network import (
+    HTTPClientRegistry,
     HTTPClientWrapper,
     get_http_client_registry,
 )
@@ -13,26 +15,27 @@ logger = logging.getLogger(__name__)
 
 
 class DoiRepository:
-    """Handles information specific to the DOI of a work."""
+    """Handles metadata extraction and processing specific to DOI resources."""
 
     def __init__(
-        self, config: AppConfig | None = None, registry: HTTPClientWrapper | None = None
-    ):
-        self.config = config or get_config()
+        self,
+        config: AppConfig | None = None,
+        registry: HTTPClientRegistry | None = None,
+    ) -> None:
+        self.config: AppConfig = config or get_config()
         registry = registry or get_http_client_registry()
-        self.http_client_wrapper = registry.get_client("doi")
+        self.http_client_wrapper: HTTPClientWrapper = registry.get_client("doi")
 
-    def get_metadata(self, doi: str) -> dict[str, any]:
-        """Gets the metadata of a work in CSL-JSON format via content negotiation.
+    def get_metadata(self, doi: str) -> dict[str, Any]:
+        """Retrieve CSL-JSON metadata via DOI content negotiation.
         Ensures that metadata contains an attribute id or DOI, necessary for
         CSLReference validation.
         """
         headers = {"Accept": "application/vnd.citationstyles.csl+json"}
+        url = self.config.doi_api_url.replace("{doi}", str(doi))
 
         try:
-            res = self.http_client_wrapper.get(
-                self.config.doi_api_url.replace("{doi}", str(doi)), headers=headers
-            )
+            res = self.http_client_wrapper.get(url, headers=headers)
             res.raise_for_status()
             csl_metadata = res.json()
 
@@ -60,15 +63,12 @@ class DoiRepository:
                 )
                 return {}
 
-            work_blacklist_fields = getattr(
-                self.config, "work_cls_schema_blacklist_fields", []
-            )
+            # Purge configured blacklisted fields
+            work_blacklist_fields = self.config.work_cls_schema_blacklist_fields
             for field in work_blacklist_fields:
                 csl_metadata.pop(field, None)
 
-            author_blacklist_fields = getattr(
-                self.config, "author_cls_schema_blacklist_fields", []
-            )
+            author_blacklist_fields = self.config.author_cls_schema_blacklist_fields
             if (
                 author_blacklist_fields
                 and "author" in csl_metadata

@@ -1,6 +1,7 @@
 import io
 import logging
 import time
+from typing import Any
 
 import citeproc
 from citeproc import (
@@ -25,19 +26,19 @@ logger = logging.getLogger(__name__)
 
 
 class ReferenceService:
-    """Coordinates metadata enrichment and bibliography rendering."""
+    """Coordinates Citeproc reference parsing and WorkMetadata schema enrichment."""
 
     def __init__(
         self,
         config: AppConfig | None = None,
-    ):
-        self.config = config or get_config()
+    ) -> None:
+        self.config: AppConfig = config or get_config()
 
     @staticmethod
     def _log_heartbeat_if_needed(processed: int, total: int, last_time: float) -> float:
-        """Helper to log heartbeat every 10 seconds."""
+        """Log batch resolution progress every 10 seconds of processing time."""
         current_time = time.time()
-        if current_time - last_time > 10:
+        if current_time - last_time > 10.0:
             remaining = total - processed
             logger.info(
                 "Batch update status: %d updates remaining out of %d",
@@ -60,8 +61,7 @@ class ReferenceService:
         csl_style_content: str,
         target_style: str,
     ) -> None:
-        """
-        Enriches WorkMetadata records with formatted references.
+        """Enrich unpopulated WorkMetadata records with generated references in-place.
         Updates in-place if style is mismatched or reference is missing.
 
         Note: If get_reference raises an exception, the execution
@@ -98,7 +98,7 @@ class ReferenceService:
             record.raw_reference = raw_reference
             record.style = target_style
             processed_record_count += 1
-            last_display_time = ReferenceService._log_heartbeat_if_needed(
+            last_display_time = self._log_heartbeat_if_needed(
                 processed_record_count,
                 len(records_to_process),
                 last_display_time,
@@ -114,10 +114,9 @@ class ReferenceService:
         )
 
     def get_reference(
-        self, csl_metadata: dict[str, any], csl_style_content: str, doi: str
+        self, csl_metadata: dict[str, Any] | None, csl_style_content: str, doi: str
     ) -> str:
-        """Renders a single CSL-JSON metadata dictionary into a plain text bibliography
-        reference.
+        """Render a CSL-JSON dictionary into a formatted plain-text bibliography entry.
         Warning: the metadata must contain an id attribute."""
         if not csl_metadata:
             logger.warning(
@@ -134,13 +133,12 @@ class ReferenceService:
         try:
             validated_csl = CSLReference.model_validate(csl_metadata)
             clean_csl_dict = validated_csl.model_dump(by_alias=True, exclude_none=True)
-
         except ValidationError as e:
             logger.warning(
                 "CSL-JSON metadata validation failed for DOI: %s. Details: %s",
                 doi,
-                e.errors(
-                    include_url=False
+                str(
+                    e.errors(include_url=False)
                 ),  # Donne un résumé propre des champs en faute
                 extra={
                     "status": "KO",
@@ -149,6 +147,7 @@ class ReferenceService:
                 },
             )
             return "Reference unavailable in doi.org."
+
         bib_source = CiteProcJSON([clean_csl_dict])
         style_bytes = csl_style_content.encode("utf-8")
         style_file = io.BytesIO(style_bytes)
