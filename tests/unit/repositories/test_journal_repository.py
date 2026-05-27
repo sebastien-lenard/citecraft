@@ -1,18 +1,20 @@
 import logging
 from datetime import date, timedelta
-from typing import Literal
+from typing import Any, Literal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from manuscript_reference_lister.repositories import JournalRepository
 from manuscript_reference_lister.schemas import JournalMetadata
+from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
-def repo() -> JournalRepository:
-    """Provides a fresh instance of JournalRepository for each test."""
-    return JournalRepository()
+def repo(test_config: AppConfig) -> JournalRepository:
+    """Provide JournalRepository instance utilizing the isolated global test
+    configuration."""
+    return JournalRepository(config=test_config)
 
 
 def test_get_journal_metadata_success(repo: JournalRepository) -> None:
@@ -51,7 +53,7 @@ def test_get_journal_metadata_not_found_behavior(
     repo: JournalRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Verify fallback to template and warning log when absolutely no matching journal
-    or similar titles are found.."""
+    is found."""
     mock_resp = MagicMock(status_code=200)
     mock_resp.json.return_value = {"message": {"items": []}}
 
@@ -70,8 +72,8 @@ def test_get_journal_metadata_not_found_behavior(
 def test_get_journal_metadata_similar_matches_found(
     repo: JournalRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify normalization rules detect potential matches, filter duplicates, and "
-    "set similar_titles, and follow up by collecting their ISSNs, query their publication years, and enrich records with metadata."""
+    """Verify normalization rules detect potential matches, filter duplicates, and set
+    similar_titles."""
     mock_main = MagicMock(status_code=200)
     mock_main.json.return_value = {
         "message": {
@@ -84,22 +86,21 @@ def test_get_journal_metadata_similar_matches_found(
                 {
                     "title": "Nature-Geosciences",
                     "publisher": "Springer Nature",
-                    "ISSN": ["1752-0894", "1752-0908"],  # Includes a unique one
+                    "ISSN": ["1752-0894", "1752-0908"],
                 },
                 {
                     "title": "Nature Geoscience",
                     "publisher": "Springer Nature",
                     "ISSN": ["1752-0894"],
-                },  # Duplicate item
+                },
                 {
                     "title": "Science Journal",
                     "publisher": "Other",
                     "ISSN": ["0000-0000"],
-                },  # Out of scope
+                },
             ]
         }
     }
-
     mock_year = MagicMock(status_code=200)
     mock_year.json.return_value = {
         "message": {
@@ -120,15 +121,12 @@ def test_get_journal_metadata_similar_matches_found(
         with caplog.at_level(logging.WARNING):
             results = repo.get_journal_metadata("nature geoscience")
 
-            # Check for updated warning log string
             assert (
                 "Journal nature geoscience not found. Use similar titles to fill"
                 " metadata: Nature Geoscience, Nature-Geosciences" in caplog.text
             )
-            # 2 valid unique ISSNs across similar titles generate 2 metadata entries
             assert len(results) == 2
 
-            # Assert first entry values
             assert results[0].input_title == "nature geoscience"
             assert results[0].true_title == "Nature Geoscience"
             assert results[0].ISSN == "1752-0894"
@@ -139,7 +137,6 @@ def test_get_journal_metadata_similar_matches_found(
                 "Nature-Geosciences",
             ]
 
-            # Assert second entry values (resolved from the structural variant item)
             assert results[1].input_title == "nature geoscience"
             assert results[1].true_title == "Nature-Geosciences"
             assert results[1].ISSN == "1752-0908"
@@ -147,7 +144,6 @@ def test_get_journal_metadata_similar_matches_found(
                 "Nature Geoscience",
                 "Nature-Geosciences",
             ]
-
             assert mock_get.call_count == 5
 
 
@@ -158,14 +154,14 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
         "message": {
             "items": [
                 {
-                    "title": "Nature",  # Must contain the exact string
+                    "title": "Nature",
                     "ISSN": ["0028-0836", "1476-4687"],
                 }
             ]
         }
     }
 
-    def year_mock(year: int):
+    def year_mock(year: int) -> MagicMock:
         m = MagicMock(status_code=200)
         m.json.return_value = {
             "message": {"items": [{"published-print": {"date-parts": [[year]]}}]}
@@ -176,9 +172,9 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
         mock_get.side_effect = [
             mock_main,
             year_mock(1869),
-            year_mock(2023),  # ISSN 1
+            year_mock(2023),
             year_mock(1997),
-            year_mock(2023),  # ISSN 2
+            year_mock(2023),
         ]
 
         results = repo.get_journal_metadata("Nature")
@@ -190,9 +186,8 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
 
 
 def test_get_journal_metadata_missing_issn_handling(repo: JournalRepository) -> None:
-    """Verify that journals found without an ISSN are preserved in the results
-    with ISSN and years set to None, without calling year endpoints.
-    """
+    """Verify that journals found without an ISSN are preserved without calling year
+    endpoints."""
     mock_main = MagicMock(status_code=200)
     mock_main.json.return_value = {
         "message": {
@@ -219,9 +214,7 @@ def test_get_journal_metadata_missing_issn_handling(repo: JournalRepository) -> 
 
 
 def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -> None:
-    """Verify that journals with a valid ISSN but no published works are preserved
-    with their metadata intact and dates set to None.
-    """
+    """Verify that journals with valid ISSN but no published works preserve metadata."""
     mock_main = MagicMock(status_code=200)
     mock_main.json.return_value = {
         "message": {
@@ -234,7 +227,6 @@ def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -
             ]
         }
     }
-
     mock_year_empty = MagicMock(status_code=200)
     mock_year_empty.json.return_value = {"message": {"items": []}}
 
@@ -252,9 +244,8 @@ def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -
 
 
 def test_get_issns_by_input_title(repo: JournalRepository) -> None:
-    """Verify that get_issns_by_input_title extracts unique and clean ISSNs
-    for a specific input_title, ignoring duplicates and None values.
-    """
+    """Verify that get_issns_by_input_title extracts unique and clean ISSNs, ignoring
+    empty fields."""
     repo.records = [
         JournalMetadata(
             input_title="Journal A", ISSN="1111-1111", start_year=2000, end_year=2010
@@ -262,7 +253,7 @@ def test_get_issns_by_input_title(repo: JournalRepository) -> None:
         JournalMetadata(
             input_title="Journal A", ISSN="2222-2222", start_year=2005, end_year=2015
         ),
-        JournalMetadata(input_title="Journal A", ISSN=None),  # Must be ignored
+        JournalMetadata(input_title="Journal A", ISSN=None),
         JournalMetadata(
             input_title="Journal B", ISSN="3333-3333", start_year=2000, end_year=2020
         ),
@@ -270,15 +261,12 @@ def test_get_issns_by_input_title(repo: JournalRepository) -> None:
 
     issns = repo.get_issns_by_input_title("Journal A")
     assert issns == ["1111-1111", "2222-2222"]
-
     assert repo.get_issns_by_input_title("Non Existent") == []
 
 
 def test_get_unique_issns_for_titles(repo: JournalRepository) -> None:
-    """Verify that get_unique_issns_for_titles extracts unique sorted ISSNs
-    for a batch of titles, using a simple normalization check to ensure
-    case and punctuation resilience.
-    """
+    """Verify unique sorted ISSN extraction across multiple titles with normalization
+    logic."""
     repo.records = [
         JournalMetadata(
             input_title="Nature Geoscience",
@@ -300,7 +288,7 @@ def test_get_unique_issns_for_titles(repo: JournalRepository) -> None:
         ),
         JournalMetadata(
             input_title="Remote Sensing",
-            ISSN=None,  # Should be ignored
+            ISSN=None,
         ),
     ]
 
@@ -320,159 +308,166 @@ def test_get_unique_issns_for_titles(repo: JournalRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "order, expected_year",
+    "order, mock_items, expected_year",
     [
-        ("asc", 1990),  # Test oldest
-        ("desc", 2024),  # Test newest
-    ],
-)
-def test_get_issn_year_endpoint_success(
-    repo: JournalRepository, order: Literal["asc", "desc"], expected_year: int
-) -> None:
-    """Test retrieving years when both print and online dates are present."""
-    mock_response = MagicMock()
-    mock_response.json.return_value = {
-        "message": {
-            "items": [
+        # Case A: Oldest year extracted via print/online properties
+        (
+            "asc",
+            [
                 {
                     "published-print": {"date-parts": [[1990, 1, 1]]},
                     "published-online": {"date-parts": [[2024, 5, 12]]},
                 }
-            ]
-        }
-    }
+            ],
+            1990,
+        ),
+        # Case B: Newest year extracted via online/print properties
+        (
+            "desc",
+            [
+                {
+                    "published-print": {"date-parts": [[1990, 1, 1]]},
+                    "published-online": {"date-parts": [[2024, 5, 12]]},
+                }
+            ],
+            2024,
+        ),
+        # Case C: Empty API response guard condition
+        ("asc", [], None),
+        # Case D: Missing print years fall back to online equivalents
+        (
+            "asc",
+            [
+                {
+                    "published-print": {"date-parts": [[None]]},
+                    "published-online": {"date-parts": [[2010, 1, 1]]},
+                }
+            ],
+            2010,
+        ),
+    ],
+)
+def test_get_issn_year_endpoint_scenarios(
+    repo: JournalRepository,
+    order: Literal["asc", "desc"],
+    mock_items: list[dict[str, Any]],
+    expected_year: int | None,
+) -> None:
+    """Verify endpoint date resolution behaves correctly across different payload
+    conditions."""
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"message": {"items": mock_items}}
 
     with patch.object(
         repo.http_client_wrapper, "get", return_value=mock_response
     ) as mock_get:
         result = repo.get_issn_year_endpoint("1234-5678", order)
         assert result == expected_year
-        # Verify the API was called with the correct sort/order params
-        mock_get.assert_called_with(
-            repo.config.crossref_api_journals_issn_url.replace("{issn}", "1234-5678"),
-            params={
-                "sort": "published",
-                "order": order,
-                "rows": 1,
-                "mailto": repo.config.crossref_api_email,
-            },
-            headers=repo.headers,
-        )
+        if expected_year is not None or len(mock_items) == 0:
+            mock_get.assert_called_with(
+                repo.config.crossref_api_journals_issn_url.replace(
+                    "{issn}", "1234-5678"
+                ),
+                params={
+                    "sort": "published",
+                    "order": order,
+                    "rows": 1,
+                    "mailto": repo.config.crossref_api_email,
+                },
+                headers=repo.headers,
+            )
         mock_get.assert_called_once()
 
 
-def test_get_issn_year_endpoint_no_items(repo: JournalRepository) -> None:
-    """Test the 'guard clause' when the API returns no items."""
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"message": {"items": []}}
-    with patch.object(
-        repo.http_client_wrapper, "get", return_value=mock_response
-    ) as mock_get:
-        result = repo.get_issn_year_endpoint("0000-0000", "asc")
-        assert result is None
-        mock_get.assert_called_once()
-
-
-def test_get_issn_year_endpoint_partial_dates(repo: JournalRepository) -> None:
-    """Test behavior when only one type of date (e.g. online) is available."""
-    mock_response = MagicMock()
-    mock_response.json.return_value = {
-        "message": {
-            "items": [
-                {
-                    "published-print": {"date-parts": [[None]]},
-                    "published-online": {"date-parts": [[2010, 1, 1]]},
-                }
-            ]
-        }
-    }
-    with patch.object(
-        repo.http_client_wrapper, "get", return_value=mock_response
-    ) as mock_get:
-        assert repo.get_issn_year_endpoint("1111-2222", "asc") == 2010
-        mock_get.assert_called_once()
-
-
-def test_get_sync_status_isolated(repo: JournalRepository) -> None:
-    """Verify get_sync_status accurately categorizes different records state without
-    running update_all."""
+@pytest.mark.parametrize(
+    (
+        "records, pending_updates, expected_synchronized, expected_missing, "
+        "expected_expired, expected_pending"
+    ),
+    [
+        # Mixed states: Contains expired, missing, and valid entries
+        (
+            [
+                JournalMetadata(
+                    input_title="Valid J",
+                    true_title="T",
+                    publisher="P",
+                    ISSN="1-1",
+                    start_year=2000,
+                    end_year=2026,
+                    update=str(date.today() - timedelta(days=5)),
+                ),
+                JournalMetadata(
+                    input_title="Expired J",
+                    true_title="T",
+                    publisher="P",
+                    ISSN="2-2",
+                    start_year=2000,
+                    end_year=2026,
+                    update=str(date.today() - timedelta(days=45)),
+                ),
+                JournalMetadata(
+                    input_title="Missing J",
+                    true_title=None,
+                    publisher=None,
+                    ISSN=None,
+                    start_year=None,
+                    end_year=None,
+                    update=str(date.today() - timedelta(days=5)),
+                ),
+            ],
+            True,
+            False,
+            1,
+            1,
+            True,
+        ),
+        # Fully synchronized states
+        (
+            [
+                JournalMetadata(
+                    input_title="Valid J",
+                    true_title="T",
+                    publisher="P",
+                    ISSN="1-1",
+                    start_year=2000,
+                    end_year=2026,
+                    update=str(date.today() - timedelta(days=5)),
+                )
+            ],
+            False,
+            True,
+            0,
+            0,
+            False,
+        ),
+    ],
+)
+def test_get_sync_status_scenarios(
+    repo: JournalRepository,
+    records: list[JournalMetadata],
+    pending_updates: bool,
+    expected_synchronized: bool,
+    expected_missing: int,
+    expected_expired: int,
+    expected_pending: bool,
+) -> None:
+    """Verify get_sync_status mapping calculations across varying list parameters."""
     repo.config = repo.config.model_copy(update={"journal_update_days": 30})
-    today = date.today()
-    old_date = str(today - timedelta(days=45))  # Expired threshold
-    recent_date = str(today - timedelta(days=5))  # Valid threshold
-
-    repo.records = [
-        # Valid
-        JournalMetadata(
-            input_title="Valid J",
-            true_title="T",
-            publisher="P",
-            ISSN="1-1",
-            start_year=2000,
-            end_year=2026,
-            update=recent_date,
-        ),
-        # Expired
-        JournalMetadata(
-            input_title="Expired J",
-            true_title="T",
-            publisher="P",
-            ISSN="2-2",
-            start_year=2000,
-            end_year=2026,
-            update=old_date,
-        ),
-        # Missing (Incomplete)
-        JournalMetadata(
-            input_title="Missing J",
-            true_title=None,
-            publisher=None,
-            ISSN=None,
-            start_year=None,
-            end_year=None,
-            update=recent_date,
-        ),
-    ]
-
-    repo.has_pending_updates = True
+    repo.records = records
+    repo.has_pending_updates = pending_updates
 
     status = repo.get_sync_status()
 
-    assert status["is_fully_synchronized"] is False
-    assert status["missing_metadata_count"] == 1
-    assert status["expired_metadata_count"] == 1
-    assert status["has_pending_updates"] is True
-
-
-def test_get_sync_status_fully_synchronized(repo: JournalRepository) -> None:
-    """Verify status report when all elements are complete and up to date."""
-    repo.config = repo.config.model_copy(update={"journal_update_days": 30})
-    recent_date = str(date.today() - timedelta(days=5))
-
-    repo.records = [
-        JournalMetadata(
-            input_title="Valid J",
-            true_title="T",
-            publisher="P",
-            ISSN="1-1",
-            start_year=2000,
-            end_year=2026,
-            update=recent_date,
-        )
-    ]
-    repo.has_pending_updates = False
-
-    status = repo.get_sync_status()
-
-    assert status["is_fully_synchronized"] is True
-    assert status["missing_metadata_count"] == 0
-    assert status["expired_metadata_count"] == 0
-    assert status["has_pending_updates"] is False
+    assert status["is_fully_synchronized"] is expected_synchronized
+    assert status["missing_metadata_count"] == expected_missing
+    assert status["expired_metadata_count"] == expected_expired
+    assert status["has_pending_updates"] is expected_pending
 
 
 def test_merge_new_titles(repo: JournalRepository) -> None:
-    """Verify that new titles are deduplicated and merged as templates without
-    affecting existing data."""
+    """Verify new titles merge as blank templates without overriding pre-existing
+    records."""
     repo.records = [JournalMetadata(input_title="Existing", ISSN="0000-0000")]
     repo.merge_new_titles(input_titles=["Existing", "Geology", "Geology"])
 
@@ -490,7 +485,8 @@ def test_merge_new_titles(repo: JournalRepository) -> None:
 def test_update_all_priority_and_limit(
     repo: JournalRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify that updates prioritize missing info and respect the max update limit."""
+    """Verify that update processes prioritize missing records and respect capacity
+    limits."""
     caplog.set_level(logging.INFO)
     repo.config = repo.config.model_copy(
         update={"journal_update_limit": 1, "journal_update_days": 30}
@@ -581,9 +577,8 @@ def test_update_all_priority_and_limit(
 
 
 def test_update_all_sorting_logic_strict(repo: JournalRepository) -> None:
-    """Verify that records are strictly partitioned (complete first, then incomplete)
-    and that each subgroup is sorted alphabetically by input_title.
-    """
+    """Verify record sorting groups completed journals before placing incomplete items
+    alphabetically."""
     repo.config = repo.config.model_copy(
         update={"journal_update_limit": 0, "journal_update_days": 30}
     )

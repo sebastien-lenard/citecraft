@@ -1,8 +1,8 @@
 from manuscript_reference_lister.schemas.citation_metadata import CitationMetadata
 
 
-def test_citation_metadata_instantiation():
-    """Verify that CitationMetadata creates an object with expected defaults."""
+def test_citation_metadata_instantiation() -> None:
+    """Verify initialization defaults of CitationMetadata entities."""
     citation = CitationMetadata(
         first_authors_txt="Lenard et al.", year_and_suffix="2020a"
     )
@@ -12,8 +12,8 @@ def test_citation_metadata_instantiation():
     assert citation.type == "narrative"
 
 
-def test_citation_metadata_identity_key():
-    """Verify the deduplication key is correctly formed."""
+def test_citation_metadata_identity_key() -> None:
+    """Verify signature generation matching author and publication details."""
     citation = CitationMetadata(
         first_authors_txt="Guns and Vanacker",
         year_and_suffix="2021",
@@ -24,8 +24,8 @@ def test_citation_metadata_identity_key():
     assert citation.identity_key == expected_key
 
 
-def test_citation_metadata_deduplication_logic():
-    """Check that 2 distinct types of citation generate same key."""
+def test_citation_metadata_deduplication_logic() -> None:
+    """Ensure signature key generation is independent of citation layout style."""
     cit1 = CitationMetadata(
         first_authors_txt="Lenard et al.", year_and_suffix="2020", type="narrative"
     )

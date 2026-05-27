@@ -6,22 +6,24 @@ from pydantic import ValidationError
 from manuscript_reference_lister.schemas import JournalMetadata
 
 
-def test_journal_metadata_defaults():
-    """Ensure optional fields default to None and date is today."""
+def test_journal_metadata_defaults() -> None:
+    """Ensure optional fields default to None and update dates fallback to today."""
     journal = JournalMetadata(input_title="Science")
+
     assert journal.ISSN is None
     assert journal.similar_titles is None
     assert journal.update == str(date.today())
 
 
-def test_journal_metadata_identity_key():
-    """Ensure deduplication key is composed correctly."""
+def test_journal_metadata_identity_key() -> None:
+    """Ensure deduplication identity matches mapped title and ISSN coordinates."""
     journal = JournalMetadata(input_title="Nature", ISSN="1234-5678")
+
     assert journal.identity_key == ("Nature", "1234-5678")
 
 
-def test_journal_metadata_issn_formatting():
-    """Verify that ISSN is automatically formatted with a hyphen."""
+def test_journal_metadata_issn_formatting() -> None:
+    """Verify that ISSN structures are normalized to standardized hyphenated layouts."""
     journal = JournalMetadata(input_title="Test", ISSN="12345678")
     assert journal.ISSN == "1234-5678"
 
@@ -30,8 +32,8 @@ def test_journal_metadata_issn_formatting():
 
 
 @pytest.mark.parametrize("invalid_year", [1599, 2101])
-def test_journal_metadata_year_bounds(invalid_year):
-    """Ensure years outside 1600-2099 raise a ValidationError."""
+def test_journal_metadata_year_bounds(invalid_year: int) -> None:
+    """Ensure year boundaries outside 1600-2099 raise ValidationErrors."""
     with pytest.raises(ValidationError) as excinfo:
         JournalMetadata(input_title="Test", start_year=invalid_year)
 
@@ -42,8 +44,8 @@ def test_journal_metadata_year_bounds(invalid_year):
     )
 
 
-def test_journal_metadata_year_range_logic():
-    """Ensure start_year cannot be greater than end_year."""
+def test_journal_metadata_year_range_logic() -> None:
+    """Ensure logical bounds guarantee start_year cannot exceed end_year limits."""
     with pytest.raises(ValidationError) as excinfo:
         JournalMetadata(input_title="Test", start_year=2025, end_year=2020)
 
@@ -52,24 +54,26 @@ def test_journal_metadata_year_range_logic():
     )
 
 
-def test_journal_metadata_valid_year_range():
-    """Ensure correct year ranges are accepted."""
+def test_journal_metadata_valid_year_range() -> None:
+    """Ensure valid year spans parse and store correctly within range parameters."""
     journal = JournalMetadata(input_title="Test", start_year=2020, end_year=2025)
+
     assert journal.start_year == 2020
     assert journal.end_year == 2025
 
 
-def test_journal_metadata_extra_fields_ignored():
-    """Verify that extra keys from API data are silently ignored."""
+def test_journal_metadata_extra_fields_ignored() -> None:
+    """Verify that unregistered JSON dictionary values are ignored."""
     data = {"input_title": "Nature", "extra_api_garbage": "should_not_exist"}
 
     journal = JournalMetadata(**data)
+
     assert journal.input_title == "Nature"
     assert not hasattr(journal, "extra_api_garbage")
 
 
-def test_journal_metadata_completeness_logic():
-    """Verify that is_complete detects missing core metadata correctly."""
+def test_journal_metadata_completeness_logic() -> None:
+    """Verify is_complete identifies incomplete core operational properties."""
     incomplete_journal = JournalMetadata(input_title="Nature")
     assert incomplete_journal.is_complete is False
 
@@ -95,13 +99,11 @@ def test_journal_metadata_completeness_logic():
     assert complete_with_suggestions.is_complete
 
 
-def test_journal_metadata_status_property():
-    """Verify that the status property correctly evaluates all business conditions."""
-    # Case: Completely empty record / Not found
+def test_journal_metadata_status_property() -> None:
+    """Verify state classification matches property presence combinations."""
     j_not_found = JournalMetadata(input_title="Fake Journal")
     assert j_not_found.status == "Not found"
 
-    # Case: Found but missing ISSN
     j_no_issn = JournalMetadata(
         input_title="Nature Physics",
         true_title="Nature Physics",
@@ -110,7 +112,6 @@ def test_journal_metadata_status_property():
     )
     assert j_no_issn.status == "Found without ISSN"
 
-    # Case: Found with ISSN but missing execution years / works
     j_no_works = JournalMetadata(
         input_title="Empty Journal",
         true_title="Empty Journal",
@@ -121,7 +122,6 @@ def test_journal_metadata_status_property():
     )
     assert j_no_works.status == "Found without work"
 
-    # Case: Complete and operational record
     j_ok = JournalMetadata(
         input_title="Science",
         true_title="Science",

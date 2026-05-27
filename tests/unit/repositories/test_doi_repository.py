@@ -1,27 +1,29 @@
 import json
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 
 from manuscript_reference_lister.repositories import DoiRepository
+from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
-def repo() -> DoiRepository:
-    """Provides a fresh instance of DoiRepository for each test."""
-    return DoiRepository()
+def repo(test_config: AppConfig) -> DoiRepository:
+    """Provide DoiRepository instance utilizing the isolated global test
+    configuration."""
+    return DoiRepository(config=test_config)
 
 
 def test_get_metadata_success(repo: DoiRepository) -> None:
-    """Verify that CSL-JSON metadata is returned correctly as a dictionary."""
+    """Verify that valid CSL-JSON metadata is mapped and returned correctly."""
     mock_json_data = {
         "id": "10.1000/182",
         "type": "article-journal",
         "title": "Title of the Paper",
         "author": [{"family": "Doe", "given": "J."}],
     }
-
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_json_data
@@ -29,8 +31,7 @@ def test_get_metadata_success(repo: DoiRepository) -> None:
     with patch.object(
         repo.http_client_wrapper, "get", return_value=mock_response
     ) as mock_get:
-        doi = "10.1000/182"
-        result = repo.get_metadata(doi)
+        result = repo.get_metadata("10.1000/182")
 
         assert result == mock_json_data
         assert isinstance(result, dict)
@@ -40,70 +41,74 @@ def test_get_metadata_success(repo: DoiRepository) -> None:
         assert kwargs["headers"]["Accept"] == "application/vnd.citationstyles.csl+json"
 
 
-def test_get_metadata_missing_both_id_and_doi(repo: DoiRepository) -> None:
-    """Verify that an empty dict is returned and warning logged if identity fields are
-    absent."""
-    mock_invalid_data = {"type": "article-journal", "title": "Orphan Title"}
-
+@pytest.mark.parametrize(
+    "side_effect, json_val, expected_log_sub",
+    [
+        # Case A: Missing required keys (id and DOI)
+        (
+            None,
+            {"type": "article-journal", "title": "Orphan Title"},
+            "metadata invalid",
+        ),
+        # Case B: JSONDecodeError simulation
+        (
+            json.JSONDecodeError("Expecting value", "", 0),
+            None,
+            "Invalid format for CSL-JSON",
+        ),
+        # Case C: HTTP 404 Status Error simulation
+        (
+            httpx.HTTPStatusError(
+                "404 Not Found",
+                request=httpx.Request("GET", "https://doi.org/invalid/doi"),
+                response=httpx.Response(404),
+            ),
+            None,
+            "not found",
+        ),
+    ],
+)
+def test_get_metadata_safe_fallbacks(
+    repo: DoiRepository,
+    side_effect: Exception | None,
+    json_val: dict[str, Any] | None,
+    expected_log_sub: str,
+) -> None:
+    """Verify that API errors, formatting issues, or missing keys fall back to empty
+    records."""
     mock_response = MagicMock()
     mock_response.status_code = 200
-    mock_response.json.return_value = mock_invalid_data
+    if json_val is not None:
+        mock_response.json.return_value = json_val
+    if isinstance(side_effect, json.JSONDecodeError):
+        mock_response.json.side_effect = side_effect
 
     with (
-        patch.object(repo.http_client_wrapper, "get", return_value=mock_response),
+        patch.object(
+            repo.http_client_wrapper,
+            "get",
+            side_effect=side_effect
+            if not isinstance(side_effect, json.JSONDecodeError)
+            else None,
+            return_value=mock_response
+            if isinstance(side_effect, json.JSONDecodeError) or side_effect is None
+            else None,
+        ),
         patch(
             "manuscript_reference_lister.repositories.doi_repository.logger.warning"
         ) as mock_warn,
     ):
-        result = repo.get_metadata("10.1000/orphan")
+        result = repo.get_metadata("10.1000/fallback-target")
+
         assert result == {}
         mock_warn.assert_called_once()
-        assert "metadata invalid" in mock_warn.call_args[0][0]
 
-
-def test_get_metadata_invalid_json_format(repo: DoiRepository) -> None:
-    """Verify that a JSONDecodeError returns an empty dict and triggers a warning."""
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-
-    mock_response.json.side_effect = json.JSONDecodeError("Expecting value", "", 0)
-
-    with (
-        patch.object(repo.http_client_wrapper, "get", return_value=mock_response),
-        patch(
-            "manuscript_reference_lister.repositories.doi_repository.logger.warning"
-        ) as mock_warn,
-    ):
-        result = repo.get_metadata("10.1000/corrupted")
-        assert result == {}
-        mock_warn.assert_called_once()
-        assert "Invalid format for CSL-JSON" in mock_warn.call_args[0][0]
-
-
-def test_get_metadata_not_found_404(repo: DoiRepository) -> None:
-    """Verify an empty dictionary is returned and logged when a 404 error occurs for
-    CSL-JSON."""
-    mock_request = httpx.Request("GET", "https://doi.org/invalid/doi")
-    mock_response = httpx.Response(status_code=404, request=mock_request)
-
-    error = httpx.HTTPStatusError(
-        message="Client Error: 404 Not Found",
-        request=mock_request,
-        response=mock_response,
-    )
-    with (
-        patch.object(repo.http_client_wrapper, "get", side_effect=error),
-        patch(
-            "manuscript_reference_lister.repositories.doi_repository.logger.warning"
-        ) as mock_warn,
-    ):
-        result = repo.get_metadata("invalid/doi")
-        assert result == {}
-        mock_warn.assert_called_once()
+        log_content = " ".join(str(arg) for arg in mock_warn.call_args[0]).lower()
+        assert expected_log_sub.lower() in log_content
 
 
 def test_get_metadata_server_error_500_bubbles_up(repo: DoiRepository) -> None:
-    """Verify that any non-404 HTTP errors (like 500) are NOT caught and bubble up."""
+    """Verify that server-level errors (like 500) bubble up and raise immediately."""
     mock_request = httpx.Request("GET", "https://doi.org/10.1000/broken")
     mock_response = httpx.Response(status_code=500, request=mock_request)
     error = httpx.HTTPStatusError(
@@ -116,7 +121,8 @@ def test_get_metadata_server_error_500_bubbles_up(repo: DoiRepository) -> None:
 
 
 def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> None:
-    """Verify that root work fields and internal author sub-fields are properly removed."""
+    """Verify that configured schema blacklists strip fields from work and author
+    scopes."""
     repo.config.work_cls_schema_blacklist_fields = [
         "ISSN",
         "assertion",
@@ -127,7 +133,6 @@ def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> No
         "authenticated-orcid",
         "role",
     ]
-
     mock_raw_csl = {
         "DOI": "10.1038/s41561-020-0585-2",
         "ISSN": ["1752-0894"],
@@ -145,7 +150,6 @@ def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> No
             {"family": "Lavé", "given": "Jérôme", "role": [{"role": "author"}]},
         ],
     }
-
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_raw_csl
@@ -153,19 +157,16 @@ def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> No
     with patch.object(repo.http_client_wrapper, "get", return_value=mock_response):
         filtered_result = repo.get_metadata("10.1038/s41561-020-0585-2")
 
-        # Verify cleaning of work root fields
         assert "DOI" in filtered_result
         assert "title" in filtered_result
         assert "ISSN" not in filtered_result
         assert "is-referenced-by-count" not in filtered_result
         assert "assertion" not in filtered_result
 
-        # # Verify cleaning of author fields
         assert "author" in filtered_result
         authors = filtered_result["author"]
         assert len(authors) == 2
 
-        # Check authors and missing excluded fields
         assert authors[0]["family"] == "Lenard"
         assert "ORCID" not in authors[0]
         assert "authenticated-orcid" not in authors[0]
@@ -176,21 +177,18 @@ def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> No
 
 
 def test_get_metadata_with_empty_or_missing_blacklists(repo: DoiRepository) -> None:
-    """Verify get_metadata functions normally if blacklists are missing or empty."""
+    """Verify that blacklisting logic passes through unchanged when scopes are empty."""
     repo.config.work_cls_schema_blacklist_fields = []
     repo.config.author_cls_schema_blacklist_fields = []
-
     mock_json_data = {
         "id": "10.1000/182",
         "author": [{"family": "Doe", "ORCID": "0000-0001"}],
     }
-
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_json_data
 
     with patch.object(repo.http_client_wrapper, "get", return_value=mock_response):
         result = repo.get_metadata("10.1000/182")
-        # No alteration should be observed
         assert result == mock_json_data
         assert "ORCID" in result["author"][0]

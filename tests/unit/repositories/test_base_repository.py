@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from manuscript_reference_lister.repositories import BaseRepository
 from manuscript_reference_lister.schemas import BaseSchema
-from manuscript_reference_lister.utils import get_config
+from manuscript_reference_lister.utils import AppConfig
 
 
 class MockSchema(BaseSchema):
@@ -21,17 +21,16 @@ class MockSchema(BaseSchema):
 
 
 class MockRepository(BaseRepository[MockSchema]):
-    """Concrete repository for testing base logic."""
+    """Concrete repository implementation mapping MockSchema elements."""
 
     pass
 
 
 @pytest.fixture
-def base_repo(tmp_path: Path) -> MockRepository:
-    """Fixture providing a repo with a strictly local and isolated config and a
-    temporary directory."""
-    current_cfg = get_config().model_copy(update={"local_repo_dir_path": tmp_path})
-    return MockRepository("test_base_records.json", MockSchema, config=current_cfg)
+def base_repo(test_config: AppConfig) -> MockRepository:
+    """Provide a MockRepository instance utilizing the isolated global test
+    configuration."""
+    return MockRepository("test_base_records.json", MockSchema, config=test_config)
 
 
 def test_deduplicate_removes_repeats(base_repo: MockRepository) -> None:
@@ -49,47 +48,39 @@ def test_deduplicate_removes_repeats(base_repo: MockRepository) -> None:
     assert [r.id for r in base_repo.records] == [1, 2]
 
 
-def test_load_all_success(base_repo: MockRepository) -> None:
-    """Verify raw JSON data is correctly instantiated into schema objects."""
+@pytest.mark.parametrize(
+    "file_content, expected_records_count, expected_load_failed",
+    [
+        # Case A: Valid JSON file loaded and verified
+        ('[{"id": 1, "content": "A"}, {"id": 2, "content": "B"}]', 2, False),
+        # Case B: Invalid JSON structure causes failure flag and clears entries
+        ('[{"content": "broken"}]', 0, True),
+        # Case C: Missing target repository file loads empty lists gracefully
+        (None, 0, False),
+    ],
+)
+def test_load_all_scenarios(
+    base_repo: MockRepository,
+    file_content: str | None,
+    expected_records_count: int,
+    expected_load_failed: bool,
+) -> None:
+    """Verify load_all behaviors under standard file-system and validation states."""
     path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
-    valid_data = [{"id": 1, "content": "A"}, {"id": 2, "content": "B"}]
-    path.write_text(json.dumps(valid_data), encoding="utf-8")
 
-    base_repo.load_all()
-
-    assert len(base_repo) == 2
-    assert isinstance(base_repo.records[0], MockSchema)
-    assert base_repo.records[0].id == 1
-
-
-def test_load_all_invalid_schema(base_repo: MockRepository) -> None:
-    """Verify records list is cleared if data fails schema validation."""
-    path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
-    # Missing 'id' field required by MockSchema
-    invalid_data = [{"content": "broken"}]
-    path.write_text(json.dumps(invalid_data), encoding="utf-8")
-
-    base_repo.load_all()
-
-    assert base_repo.records == []
-    assert base_repo._load_failed is True
-
-
-def test_load_all_file_not_found(base_repo: MockRepository) -> None:
-    """Verify that a missing file results in empty records without crashing."""
-    # File shouldn't exist
-    path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
-    if path.exists():
+    if file_content is not None:
+        path.write_text(file_content, encoding="utf-8")
+    elif path.exists():
         path.unlink()
 
     base_repo.load_all()
 
-    assert base_repo.records == []
-    assert base_repo._load_failed is False
+    assert len(base_repo.records) == expected_records_count
+    assert base_repo._load_failed is expected_load_failed
 
 
 def test_save_all_atomic_success(base_repo: MockRepository, tmp_path: Path) -> None:
-    """Verify save_all writes JSON and cleans up temporary files."""
+    """Verify save_all writes JSON and cleans up temporary swap files."""
     data = [MockSchema(id=1, content="saved")]
     base_repo.records = data
     target = tmp_path / base_repo.local_filename
@@ -98,12 +89,11 @@ def test_save_all_atomic_success(base_repo: MockRepository, tmp_path: Path) -> N
 
     assert target.exists()
     assert json.loads(target.read_text(encoding="utf-8"))[0]["id"] == 1
-    # Check that temp file is cleaned up
     assert not target.with_suffix(".tmp").exists()
 
 
 def test_save_all_overwrite_existing(base_repo: MockRepository) -> None:
-    """Verify that save_all correctly overwrites an existing file via atomic swap."""
+    """Verify that save_all correctly overwrites existing contents via atomic swap."""
     path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
     path.write_text("initial junk data", encoding="utf-8")
 
@@ -120,24 +110,19 @@ def test_save_all_preserves_utf8(base_repo: MockRepository) -> None:
     """Ensure non-ASCII characters are saved as literal UTF-8 in the JSON file."""
     special_content = "Lavé & Keddadouche — 2020"
     base_repo.records = [MockSchema(id=1, content=special_content)]
-
     path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
-    base_repo.save_all()
 
-    # Read the raw file content to check for proper UTF-8 storage
+    base_repo.save_all()
     raw_text = path.read_text(encoding="utf-8")
 
-    # ensure_ascii=False means we should see "é", not "\u00e9"
     assert "é" in raw_text
     assert "—" in raw_text
 
-    # Loading it back should match perfectly
     base_repo.load_all()
     assert base_repo.records[0].content == special_content
 
 
-def test_validation_error_handling():
-    """Check that ValidationError is raised for bad data."""
+def test_validation_error_handling() -> None:
+    """Verify invalid schema instantiations raise ValidationErrors."""
     with pytest.raises(ValidationError):
-        # Misses 'id' field
         MockSchema(content="error")

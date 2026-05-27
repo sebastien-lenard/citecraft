@@ -5,61 +5,44 @@ from manuscript_reference_lister.parsers import JournalParser
 
 @pytest.fixture
 def parser() -> JournalParser:
-    """Provides a fresh instance of JournalParser for each test."""
+    """Provide a fresh instance of JournalParser for isolated testing."""
     return JournalParser()
-
-
-def test_standard_case(parser: JournalParser) -> None:
-    """Test extraction from a typical formatted string with headers and footers."""
-    text = (
-        "Intro text.\n"
-        "\n"
-        "Journals\n"
-        "Geomorphology\n"
-        "Geology\n"
-        "Chemical Geology\n"
-        "\n"
-        "End of file."
-    )
-    expected = ["Geomorphology", "Geology", "Chemical Geology"]
-    assert parser.extract_all(text) == expected
-
-
-def test_last_occurrence_only(parser: JournalParser) -> None:
-    """Ensure it only picks up the list after the LAST 'Journals' header."""
-    text = (
-        "Journals\n"
-        "Old List\n"
-        "\n"
-        "Intermediate text...\n"
-        "\n"
-        "Journals\n"
-        "New List 1\n"
-        "New List 2\n"
-        "\n"
-        "End."
-    )
-    expected = ["New List 1", "New List 2"]
-    assert parser.extract_all(text) == expected
 
 
 @pytest.mark.parametrize(
     "text, expected",
     [
-        # No header: Return empty list
+        # Standard parsing case with introductory headers and footers
+        (
+            (
+                "Intro text.\n\nJournals\nGeomorphology\nGeology\nChemical Geology"
+                "\n\nEnd of file."
+            ),
+            ["Geomorphology", "Geology", "Chemical Geology"],
+        ),
+        # Last occurrence logic (only picking up list following the final "Journals"
+        # header)
+        (
+            (
+                "Journals\nOld List\n\nIntermediate text...\n\nJournals\nNew List 1"
+                "\nNew List 2\n\nEnd."
+            ),
+            ["New List 1", "New List 2"],
+        ),
+        # No matching header
         ("This text mentions journals but not as a header line.", []),
-        # Break with whitespace: Stop at a double newline even if it contains spaces/tabs
+        # Break parsing on intermediate whitespace or blank lines
         ("Journals\nJournal Alpha\n \t \nJournal Beta", ["Journal Alpha"]),
-        # End of string: Handle cases where the list goes until the very end
+        # End of stream reached before any terminal breaks
         ("Journals\nOnly Journal", ["Only Journal"]),
-        # Strict match: Ensure partial matches like 'Scientific Journals' are ignored
+        # Strict word matching (ignoring compound titles like 'Scientific Journals')
         ("Scientific Journals\nPhysics\n\nJournals\nChemistry\n\nEnd", ["Chemistry"]),
-        # Duplicate removal: Ensure the same title isn't listed twice
+        # Auto-deduplication of parsed titles
         ("Journals\nNature\nScience\nNature\n\nEnd", ["Nature", "Science"]),
     ],
 )
-def test_parsing_edge_cases(
+def test_journal_parser_scenarios(
     parser: JournalParser, text: str, expected: list[str]
 ) -> None:
-    """Verify various boundary conditions and strict header matching."""
+    """Verify structural extraction rules and boundary parsing edge cases."""
     assert parser.extract_all(text) == expected

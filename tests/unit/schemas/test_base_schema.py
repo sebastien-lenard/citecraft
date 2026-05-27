@@ -4,18 +4,18 @@ from manuscript_reference_lister.schemas.base_schema import BaseSchema
 
 
 class MockSchema(BaseSchema):
-    """Simple implementation for testing BaseSchema logic."""
+    """Simple schema implementation for validating base behaviors."""
 
     name: str
     value: int = 0
 
     @property
-    def identity_key(self):
+    def identity_key(self) -> str:
         return self.name
 
 
 def test_base_schema_to_dict() -> None:
-    """Should be able to convert into a dict."""
+    """Verify clean dictionary export functionality."""
     obj = MockSchema(name="Test", value=10)
     expected = {"name": "Test", "value": 10}
 
@@ -23,7 +23,7 @@ def test_base_schema_to_dict() -> None:
 
 
 def test_base_schema_from_dict_ignores_extra_fields() -> None:
-    """Extra fields shouldn't raise errors due to model_config extra='ignore'."""
+    """Ensure unregistered dictionary items are discarded during instantiation."""
     raw_data = {"name": "Test", "value": 42, "extra_garbage": "ignore_me"}
 
     obj = MockSchema(**raw_data)
@@ -34,7 +34,7 @@ def test_base_schema_from_dict_ignores_extra_fields() -> None:
 
 
 def test_base_schema_identity_key_requirement() -> None:
-    """Ensure a subclass must implement identity_key or raise NotImplementedError."""
+    """Ensure subclasses trigger NotImplementedError when identity_key is missing."""
 
     class BrokenSchema(BaseSchema):
         name: str

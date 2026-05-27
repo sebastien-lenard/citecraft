@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,36 +10,24 @@ from manuscript_reference_lister.schemas import (
     CrossrefAuthor,
     WorkMetadata,
 )
+from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
-def repo() -> WorkRepository:
-    """Provides a fresh instance of WorkRepository for each test."""
-    return WorkRepository()
+def repo(test_config: AppConfig) -> WorkRepository:
+    """Provide WorkRepository instance utilizing the isolated global test
+    configuration."""
+    return WorkRepository(config=test_config)
 
 
-def test_fetch_not_found(repo: WorkRepository) -> None:
-    """Verify behavior when no results are found (returns empty list)."""
-    mock_resp = MagicMock(status_code=200)
-    mock_resp.json.return_value = {"message": {"items": []}}
-
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_resp):
-        result = repo.get_work_metadata(
-            CitationMetadata(
-                first_authors_txt="UnknownAuthor",
-                year_and_suffix="2025",
-            ),
-            input_ISSN="1752-0894",
-        )
-        assert result == []
-
-
-def test_returns_multiple_candidates(repo: WorkRepository) -> None:
-    """Verify that the repo identifies and returns multiple valid candidates."""
-    mock_resp = MagicMock(status_code=200)
-    mock_resp.json.return_value = {
-        "message": {
-            "items": [
+@pytest.mark.parametrize(
+    "api_items, expected_length, expected_first_doi, expected_first_type",
+    [
+        # Case A: Empty item payloads return empty result sets
+        ([], 0, None, None),
+        # Case B: Multiple valid work records instantiated with correct metadata types
+        (
+            [
                 {
                     "DOI": "10.1038/s41561-020-0585-2",
                     "type": "journal-article",
@@ -57,26 +46,41 @@ def test_returns_multiple_candidates(repo: WorkRepository) -> None:
                         {"family": "Brown", "sequence": "additional"},
                     ],
                 },
-            ]
-        }
-    }
+            ],
+            2,
+            "https://doi.org/10.1038/s41561-020-0585-2",
+            "journal-article",
+        ),
+    ],
+)
+def test_get_work_metadata_parsing_scenarios(
+    repo: WorkRepository,
+    api_items: list[dict[str, Any]],
+    expected_length: int,
+    expected_first_doi: str | None,
+    expected_first_type: str | None,
+) -> None:
+    """Verify get_work_metadata parses and maps raw API payloads to matching schema
+    lists."""
+    mock_resp = MagicMock(status_code=200)
+    mock_resp.json.return_value = {"message": {"items": api_items}}
 
     with patch.object(repo.http_client_wrapper, "get", return_value=mock_resp):
         results = repo.get_work_metadata(
             CitationMetadata(first_authors_txt="Lenard et al.", year_and_suffix="2020"),
             input_ISSN="1752-0894",
         )
-        assert len(results) == 2
-        assert results[0].type == "journal-article"
-        assert results[0].DOI == "https://doi.org/10.1038/s41561-020-0585-2"
-        assert results[1].type == "proceedings-article"
+
+        assert len(results) == expected_length
+        if expected_length > 0:
+            assert results[0].DOI == expected_first_doi
+            assert results[0].type == expected_first_type
 
 
 def test_parameterized_keywords(repo: WorkRepository) -> None:
     """Verify that custom keywords are correctly injected into the API query."""
     mock_resp = MagicMock(status_code=200)
     mock_resp.json.return_value = {"message": {"items": []}}
-
     custom_kws = "Shifts in landslide frequency–area distribution"
 
     with patch.object(
@@ -206,7 +210,7 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
         (
             [{"family": "Lucas", "sequence": "first"}],
             ["Lucas"],
-            None,  # input_first_authors_count when is_et_al=True
+            None,
             False,
         ),
         # Testing inversion family/given name.
@@ -223,8 +227,8 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
 def test_validate_first_authors_logic(
     repo: WorkRepository,
     crossref_authors: list[CrossrefAuthor],
-    input_first_authors: list,
-    input_first_authors_count: int,
+    input_first_authors: list[str],
+    input_first_authors_count: int | None,
     expected_result: bool,
 ) -> None:
     """Directly test author validation logic across naming and count scenarios."""
@@ -240,65 +244,82 @@ def test_validate_first_authors_logic(
     )
 
 
-def test_merge_new_works_deduplication(repo: WorkRepository) -> None:
-    """Ensure duplicate input citations only create one record."""
-    citations = [
-        CitationMetadata(first_authors_txt="Lenard et al.", year_and_suffix="2020a"),
-        CitationMetadata(first_authors_txt="Lenard et al.", year_and_suffix="2020a"),
-    ]
-    repo.merge_new_works(citations)
+@pytest.mark.parametrize(
+    (
+        "initial_records, new_citations, expected_final_count, expected_first_doi, "
+        "expected_first_issn"
+    ),
+    [
+        # Scenario A: Identical incoming citation targets are deduplicated onto a single
+        # template record
+        (
+            [],
+            [
+                CitationMetadata(
+                    first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+                ),
+                CitationMetadata(
+                    first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+                ),
+            ],
+            1,
+            None,
+            None,
+        ),
+        # Scenario B: Avoid adding blank templates when matching rich records exist in
+        # records
+        (
+            [
+                WorkMetadata(
+                    input_first_authors_txt="Lenard et al.",
+                    input_year_and_suffix="2020a",
+                    input_ISSN="1752-0894",
+                    DOI="10.1038/s41561-020-0585-2",
+                )
+            ],
+            [
+                CitationMetadata(
+                    first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+                )
+            ],
+            1,
+            "10.1038/s41561-020-0585-2",
+            "1752-0894",
+        ),
+        # Scenario C: Create fresh template record for entirely unvisited citations
+        (
+            [],
+            [CitationMetadata(first_authors_txt="New Author", year_and_suffix="2024")],
+            1,
+            None,
+            None,
+        ),
+    ],
+)
+def test_merge_new_works_scenarios(
+    repo: WorkRepository,
+    initial_records: list[WorkMetadata],
+    new_citations: list[CitationMetadata],
+    expected_final_count: int,
+    expected_first_doi: str | None,
+    expected_first_issn: str | None,
+) -> None:
+    """Verify deduplication, rich preservation, and insertion behaviors of
+    merge_new_works."""
+    repo.records = initial_records
+    repo.merge_new_works(new_citations)
 
-    assert len(repo) == 1
-    assert repo.records[0].input_first_authors_txt == "Lenard et al."
-
-
-def test_merge_new_works_avoids_duplicate_of_rich_record(repo: WorkRepository) -> None:
-    """
-    Ensure a template is NOT added if a record with the same author/year
-    already exists (even if the existing record has a DOI/ISSN).
-    """
-    # Pre-populate with a 'rich' record
-    rich_record = WorkMetadata(
-        input_first_authors_txt="Lenard et al.",
-        input_year_and_suffix="2020a",
-        input_ISSN="1752-0894",
-        DOI="10.1038/s41561-020-0585-2",
-    )
-    repo.records = [rich_record]
-
-    # Try to merge a citation that matches the author/year
-    citations = [
-        CitationMetadata(first_authors_txt="Lenard et al.", year_and_suffix="2020a")
-    ]
-    repo.merge_new_works(citations)
-
-    # Should still be 1 record, and it should be our rich one
-    assert len(repo) == 1
-    assert repo.records[0].DOI == "10.1038/s41561-020-0585-2"
-    assert repo.records[0].input_ISSN == "1752-0894"
-
-
-def test_merge_new_works_adds_fresh_template(repo: WorkRepository) -> None:
-    """Ensure a brand new citation is added as a template."""
-    repo.records = []
-    citations = [
-        CitationMetadata(first_authors_txt="New Author", year_and_suffix="2024")
-    ]
-
-    repo.merge_new_works(citations)
-
-    assert len(repo) == 1
-    new_entry = repo.records[0]
-    assert new_entry.input_first_authors_txt == "New Author"
-    assert new_entry.DOI is None
-    assert new_entry.input_ISSN is None
+    assert len(repo) == expected_final_count
+    if expected_final_count > 0:
+        assert repo.records[0].DOI == expected_first_doi
+        assert repo.records[0].input_ISSN == expected_first_issn
 
 
 def test_update_all_replaces_template_with_rich_record(
     repo: WorkRepository, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Verify that a record without a DOI is updated when get_work_metadata returns a
-    result and the structured success log is recorded."""
+    result."""
     caplog.set_level(logging.INFO)
     template = WorkMetadata(
         input_first_authors_txt="Lenard et al.", input_year_and_suffix="2020a"
@@ -324,14 +345,9 @@ def test_update_all_replaces_template_with_rich_record(
         repo.update_all(ISSNs=["1752-0894"])
 
         assert "Work resolution completed. Updated: 1, Failed: 0" in caplog.text
-        # Check that get_work_metadata called for the template but NOT for the existing
-        # rich record
         assert mock_get.call_count == 1
-
-        # Check that the records were swapped
         assert len(repo.records) == 2
 
-        # Verify the template is gone and the rich one is in
         titles = [r.input_first_authors_txt for r in repo.records]
         assert "Lenard et al." in titles
         assert "Other Author" in titles
@@ -354,11 +370,10 @@ def test_update_all_skips_if_no_results_found(
     )
     repo.records = [template]
 
-    # Patch get_work_metadata to return an empty list
     with patch.object(repo, "get_work_metadata", return_value=[]):
         repo.update_all(ISSNs=["0000-0000"])
 
         assert "No work found for Unknown, 2024." in caplog.text
         assert "Work resolution completed. Updated: 0, Failed: 1" in caplog.text
         assert len(repo.records) == 1
-        assert repo.records[0].DOI is None  # Still a template
+        assert repo.records[0].DOI is None

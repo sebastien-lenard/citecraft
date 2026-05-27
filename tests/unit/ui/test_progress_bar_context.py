@@ -33,7 +33,7 @@ def test_generate_bar_string_zero_elapsed_time() -> None:
 
 
 def test_generate_bar_string_mid_progress() -> None:
-    """Verify ETA calculation and fill ratio at midpoint."""
+    """Verify ETA calculation and fill ratio at progress midpoint."""
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
     # 2 out of 4 steps done in 10 seconds -> 5 seconds per step average.
     # 2 steps remaining * 5s = 10s remaining -> ETA: 00:10
@@ -71,9 +71,7 @@ def test_progress_bar_passive_mode_when_verbose() -> None:
 
 
 def test_progress_lifecycle_and_render(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test standard execution lifecycle by isolating the stream target.
-    Ensures messages transit correctly from initialization to completion.
-    """
+    """Test standard execution lifecycle rendering on sys.stderr."""
     fake_stderr = io.StringIO()
     # Replace sys.stderr safely during this test execution
     monkeypatch.setattr(sys, "stderr", fake_stderr)
@@ -130,9 +128,8 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> None:
-    """Verify that the integration between ProgressBarContext and global logging
-    correctly clears the progress bar line, emits the log, and repaints the UI.
-    """
+    """Verify that logging integrations correctly erase progress bar lines before
+    emitting logs."""
     # 1. Setup local logging infrastructure connected to root for context interception
     test_logger = logging.getLogger("manuscript_reference_lister.integ_ui")
     test_logger.setLevel(logging.WARNING)
@@ -161,7 +158,7 @@ def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> Non
         # 3. Assert structural integrity of the stream sequence
         # The output must contain the clear line carriage return token before the log
         # Note: In Option B, LogInterceptor applies formatting or the context redraws.
-        assert "Network timeout encountered, retrying..." in captured.err
+        assert "Network timeout encountered, retrying..." in err_output
 
         # Verify ANSI erase sequence
         # Log mustn't overwrite remaining progressbar
@@ -177,9 +174,8 @@ def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> Non
 
 
 def test_logging_handlers_are_cleaned_on_exception() -> None:
-    """Verify that ProgressBarContext removes its logging handlers from the root logger
-    even when an unhandled exception occurs inside the context block.
-    """
+    """Verify that ProgressBarContext removes intercepting handlers during crash
+    sequences."""
     root_logger = logging.getLogger()
     initial_handlers = list(root_logger.handlers)
 

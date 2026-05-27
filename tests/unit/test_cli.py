@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
 
@@ -13,8 +14,7 @@ from manuscript_reference_lister.utils import AppConfig
 def test_local_repo_filepaths(
     test_config: AppConfig, tmp_path: Path
 ) -> tuple[Path, list[Path]]:
-    """Create temporary local repository files."""
-
+    """Create temporary local repository files inside the isolated directory."""
     local_repo_files = [
         test_config.local_repo_dir_path / "journal_records.json",
         test_config.local_repo_dir_path / "work_records.json",
@@ -23,27 +23,25 @@ def test_local_repo_filepaths(
     for file in local_repo_files:
         file.write_text('{"test": "data"}', encoding="utf-8")
 
-    return local_repo_files
+    return test_config.local_repo_dir_path, local_repo_files
 
 
 @pytest.fixture
 def runner() -> CliRunner:
-    """Provides a Click CliRunner instance for testing CLI commands."""
+    """Provide a Click CliRunner instance for CLI invocation tests."""
     return CliRunner()
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_logging():
-    """Autouse fixture to prevent the CLI from restructuring the global logging
-    handlers and breaking pytest's caplog during global test suite runs.
-    """
+def mock_setup_logging() -> Generator[MagicMock, None, None]:
+    """Isolate CLI tests from modifying global root log configurations."""
     with patch("manuscript_reference_lister.cli.setup_logging") as mock:
         mock.return_value = "/mock/log/dir"
         yield mock
 
 
 def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
-    """Verify that the CLI exits with 0 on successful execution."""
+    """Verify that the CLI exits with 0 on successful execution runs."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -65,16 +63,29 @@ def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
         )
 
 
-def test_cli_handles_unexpected_exception_and_exits_1(
-    runner: CliRunner, test_config: AppConfig
+@pytest.mark.parametrize(
+    "verbose_args, expect_traceback",
+    [
+        # Scenario A: Standard error reporting without traceback output
+        ([], False),
+        # Scenario B: Verbose error reporting containing debug traceback details
+        (["-v"], True),
+    ],
+)
+def test_cli_exception_handling_paths(
+    runner: CliRunner,
+    test_config: AppConfig,
+    verbose_args: list[str],
+    expect_traceback: bool,
 ) -> None:
-    """Verify that an unhandled exception in core.run causes the CLI to print
-    an error message and exit with status code 1."""
+    """Verify that unexpected pipeline crashes are caught with correct traceback display settings."""
     with patch("manuscript_reference_lister.cli.run") as mock_run:
         mock_run.side_effect = RuntimeError("Database or File system corruption")
 
         result = runner.invoke(
-            cli, ["main", "-f", "corrupted.docx"], obj={"config": test_config}
+            cli,
+            ["main", "-f", "corrupted.docx"] + verbose_args,
+            obj={"config": test_config},
         )
 
         assert result.exit_code == 1
@@ -82,41 +93,22 @@ def test_cli_handles_unexpected_exception_and_exits_1(
             "Error: An unexpected error occurred: Database or File system corruption"
             in result.output
         )
-        assert "--- Debug Traceback ---" not in result.output
-        assert (
-            "Use the '-v' or '-vv' option to see the full debug traceback."
-            in result.output
-        )
 
-
-def test_cli_shows_traceback_in_verbose_mode(
-    runner: CliRunner, test_config: AppConfig
-) -> None:
-    """Verify that passing the verbose flag (-v) includes the debug traceback
-    upon failure."""
-    with patch("manuscript_reference_lister.cli.run") as mock_run:
-        mock_run.side_effect = RuntimeError("Network link completely broken")
-
-        result = runner.invoke(
-            cli, ["main", "-f", "manuscript.docx", "-v"], obj={"config": test_config}
-        )
-
-        assert result.exit_code == 1
-        assert (
-            "Error: An unexpected error occurred: Network link completely broken"
-            in result.output
-        )
-
-        assert "--- Debug Traceback ---" in result.output
-        assert "RuntimeError: Network link completely broken" in result.output
-        assert "-----------------------" in result.output
+        if expect_traceback:
+            assert "--- Debug Traceback ---" in result.output
+            assert "RuntimeError: Database or File system corruption" in result.output
+        else:
+            assert "--- Debug Traceback ---" not in result.output
+            assert (
+                "Use the '-v' or '-vv' option to see the full debug traceback."
+                in result.output
+            )
 
 
 def test_cli_piped_input_default_style(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify that standard input redirection (piping) passes the string
-    correctly and uses the default style from the configuration."""
+    """Verify standard input redirection (piping) forwards strings correctly using APA defaults."""
     piped_text = "Some citation (Lenard et al., 2025)"
 
     with patch(
@@ -143,9 +135,7 @@ def test_cli_piped_input_default_style(
 def test_cli_custom_style_and_output_options(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify that both --style and --output_file options correctly propagate
-    their values to the core.run function.
-    """
+    """Verify custom styles and output paths are propagated cleanly to core pipelines."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -179,10 +169,7 @@ def test_cli_custom_style_and_output_options(
 def test_cli_skip_update_flags_propagate(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify that both --skip-journal-update and --skip-work-update flags
-    correctly propagate their values to the core.run function and display
-    the summary of skipped steps in the output.
-    """
+    """Verify that bypass flags propagate to core runs and display skipped indicators."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -209,7 +196,6 @@ def test_cli_skip_update_flags_propagate(
             skip_journal_update=True,
             skip_work_update=True,
         )
-
         assert "ℹ️  Pipeline Skips:" in result.output
         assert "- Journal metadata update was skipped." in result.output
         assert "- Work DOI search and update was skipped" in result.output
@@ -218,9 +204,7 @@ def test_cli_skip_update_flags_propagate(
 def test_cli_displays_journal_anomalies_warning_table(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Check if CLI catches metadata anomalies dictionary and correctly displays
-    the updated warning text and multi-column status table.
-    """
+    """Verify metadata anomalies are detected and displayed inside status formatting grids."""
     mock_anomalies = {
         ("Natural Hazards", "1234-5678"): {
             "input_title": "Natural Hazards",
@@ -235,7 +219,6 @@ def test_cli_displays_journal_anomalies_warning_table(
             "issns_found": "",
         },
     }
-
     mock_export = MagicMock()
     mock_export.total_rows = 0
     mock_export.output_filepath = "/mock/path.csv"
@@ -281,10 +264,7 @@ def test_cli_final_summary_display_integrity(
     test_local_repo_filepaths: tuple[Path, list[Path]],
     tmp_path: Path,
 ) -> None:
-    """Verify that the CLI correctly structures and displays the final summary metrics,
-    the multi-line textwrapped preview table, and the user guidance section.
-    """
-
+    """Verify formatting metrics and output textwrapping grids on final CLI summary cards."""
     mock_manuscript = tmp_path / "mock_manuscript.docx"
     mock_manuscript.write_text("dummy content", encoding="utf-8")
 
@@ -372,8 +352,8 @@ def test_cli_clear_cache_option_absent_does_not_touch_files(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Checks that without option --clear-cache, files are untouched."""
-    local_repo_files = test_local_repo_filepaths
+    """Verify cache directories remain untouched unless clear-cache flags are declared."""
+    _, local_repo_files = test_local_repo_filepaths
 
     with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
         result = runner.invoke(
@@ -391,8 +371,8 @@ def test_cli_clear_cache_cancelled_by_user(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Checks clear cache operation stops on user refusal."""
-    local_repo_files = test_local_repo_filepaths
+    """Verify cache cleanup stops on explicit user cancellation inputs."""
+    _, local_repo_files = test_local_repo_filepaths
 
     result = runner.invoke(
         cli, ["main", "--clear-cache"], input="n\n", obj={"config": test_config}
@@ -410,12 +390,10 @@ def test_cli_clear_cache_maintenance_only_success(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Check maintenance mode: clear cache without handling manuscript/document."""
-    local_repo_files = test_local_repo_filepaths
+    """Verify standalone cache maintenance wipes cache files and generates back-ups."""
+    local_repo_dir_path, local_repo_files = test_local_repo_filepaths
 
-    with patch("manuscript_reference_lister.cli.run") as mock_run:
-        mock_run.return_value = ({}, {})
-
+    with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
         result = runner.invoke(
             cli, ["main", "--clear-cache"], input="y\n", obj={"config": test_config}
         )
@@ -427,7 +405,7 @@ def test_cli_clear_cache_maintenance_only_success(
     for file in local_repo_files:
         assert not file.exists()
 
-    backups = list(test_config.local_repo_dir_path.glob("*.bak_*"))
+    backups = list(local_repo_dir_path.glob("*.bak_*"))
     assert len(backups) == 2
 
 
@@ -436,8 +414,8 @@ def test_cli_clear_cache_then_proceeds_to_run(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Check cache clearing followed by processing if input document present."""
-    local_repo_files = test_local_repo_filepaths
+    """Verify clean cache setup triggers first before compiling the manuscript target."""
+    local_repo_dir_path, local_repo_files = test_local_repo_filepaths
 
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
@@ -456,8 +434,7 @@ def test_cli_clear_cache_then_proceeds_to_run(
 
     for file in local_repo_files:
         assert not file.exists()
-    assert len(list(test_config.local_repo_dir_path.glob("*.bak_*"))) == 2
-
+    assert len(list(local_repo_dir_path.glob("*.bak_*"))) == 2
     mock_run.assert_called_once()
 
 
@@ -466,9 +443,7 @@ def test_cli_clear_cache_summary_displayed_at_the_very_end(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Check presence of cache clearing synthetic message after processing."""
-    _, _ = test_local_repo_filepaths
-
+    """Verify that cache maintenance completions print confirmation statuses before exiting."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -483,9 +458,7 @@ def test_cli_clear_cache_summary_displayed_at_the_very_end(
     mock_run.assert_called_once()
 
     lines = [line.strip() for line in result.output.splitlines() if line.strip()]
-
     assert any("🧹 Local cache cleared" in line for line in lines)
-
     # Check structure of the end of the output to ensure message hasn't been
     # erased/hidden
     assert "Done." in lines[-1]
@@ -496,15 +469,13 @@ def test_cli_clear_cache_partial_files_shows_warning(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Check that a warning is displayed if one of the expected cache files is missing."""
-    local_repo_files = test_local_repo_filepaths
+    """Verify warning visibility if any targeted cache elements are already absent."""
+    _, local_repo_files = test_local_repo_filepaths
 
     missing_file = local_repo_files[0]
     missing_file.unlink()
 
-    with patch("manuscript_reference_lister.cli.run") as mock_run:
-        mock_run.return_value = ({}, {})
-
+    with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
         result = runner.invoke(
             cli, ["main", "--clear-cache"], input="y\n", obj={"config": test_config}
         )

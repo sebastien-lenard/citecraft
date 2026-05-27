@@ -10,12 +10,9 @@ from manuscript_reference_lister.network.http_client_wrapper import HTTPClientWr
 
 @pytest.fixture
 def wrapper() -> Generator[HTTPClientWrapper, None, None]:
-    """Provides an HTTPClientWrapper instance with low backoff and no initial delay for
-    fast, deterministic testing.
-    Note: We explicitly call wrapper.close() to free client resources.
-    """
+    """Provide an HTTPClientWrapper instance configured with low backoffs for deterministic tests."""
     client_wrapper = HTTPClientWrapper(
-        email="test@example.com", max_retries=3, backoff_factor=0.1, delay=0.0
+        email="test@example.com", max_retries=3, backoff_factor=0.01, delay=0.0
     )
     yield client_wrapper
     client_wrapper.close()
@@ -33,60 +30,51 @@ def test_get_success(wrapper: HTTPClientWrapper) -> None:
         assert mock_get.call_count == 1
 
 
-def test_get_retry_on_timeout(wrapper: HTTPClientWrapper) -> None:
-    """Verify that the wrapper retries upon receiving a TransportError exception."""
-    mock_response = MagicMock(spec=httpx.Response)
-    mock_response.status_code = 200
-
-    # Simulate two failures followed by one success
-    request_obj = httpx.Request("GET", "https://api.test.com")
+@pytest.mark.parametrize(
+    "errors_to_simulate",
+    [
+        # Scenario A: Network timeout retry sequences
+        [
+            httpx.ReadTimeout(
+                "Timeout", request=httpx.Request("GET", "https://api.test.com")
+            ),
+            httpx.ReadTimeout(
+                "Timeout 2", request=httpx.Request("GET", "https://api.test.com")
+            ),
+        ],
+        # Scenario B: Transient HTTP status errors (429, 503)
+        [
+            httpx.HTTPStatusError(
+                "Too Many Requests",
+                request=httpx.Request("GET", "https://api.test.com"),
+                response=httpx.Response(429),
+            ),
+            httpx.HTTPStatusError(
+                "Service Unavailable",
+                request=httpx.Request("GET", "https://api.test.com"),
+                response=httpx.Response(503),
+            ),
+        ],
+    ],
+)
+def test_get_retry_on_transient_failures(
+    wrapper: HTTPClientWrapper, errors_to_simulate: list[Exception]
+) -> None:
+    """Verify wrapper retries transient failures before returning success."""
+    mock_response_ok = MagicMock(spec=httpx.Response)
+    mock_response_ok.status_code = 200
 
     with (
         patch.object(wrapper.client, "get") as mock_get,
         patch("tenacity.nap.time.sleep") as mock_tenacity_sleep,
     ):
-        mock_get.side_effect = [
-            httpx.ReadTimeout("Slow connection", request=request_obj),
-            httpx.ReadTimeout("Still slow", request=request_obj),
-            mock_response,
-        ]
-
-        response = wrapper.get("https://api.test.com")
-
-        assert response == mock_response
-        assert mock_get.call_count == 3
-        assert mock_tenacity_sleep.call_count == 2  # 2 sleeps for 3 retries
-
-
-def test_get_retry_on_transient_http_errors(wrapper: HTTPClientWrapper) -> None:
-    """Verify that transient HTTP errors (429, 503) trigger retries."""
-    mock_response_ok = MagicMock(spec=httpx.Response)
-    mock_response_ok.status_code = 200
-
-    request_obj = httpx.Request("GET", "https://api.test.com")
-
-    mock_response_429 = MagicMock(spec=httpx.Response)
-    mock_response_429.status_code = 429
-    error_429 = httpx.HTTPStatusError(
-        "Too Many Requests", request=request_obj, response=mock_response_429
-    )
-
-    mock_response_503 = MagicMock(spec=httpx.Response)
-    mock_response_503.status_code = 503
-    error_503 = httpx.HTTPStatusError(
-        "Service Unavailable", request=request_obj, response=mock_response_503
-    )
-
-    with (
-        patch.object(wrapper.client, "get") as mock_get,
-        patch("tenacity.nap.time.sleep"),
-    ):
-        mock_get.side_effect = [error_429, error_503, mock_response_ok]
+        mock_get.side_effect = [*errors_to_simulate, mock_response_ok]
 
         response = wrapper.get("https://api.test.com")
 
         assert response == mock_response_ok
-        assert mock_get.call_count == 3
+        assert mock_get.call_count == len(errors_to_simulate) + 1
+        assert mock_tenacity_sleep.call_count == len(errors_to_simulate)
 
 
 def test_get_max_retries_reached(wrapper: HTTPClientWrapper) -> None:
@@ -105,30 +93,30 @@ def test_get_max_retries_reached(wrapper: HTTPClientWrapper) -> None:
         assert mock_get.call_count == 3
 
 
-def test_get_fatal_http_error(wrapper: HTTPClientWrapper) -> None:
-    """Verify that fatal HTTP errors (like 404) raise immediately without retry."""
-    mock_response = MagicMock(spec=httpx.Response)
-    mock_response.status_code = 404
-
+@pytest.mark.parametrize("fatal_status_code", [400, 401, 403, 404])
+def test_get_fatal_http_errors_raise_immediately(
+    wrapper: HTTPClientWrapper, fatal_status_code: int
+) -> None:
+    """Verify that fatal HTTP errors do not trigger retry attempts and fail loudly."""
+    mock_response = httpx.Response(fatal_status_code)
     request_obj = httpx.Request("GET", "https://api.test.com")
-    error_404 = httpx.HTTPStatusError(
-        "404 Not Found", request=request_obj, response=mock_response
+    error_fatal = httpx.HTTPStatusError(
+        f"Error {fatal_status_code}", request=request_obj, response=mock_response
     )
 
     with (
-        patch.object(wrapper.client, "get", side_effect=error_404) as mock_get,
+        patch.object(wrapper.client, "get", side_effect=error_fatal) as mock_get,
         patch("tenacity.nap.time.sleep") as mock_tenacity_sleep,
     ):
         with pytest.raises(httpx.HTTPStatusError):
             wrapper.get("https://api.test.com")
 
-        # Fatal errors should stop at the first attempt
         assert mock_get.call_count == 1
         assert mock_tenacity_sleep.call_count == 0
 
 
 def test_get_max_retries_override(wrapper: HTTPClientWrapper) -> None:
-    """Verify that the max_retries parameter in get() overrides the instance default."""
+    """Verify that the max_retries parameter in get() overrides the default limit."""
     request_obj = httpx.Request("GET", "https://api.test.com")
 
     with (
@@ -137,7 +125,6 @@ def test_get_max_retries_override(wrapper: HTTPClientWrapper) -> None:
     ):
         mock_get.side_effect = httpx.ConnectError("Down", request=request_obj)
 
-        # Override instance default (3) with a single attempt
         with pytest.raises(httpx.ConnectError):
             wrapper.get("https://api.test.com", max_retries=1)
 
@@ -145,7 +132,7 @@ def test_get_max_retries_override(wrapper: HTTPClientWrapper) -> None:
 
 
 def test_get_with_custom_headers(wrapper: HTTPClientWrapper) -> None:
-    """Verify that custom headers are correctly passed to the httpx call."""
+    """Verify custom headers are forwarded intact to client requests."""
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
 
@@ -161,7 +148,7 @@ def test_get_with_custom_headers(wrapper: HTTPClientWrapper) -> None:
 
 
 def test_get_follows_redirects(wrapper: HTTPClientWrapper) -> None:
-    """Verify that the underlying client correctly follows HTTP redirects (302)."""
+    """Verify the client traces redirect hops to final destination responses."""
     request_initial = httpx.Request("GET", "https://doi.org/10.1038/sample")
     request_redirected = httpx.Request("GET", "https://api.crossref.org/transform")
 
@@ -170,13 +157,11 @@ def test_get_follows_redirects(wrapper: HTTPClientWrapper) -> None:
         headers={"Location": "https://api.crossref.org/transform"},
         request=request_initial,
     )
-
     response_200 = httpx.Response(
         status_code=200,
         text="Ceci est la référence finale",
         request=request_redirected,
     )
-
     response_200.history.append(response_302)
 
     with patch.object(wrapper.client, "get", return_value=response_200) as mock_get:
@@ -190,11 +175,8 @@ def test_get_follows_redirects(wrapper: HTTPClientWrapper) -> None:
 
 
 def test_get_accepts_and_converts_pydantic_http_url(wrapper: HTTPClientWrapper) -> None:
-    """Verify that the get method explicitly converts a Pydantic HttpUrl object
-    into a primitive string before passing it to the HTTPX client.
-    """
+    """Verify the get handler converts Pydantic HttpUrl parameters to standard string representations."""
     url_raw = "https://api.crossref.org/styles"
-    # Creation of a Pydantic HttpUrl (Pydantic v2)
     pydantic_url = TypeAdapter(networks.HttpUrl).validate_python(url_raw)
 
     mock_response = MagicMock(spec=httpx.Response)

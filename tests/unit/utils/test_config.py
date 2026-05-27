@@ -1,17 +1,16 @@
 import os
-from typing import Any
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from pydantic import ValidationError
 
-from manuscript_reference_lister.utils.config import create_config
+from manuscript_reference_lister.utils.config import AppConfig, create_config
 
 
 @pytest.fixture(autouse=True)
-def mock_env_file():
-    """Isolate the testing pipeline completely from local disk
-    configurations."""
+def mock_env_file() -> Generator[None, None, None]:
+    """Isolate testing pipelines from local disk configurations using mock variables."""
     with patch.dict(os.environ, clear=True):
         os.environ["CROSSREF_API_EMAIL"] = "test@example.com"
         os.environ["CROSSREF_API_JOURNALS_URL"] = "https://example.com"
@@ -26,20 +25,22 @@ def mock_env_file():
         yield
 
 
-def _create_test_config() -> Any:
-    """Helper to bypass local .env files explicitly during initialization."""
+def _create_test_config() -> AppConfig:
+    """Helper to safely instantiate configurations, explicitly bypassing local file
+    loads."""
     return create_config(_env_file=None)
 
 
 def test_valid_https_urls_pass() -> None:
-    """Ensure that correct https:// URLs pass completely unchanged."""
+    """Ensure that already valid https:// locations are preserved during validation."""
     with patch.dict(os.environ, {"DOI_API_URL": "https://crossref.org/{doi}"}):
         config = _create_test_config()
         assert config.doi_api_url == "https://crossref.org/{doi}"
 
 
-def test_http_url_upgrades_to_https():
-    """Ensure that http:// is automatically upgraded to https://."""
+def test_http_url_upgrades_to_https() -> None:
+    """Verify that http:// endpoint declarations automatically upgrade to secure
+    https:// layouts."""
     with patch.dict(
         os.environ,
         {
@@ -54,9 +55,8 @@ def test_http_url_upgrades_to_https():
         )
 
 
-def test_missing_scheme_prepends_https():
-    """Ensure that a URL missing a scheme altogether gets https:// prepended
-    correctly."""
+def test_missing_scheme_prepends_https() -> None:
+    """Verify that schemes absent from input strings are safely coerced to https://."""
     with patch.dict(os.environ, {"STYLE_REPO_URL": "://github.com/{style}"}):
         config = _create_test_config()
         assert config.style_repo_url == "https://github.com/{style}"
@@ -66,9 +66,8 @@ def test_missing_scheme_prepends_https():
         assert config.style_repo_url == "https://github.com/{style}"
 
 
-def test_invalid_scheme_raises_validation_error():
-    """Ensure that an unsupported scheme like ftp:// causes an explicit validation
-    error."""
+def test_invalid_scheme_raises_validation_error() -> None:
+    """Verify that non-standard protocols like ftp:// fail configuration parsing."""
     with patch.dict(os.environ, {"DOI_API_URL": "ftp://api.crossref.org/{doi}"}):
         with pytest.raises(ValidationError) as exc_info:
             _create_test_config()
@@ -76,9 +75,8 @@ def test_invalid_scheme_raises_validation_error():
         assert "must use 'https://' scheme" in str(exc_info.value)
 
 
-def test_missing_template_placeholder_raises_error():
-    """Ensure that omitting mandatory braces like {issn} triggers structural
-    failures."""
+def test_missing_template_placeholder_raises_error() -> None:
+    """Verify that omission of expected URL interpolation parameters breaks loading."""
     with patch.dict(
         os.environ, {"CROSSREF_API_JOURNALS_ISSN_URL": "https://invalid-url.org"}
     ):
@@ -87,9 +85,8 @@ def test_missing_template_placeholder_raises_error():
         assert "mandatory '{issn}' placeholder" in str(exc_info.value)
 
 
-def test_case_insensitivity_works():
-    """Ensure the validator catches fields even if the environment keys are
-    lowercase."""
+def test_case_insensitivity_works() -> None:
+    """Ensure parsing and enforcement rules apply regardless of environment key case."""
     with patch.dict(os.environ, {"doi_api_url": "http://crossref.org/{doi}"}):
         config = _create_test_config()
         assert config.doi_api_url == "https://crossref.org/{doi}"

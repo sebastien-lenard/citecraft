@@ -6,9 +6,8 @@ from pydantic import ValidationError
 from manuscript_reference_lister.schemas.csl_reference import CSLReference
 
 
-def test_valid_minimal_reference():
-    """Verify that a standard CSL-JSON dictionary with required roots passes
-    validation."""
+def test_valid_minimal_reference() -> None:
+    """Verify that a standard CSL-JSON payload passes base validation rules."""
     raw_data = {
         "id": "10.1038/s41561-020-0585-2",
         "type": "article-journal",
@@ -22,8 +21,8 @@ def test_valid_minimal_reference():
     assert validated.title == "Steady erosion rates in the Himalayas"
 
 
-def test_missing_id_fallback_to_doi():
-    """Verify that if 'id' is missing but 'DOI' is present, 'id' is auto-populated."""
+def test_missing_id_fallback_to_doi() -> None:
+    """Verify fallback mapping of DOI onto missing primary identifier keys."""
     raw_data = {
         "DOI": "10.1038/s41561-020-0585-2",
         "type": "article-journal",
@@ -35,8 +34,8 @@ def test_missing_id_fallback_to_doi():
     assert validated.DOI == "10.1038/s41561-020-0585-2"
 
 
-def test_validation_error_when_both_id_and_doi_missing():
-    """Verify that validation fails if both 'id' and 'DOI' are missing entirely."""
+def test_validation_error_when_both_id_and_doi_missing() -> None:
+    """Verify validation failure if both id and DOI fields are completely absent."""
     raw_data = {
         "type": "article-journal",
         "title": "A paper without identifiers",
@@ -48,9 +47,8 @@ def test_validation_error_when_both_id_and_doi_missing():
     assert "id" in str(exc_info.value)
 
 
-def test_issn_array_extraction():
-    """Verify that an ISSN array is handled by extracting only the first entry
-    string."""
+def test_issn_array_extraction() -> None:
+    """Verify selection of the primary entry when the ISSN contains list elements."""
     json_metadata = (
         '{"id":"10.13039/100010665","type":"journal-article","ISSN":["1991-9603", '
         '"1758-0471"]}'
@@ -59,21 +57,20 @@ def test_issn_array_extraction():
 
     validated = CSLReference.model_validate(csl_metadata)
 
-    # It must pull out only the first element, ignoring the rest
     assert validated.ISSN == "1991-9603"
 
 
-def test_issn_single_string_remains_unchanged():
-    """Verify that a single plain text ISSN string remains unaffected."""
+def test_issn_single_string_remains_unchanged() -> None:
+    """Verify that pre-formatted singular string ISSNs pass through untouched."""
     raw_data = {"id": "some_id", "type": "book", "ISSN": "1234-567X"}
 
     validated = CSLReference.model_validate(raw_data)
+
     assert validated.ISSN == "1234-567X"
 
 
-def test_extra_fields_ignored_automatically():
-    """Verify that unsupported keys (like CrossRef's 'sequence') are silently
-    discarded."""
+def test_extra_fields_ignored_automatically() -> None:
+    """Verify schema ignores unmapped keys when converting back to dictionary layouts."""
     raw_data = {
         "id": "10.1038/s41561-020-0585-2",
         "type": "article-journal",
@@ -81,7 +78,6 @@ def test_extra_fields_ignored_automatically():
     }
 
     validated = CSLReference.model_validate(raw_data)
-
-    # Exporting back to JSON or a dict should reveal the field was discarded
     exported_dict = validated.model_dump()
+
     assert "extra_garbage_field" not in exported_dict

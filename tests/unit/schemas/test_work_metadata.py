@@ -3,18 +3,15 @@ import pytest
 from manuscript_reference_lister.schemas.work_metadata import WorkMetadata
 
 
-def test_work_metadata_instantiation_defaults():
-    """Verify that WorkMetadata defaults DOI to None and strings to empty."""
+def test_work_metadata_instantiation_defaults() -> None:
+    """Verify that WorkMetadata structures load correct defaults on initialization."""
     work = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
         input_ISSN="1752-0894",
     )
 
-    # Required fields
     assert work.input_ISSN == "1752-0894"
-
-    # Other fields should be None by default
     assert work.DOI is None
     assert work.raw_reference is None
     assert work.reference is None
@@ -23,8 +20,8 @@ def test_work_metadata_instantiation_defaults():
     assert work.csl_metadata is None
 
 
-def test_work_metadata_identity_key_with_none_doi():
-    """Verify the key handles the 'unresolved' state (DOI=None)."""
+def test_work_metadata_identity_key_with_none_doi() -> None:
+    """Verify fallback behavior of the identity key in unresolved DOI states."""
     work = WorkMetadata(
         input_first_authors_txt="Smith",
         input_year_and_suffix="2022",
@@ -36,8 +33,8 @@ def test_work_metadata_identity_key_with_none_doi():
     assert work.identity_key == expected_key
 
 
-def test_work_metadata_identity_key_with_none_input_issn_and_doi():
-    """Verify the key is consistent regardless of ISSN presence."""
+def test_work_metadata_identity_key_with_none_input_issn_and_doi() -> None:
+    """Verify that identity signatures ignore missing ISSN coordinates."""
     work = WorkMetadata(
         input_first_authors_txt="Smith",
         input_year_and_suffix="2022",
@@ -49,8 +46,8 @@ def test_work_metadata_identity_key_with_none_input_issn_and_doi():
     assert work.identity_key == expected_key
 
 
-def test_work_metadata_identity_key_with_actual_doi():
-    """Verify the key distinguishes between different DOIs for the same input."""
+def test_work_metadata_identity_key_with_actual_doi() -> None:
+    """Verify identifier key variation matches distinct assigned DOI strings."""
     work_a = WorkMetadata(
         input_first_authors_txt="Guns and Vanacker",
         input_year_and_suffix="2021",
@@ -65,14 +62,13 @@ def test_work_metadata_identity_key_with_actual_doi():
         DOI="10.1130/DIFFERENT_DOI",
     )
 
-    # Keys must be unique despite identical inputs
     assert work_a.identity_key != work_b.identity_key
     assert work_a.identity_key[2] == "10.1130/g49244.1"
     assert work_b.identity_key[2] == "10.1130/different_doi"
 
 
-def test_work_metadata_to_dict_includes_none():
-    """Ensure None is preserved in serialization."""
+def test_work_metadata_to_dict_includes_none() -> None:
+    """Ensure None value parameters are preserved correctly in schema outputs."""
     work = WorkMetadata(
         input_first_authors_txt="Test",
         input_year_and_suffix="2024",
@@ -81,11 +77,12 @@ def test_work_metadata_to_dict_includes_none():
     )
 
     data = work.model_dump()
+
     assert data["DOI"] is None
 
 
-def test_work_metadata_doi_normalization():
-    """Verify that DOI is automatically converted to lower case at instantiation."""
+def test_work_metadata_doi_normalization() -> None:
+    """Verify automated lowercase conversion of DOI identifiers on setup."""
     work = WorkMetadata(
         input_first_authors_txt="Lenard",
         input_year_and_suffix="2020",
@@ -108,12 +105,12 @@ def test_work_metadata_doi_normalization():
 def test_work_metadata_status_property(
     doi: str | None, reference: str | None, expected_status: str
 ) -> None:
-    """Verify that the status property correctly evaluates the validity of a
-    WorkMetadata record."""
+    """Verify evaluation transitions of WorkMetadata status states."""
     work = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020",
         DOI=doi,
         reference=reference,
     )
+
     assert work.status == expected_status

@@ -1,6 +1,7 @@
 import json
 import logging
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -30,30 +31,32 @@ def test_run_id_filter_injects_uuid() -> None:
     assert len(mock_record.run_id) == 8
 
 
-def test_get_safe_log_dir_fallback_to_tmp() -> None:
-    """Verify that if .env is missing or doesn't have LOG_DIR_PATH, it falls back to the
-    OS temporary directory."""
-    with patch(
-        "manuscript_reference_lister.logging_config.dotenv_values", return_value={}
-    ):
-        log_dir = get_safe_log_dir()
-
-        expected_dir = Path(tempfile.gettempdir()) / "manuscript-reference-lister"
-        assert log_dir == expected_dir
-
-
-def test_get_safe_log_dir_from_env() -> None:
-    """Verify that get_safe_log_dir correctly extracts and cleans the path
-    defined in the .env file."""
-    mock_env = {"LOG_DIR_PATH": '"C:\\Custom\\Log\\Path"'}
-
+@pytest.mark.parametrize(
+    "mock_env_values, expected_path_callable",
+    [
+        # Scenario A: Missing env variables -> Fallback to temporary directory subfolder
+        (
+            {},
+            lambda: Path(tempfile.gettempdir()) / "manuscript-reference-lister",
+        ),
+        # Scenario B: Custom log directory path defined in the .env configuration
+        (
+            {"LOG_DIR_PATH": '"C:\\Custom\\Log\\Path"'},
+            lambda: Path("C:\\Custom\\Log\\Path"),
+        ),
+    ],
+)
+def test_get_safe_log_dir_scenarios(
+    mock_env_values: dict[str, str],
+    expected_path_callable: Callable[[], Path],
+) -> None:
+    """Verify log path resolution fallback and custom extraction behaviors."""
     with patch(
         "manuscript_reference_lister.logging_config.dotenv_values",
-        return_value=mock_env,
+        return_value=mock_env_values,
     ):
         log_dir = get_safe_log_dir()
-
-        assert log_dir == Path("C:\\Custom\\Log\\Path")
+        assert log_dir == expected_path_callable()
 
 
 @pytest.mark.parametrize(
@@ -62,7 +65,7 @@ def test_get_safe_log_dir_from_env() -> None:
         (0, "WARNING"),
         (1, "INFO"),
         (2, "DEBUG"),
-        (3, "DEBUG"),  # Maximum verbosity (> 2)
+        (3, "DEBUG"),
     ],
 )
 def test_get_logging_config_levels(
@@ -77,8 +80,8 @@ def test_get_logging_config_levels(
 
 
 def test_setup_logging_creates_directory_and_calls_dictconfig() -> None:
-    """Verify that setup_logging triggers directory creation and passes
-    the config to Python's logging infrastructure."""
+    """Verify that setup_logging triggers directory creation and passes configuration
+    to dictConfig."""
     with (
         patch(
             "manuscript_reference_lister.logging_config.get_safe_log_dir"
@@ -96,18 +99,14 @@ def test_setup_logging_creates_directory_and_calls_dictconfig() -> None:
 
 
 def test_json_formatter_outputs_valid_structured_data() -> None:
-    """Verify that the json formatter properly extracts record fields into a
-    valid structured JSON dictionary instead of outputting raw placeholder strings.
-    """
+    """Verify that the JSON formatter properly extracts and maps log variables."""
     dummy_path = Path("/dummy/path")
     config = get_logging_config(dummy_path, verbose_level=1)
-
     formatter_spec = config["formatters"]["json"]
 
     formatter = JsonFormatter(
         fmt=formatter_spec["fmt"], rename_fields=formatter_spec["rename_fields"]
     )
-
     record = logging.LogRecord(
         name="manuscript_reference_lister.http",
         level=logging.INFO,

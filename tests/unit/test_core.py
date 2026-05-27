@@ -1,4 +1,6 @@
-from pathlib import Path
+import logging
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -8,27 +10,22 @@ from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
-def mock_config(tmp_path: Path) -> AppConfig:
-    """Insulated testing config instance, with explicit configuration of obligatory
-    attributes and bypass of .env.
-    """
-    config = AppConfig(
-        _settings_vars={},  # Empty context dictionary to bypass .env
-        crossref_api_journals_issn_url="http://mock-crossref/journals/{issn}",
-        crossref_api_email="test@example.com",
-        crossref_api_journals_url="http://mock-crossref/journals",
-        crossref_api_styles_url="http://mock-crossref/styles",
-        crossref_api_works_url="http://mock-crossref/works",
-        doi_api_url="http://mock-doi/{doi}",
-        local_repo_dir_path=tmp_path / "repo",
-        output_dir_path=tmp_path / "output",
-    )
-    return config
+def configured_core_config(test_config: AppConfig) -> AppConfig:
+    """Configure the isolated global test configuration specifically for core execution
+    boundaries."""
+    test_config.crossref_api_journals_issn_url = "https://mock-crossref/journals/{issn}"
+    test_config.crossref_api_email = "test@example.com"
+    test_config.crossref_api_journals_url = "https://mock-crossref/journals"
+    test_config.crossref_api_styles_url = "https://mock-crossref/styles"
+    test_config.crossref_api_works_url = "https://mock-crossref/works"
+    test_config.doi_api_url = "https://mock-doi/{doi}"
+    return test_config
 
 
 @pytest.fixture
-def mock_pipeline_dependencies():
-    """Insulates pipeline from real input/output and complex methods (inc. API calls)."""
+def mock_pipeline_dependencies() -> Generator[dict[str, Any], None, None]:
+    """Insulate pipeline execution from real input/output, repository layers, and API
+    clients."""
     with (
         patch("manuscript_reference_lister.core.DataLoader") as mock_loader,
         patch("manuscript_reference_lister.core.StyleRepository") as mock_style_repo,
@@ -51,25 +48,23 @@ def mock_pipeline_dependencies():
 
 
 def test_run_pipeline_progress_callback_sequences(
-    mock_config: AppConfig, mock_pipeline_dependencies
+    configured_core_config: AppConfig, mock_pipeline_dependencies: dict[str, Any]
 ) -> None:
-    """Check that the pipeline notifies callback at each start/end of step with correct
-    indices.
-    """
-    tracked_steps = []
+    """Verify that the core pipeline calls progress callbacks sequentially with accurate
+    index states."""
+    tracked_steps: list[ProgressStep] = []
 
     def sample_callback(step: ProgressStep) -> None:
         tracked_steps.append(step)
 
-    # Full execution
     run(
         input_file_path="dummy.docx",
         input_text=None,
-        config=mock_config,
+        config=configured_core_config,
         progress_callback=sample_callback,
     )
 
-    # 5 (steps) x 2 (states) notifications
+    # 5 steps, each having a 'started' and 'completed' trigger
     assert len(tracked_steps) == 10
 
     assert tracked_steps[0].step_name == "parsing"
@@ -83,12 +78,58 @@ def test_run_pipeline_progress_callback_sequences(
     assert tracked_steps[1].total == 5
 
 
-def test_run_pipeline_skips_logs_and_calls(
-    mock_config: AppConfig, mock_pipeline_dependencies, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "skip_journal, skip_work, expect_journal_update, expect_work_update, expected_logs",
+    [
+        # Case A: Both pipeline sync scopes are explicitly bypassed
+        (
+            True,
+            True,
+            False,
+            False,
+            [
+                "Skipped updating journal metadata.",
+                "Skipped finding and linking work DOI to citations.",
+            ],
+        ),
+        # Case B: Journal sync is executed, work sync is bypassed
+        (
+            False,
+            True,
+            True,
+            False,
+            ["Skipped finding and linking work DOI to citations."],
+        ),
+        # Case C: Journal sync is bypassed, work sync is executed
+        (
+            True,
+            False,
+            False,
+            True,
+            ["Skipped updating journal metadata."],
+        ),
+        # Case D: Full end-to-end sync executed without any bypass steps
+        (
+            False,
+            False,
+            True,
+            True,
+            [],
+        ),
+    ],
+)
+def test_run_pipeline_bypass_controls(
+    configured_core_config: AppConfig,
+    mock_pipeline_dependencies: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    skip_journal: bool,
+    skip_work: bool,
+    expect_journal_update: bool,
+    expect_work_update: bool,
+    expected_logs: list[str],
 ) -> None:
-    """Check that skip flags prevent updates and generate logs"""
-    import logging
-
+    """Verify bypass flags prevent specific repository updates and log warning
+    descriptions."""
     mock_journal_inst = mock_pipeline_dependencies["journal"].return_value
     mock_work_inst = mock_pipeline_dependencies["work"].return_value
 
@@ -96,17 +137,22 @@ def test_run_pipeline_skips_logs_and_calls(
         run(
             input_file_path="dummy.docx",
             input_text=None,
-            config=mock_config,
-            skip_journal_update=True,
-            skip_work_update=True,
+            config=configured_core_config,
+            skip_journal_update=skip_journal,
+            skip_work_update=skip_work,
         )
 
-    mock_journal_inst.load_all.assert_called_once()
-    mock_journal_inst.save_all.assert_called_once()
-    mock_journal_inst.update_all.assert_not_called()
+    # Verify update trigger parameters
+    if expect_journal_update:
+        mock_journal_inst.update_all.assert_called_once()
+    else:
+        mock_journal_inst.update_all.assert_not_called()
 
-    mock_work_inst.load_all.assert_called_once()
-    mock_work_inst.update_all.assert_not_called()
+    if expect_work_update:
+        mock_work_inst.update_all.assert_called_once()
+    else:
+        mock_work_inst.update_all.assert_not_called()
 
-    assert "Skipped updating journal metadata." in caplog.text
-    assert "Skipped finding and linking work DOI to citations." in caplog.text
+    # Verify appropriate bypass logs are captured
+    for expected_log in expected_logs:
+        assert expected_log in caplog.text

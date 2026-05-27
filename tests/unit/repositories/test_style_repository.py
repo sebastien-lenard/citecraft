@@ -1,15 +1,17 @@
 import logging
+from collections.abc import Callable
 from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 
 from manuscript_reference_lister.repositories import StyleRepository
+from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
 def valid_csl_content() -> str:
-    """Provides a minimal valid CSL layout string."""
+    """Provide a minimal valid CSL layout string."""
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<style xmlns="http://purl.org/net/xbiblio/csl"\n'
@@ -19,28 +21,35 @@ def valid_csl_content() -> str:
     )
 
 
-def test_init_fallback_rules() -> None:
-    """Verify init rules of favored_style."""
-    # No argument
-    repo_default = StyleRepository()
-    assert repo_default.favored_style == "apa"
+@pytest.mark.parametrize(
+    "favored_style, favored_journal, expected_favored_style",
+    [
+        (None, None, "apa"),
+        ("harvard", None, "harvard"),
+        (None, "Nature", None),
+        ("apa", "Nature", None),
+    ],
+)
+def test_init_fallback_rules(
+    test_config: AppConfig,
+    favored_style: str | None,
+    favored_journal: str | None,
+    expected_favored_style: str | None,
+) -> None:
+    """Verify initialization rules and precedence of favored_style options."""
+    repo = StyleRepository(
+        favored_style=favored_style,
+        favored_journal_title=favored_journal,
+        config=test_config,
+    )
+    assert repo.favored_style == expected_favored_style
 
-    # Only favored_style
-    repo_style = StyleRepository(favored_style="harvard")
-    assert repo_style.favored_style == "harvard"
 
-    # Only favored_journal_title
-    repo_journal = StyleRepository(favored_journal_title="Nature")
-    assert repo_journal.favored_style is None
-
-    # Two provided
-    repo_conflict = StyleRepository(favored_journal_title="Nature", favored_style="apa")
-    assert repo_conflict.favored_style is None
-
-
-def test_fetch_style_metadata_success(valid_csl_content: str) -> None:
+def test_fetch_style_metadata_success(
+    test_config: AppConfig, valid_csl_content: str
+) -> None:
     """Verify CSL content is successfully downloaded and stored."""
-    repo = StyleRepository(favored_style="apa")
+    repo = StyleRepository(favored_style="apa", config=test_config)
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.text = valid_csl_content
@@ -49,29 +58,30 @@ def test_fetch_style_metadata_success(valid_csl_content: str) -> None:
         repo.http_client_wrapper, "get", return_value=mock_response
     ) as mock_get:
         repo.fetch_style_metadata()
+
         assert repo.csl_content == valid_csl_content
         assert mock_get.call_count == 1
 
 
-def test_fetch_style_metadata_not_found() -> None:
+def test_fetch_style_metadata_not_found(test_config: AppConfig) -> None:
     """Verify fallback when CSL endpoint returns a 404 error."""
-    repo = StyleRepository(favored_style="invalid-style")
+    repo = StyleRepository(favored_style="invalid-style", config=test_config)
     mock_request = httpx.Request("GET", "https://raw.githubusercontent.com/invalid")
     mock_response = httpx.Response(status_code=404, request=mock_request)
-
     error = httpx.HTTPStatusError(
         message="404 Not Found", request=mock_request, response=mock_response
     )
 
     with patch.object(repo.http_client_wrapper, "get", side_effect=error):
         repo.fetch_style_metadata()
+
         assert repo.csl_content is None
         assert repo.favored_style_is_valid is None
 
 
-def test_fetch_style_metadata_resolves_journal_late() -> None:
+def test_fetch_style_metadata_resolves_journal_late(test_config: AppConfig) -> None:
     """Verify late solving of style by fetch_style_metadata."""
-    repo = StyleRepository(favored_journal_title="Nature")
+    repo = StyleRepository(favored_journal_title="Nature", config=test_config)
 
     with (
         patch.object(repo, "get_style", return_value="nature") as mock_get_style,
@@ -90,10 +100,10 @@ def test_fetch_style_metadata_resolves_journal_late() -> None:
 
 
 def test_fetch_style_metadata_abort_when_no_style_resolved(
-    caplog: pytest.LogCaptureFixture,
+    test_config: AppConfig, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify clean interruption if no style found."""
-    repo = StyleRepository(favored_journal_title="Unknown Journal")
+    """Verify clean interruption if no style can be resolved."""
+    repo = StyleRepository(favored_journal_title="Unknown Journal", config=test_config)
 
     with (
         patch.object(repo, "get_style", return_value=None),
@@ -107,11 +117,10 @@ def test_fetch_style_metadata_abort_when_no_style_resolved(
         )
 
 
-def test_get_style_success_independent() -> None:
+def test_get_style_success_independent(test_config: AppConfig) -> None:
     """Verify that looking up a non-dependent journal directly returns its slug."""
-    repo = StyleRepository()
+    repo = StyleRepository(config=test_config)
     mock_index = [{"title": "Nature", "name": "nature", "dependent": False}]
-
     mock_res = MagicMock()
     mock_res.json.return_value = mock_index
 
@@ -120,9 +129,9 @@ def test_get_style_success_independent() -> None:
         assert style == "nature"
 
 
-def test_get_style_success_dependent() -> None:
+def test_get_style_success_dependent(test_config: AppConfig) -> None:
     """Verify independent parent style resolution when a journal is dependent."""
-    repo = StyleRepository()
+    repo = StyleRepository(config=test_config)
     mock_index = [
         {
             "title": "Journal of Geophysical Research: Solid Earth",
@@ -130,11 +139,9 @@ def test_get_style_success_dependent() -> None:
             "dependent": True,
         }
     ]
-
     mock_res_index = MagicMock()
     mock_res_index.json.return_value = mock_index
 
-    # Minimal XML mimicking a dependent style pointing to AGU parent style
     mock_xml_content = (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<style xmlns="http://citationstyles.org/ns/" version="1.0">\n'
@@ -145,10 +152,8 @@ def test_get_style_success_dependent() -> None:
         "</style>"
     )
     mock_res_xml = MagicMock()
-    mock_res_xml.text = mock_xml_content
     mock_res_xml.content = mock_xml_content.encode("utf-8")
 
-    # Sequence mock: first call gets index, second gets XML payload
     with patch.object(
         repo.http_client_wrapper, "get", side_effect=[mock_res_index, mock_res_xml]
     ):
@@ -156,49 +161,62 @@ def test_get_style_success_dependent() -> None:
         assert style == "american-geophysical-union"
 
 
-def test_get_style_bubbles_http_error() -> None:
-    """Vérifie que get_style laisse remonter les crashs HTTP de l'index Zotero."""
-    repo = StyleRepository()
-    mock_request = httpx.Request("GET", "https://example.com")
-    error = httpx.HTTPStatusError(
-        "500 Internal Server Error", request=mock_request, response=httpx.Response(500)
-    )
+@pytest.mark.parametrize(
+    "config_mock_callable, expected_exception, expected_match",
+    [
+        # Case A: Zotero API status crashes propagate up
+        (
+            lambda m: m.configure_mock(
+                side_effect=httpx.HTTPStatusError(
+                    "500 Internal Error",
+                    request=httpx.Request("GET", "https://example.com"),
+                    response=httpx.Response(500),
+                )
+            ),
+            httpx.HTTPStatusError,
+            "500 Internal Error",
+        ),
+        # Case B: Index decoding exceptions propagate up
+        (
+            lambda m: m.return_value.json.configure_mock(
+                side_effect=ValueError("Expecting value")
+            ),
+            ValueError,
+            "Expecting value",
+        ),
+        # Case C: Non-list formats raise TypeError
+        (
+            lambda m: m.return_value.json.configure_mock(
+                return_value={"error": "not a list"}
+            ),
+            TypeError,
+            None,
+        ),
+    ],
+)
+def test_get_style_failures_propagate(
+    test_config: AppConfig,
+    config_mock_callable: Callable[[MagicMock], None],
+    expected_exception: type[Exception],
+    expected_match: str | None,
+) -> None:
+    """Verify that network and parsing failures in style lookups bubble up cleanly."""
+    repo = StyleRepository(config=test_config)
 
-    with patch.object(repo.http_client_wrapper, "get", side_effect=error):
-        with pytest.raises(httpx.HTTPStatusError):
+    with patch.object(repo.http_client_wrapper, "get") as mock_get:
+        config_mock_callable(mock_get)
+
+        with pytest.raises(expected_exception, match=expected_match):
             repo.get_style("Nature")
 
 
-def test_get_style_bubbles_json_decode_error() -> None:
-    """Vérifie que get_style laisse remonter les erreurs de décodage JSON de l'index."""
-    repo = StyleRepository()
-    mock_res = MagicMock()
-    mock_res.json.side_effect = ValueError("Expecting value: line 1 column 1 (char 0)")
-
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_res):
-        with pytest.raises(ValueError, match="Expecting value"):
-            repo.get_style("Nature")
-
-
-def test_get_style_malformed_json_raises_type_error() -> None:
-    """Ensure a TypeError is raised with log diagnostics if JSON root is not a list."""
-    repo = StyleRepository()
-    mock_res = MagicMock()
-    mock_res.json.return_value = {"error": "not a list"}  # Invalid structure type
-
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_res):
-        with pytest.raises(TypeError):
-            repo.get_style("Any Journal")
-
-
-def test_resolve_parent_missing_xml_namespace() -> None:
-    """Verify exception raised if CSL XML CSL has no namespace."""
-    repo = StyleRepository()
+def test_resolve_parent_missing_xml_namespace(test_config: AppConfig) -> None:
+    """Verify exception raised if CSL XML has no namespace defined."""
+    repo = StyleRepository(config=test_config)
     mock_index = [{"title": "Dependent J", "name": "dep-j", "dependent": True}]
     mock_res_index = MagicMock()
     mock_res_index.json.return_value = mock_index
 
-    # XML without xmlns attribute
     malformed_xml = (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<style version="1.0">\n'
@@ -215,14 +233,15 @@ def test_resolve_parent_missing_xml_namespace() -> None:
             repo.get_style("Dependent J")
 
 
-def test_resolve_parent_empty_parent_href(caplog: pytest.LogCaptureFixture) -> None:
-    """Verifies behavior when parent tag exists but empty href."""
-    repo = StyleRepository()
+def test_resolve_parent_empty_parent_href(
+    test_config: AppConfig, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify clean fallback warning when parent href is empty."""
+    repo = StyleRepository(config=test_config)
     mock_index = [{"title": "Dependent J", "name": "dep-j", "dependent": True}]
     mock_res_index = MagicMock()
     mock_res_index.json.return_value = mock_index
 
-    # XML having empty href
     xml_empty_href = (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<style xmlns="http://citationstyles.org/ns/" version="1.0">\n'
@@ -241,6 +260,7 @@ def test_resolve_parent_empty_parent_href(caplog: pytest.LogCaptureFixture) -> N
         caplog.at_level(logging.WARNING),
     ):
         result = repo.get_style("Dependent J")
+
         assert result is None
         assert any(
             "No 'independent-parent' link found" in record.message
@@ -248,19 +268,32 @@ def test_resolve_parent_empty_parent_href(caplog: pytest.LogCaptureFixture) -> N
         )
 
 
-def test_validate_favored_style_success(valid_csl_content: str) -> None:
-    """Verify validation passes when XML boundaries are matching specifications."""
-    repo = StyleRepository(favored_style="apa")
-    repo.csl_content = valid_csl_content
+@pytest.mark.parametrize(
+    "csl_payload, expected_validity",
+    [
+        # Case A: Valid CSL XML payload
+        (
+            (
+                '<?xml version="1.0" encoding="utf-8"?>\n<style '
+                'xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0">'
+                "<info><title>Mock</title></info></style>"
+            ),
+            True,
+        ),
+        # Case B: Malformed XML root structures
+        (
+            "<style>Invalid Header structure</style>",
+            False,
+        ),
+    ],
+)
+def test_validate_favored_style_scenarios(
+    test_config: AppConfig, csl_payload: str, expected_validity: bool
+) -> None:
+    """Verify structural XML validation flags matching specifications."""
+    repo = StyleRepository(favored_style="apa", config=test_config)
+    repo.csl_content = csl_payload
 
     repo.validate_favored_style()
-    assert repo.favored_style_is_valid is True
 
-
-def test_validate_favored_style_structure_failure() -> None:
-    """Verify validation fails when structural XML markers are invalid or missing."""
-    repo = StyleRepository(favored_style="apa")
-    repo.csl_content = "<style>Invalid Header structure</style>"
-
-    repo.validate_favored_style()
-    assert repo.favored_style_is_valid is False
+    assert repo.favored_style_is_valid is expected_validity

@@ -1,6 +1,7 @@
 import json
-from collections import namedtuple
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from zipfile import BadZipFile
 
 import pytest
@@ -9,14 +10,21 @@ from docx.opc.exceptions import PackageNotFoundError
 
 from manuscript_reference_lister.utils import DataLoader
 
-# Container for paths and expected data to keep tests readable
-EnvPaths = namedtuple("EnvPaths", ["dir", "docx", "docx_content", "json", "json_data"])
+
+@dataclass(frozen=True)
+class EnvPaths:
+    """Environment configurations and file routes for DataLoader validation."""
+
+    dir_path: Path
+    docx_path: Path
+    docx_content: list[str]
+    json_path: Path
+    json_data: dict[str, Any]
 
 
 @pytest.fixture
 def env(tmp_path: Path) -> EnvPaths:
-    """Fixture to set up a temporary filesystem using pytest's tmp_path."""
-    # 1. Setup DOCX
+    """Prepare standardized mock file structures on an isolated filesystem."""
     docx_path = tmp_path / "test.docx"
     content = ["Hello World", "Testing folders.", "End of file."]
     doc = Document()
@@ -24,36 +32,39 @@ def env(tmp_path: Path) -> EnvPaths:
         doc.add_paragraph(line)
     doc.save(str(docx_path))
 
-    # 2. Setup JSON
     json_path = tmp_path / "test.json"
     data = {"app": "DataLoader", "version": 1.0}
     json_path.write_text(json.dumps(data), encoding="utf-8")
 
-    return EnvPaths(tmp_path, docx_path, content, json_path, data)
+    return EnvPaths(
+        dir_path=tmp_path,
+        docx_path=docx_path,
+        docx_content=content,
+        json_path=json_path,
+        json_data=data,
+    )
 
 
 # --- DOCX TESTS ---
 
 
 def test_extract_text_matches_input(env: EnvPaths) -> None:
-    """Verify extracted text matches the seeded document content."""
-    loader = DataLoader(env.docx)
+    """Verify extracted document text matches the original layout perfectly."""
+    loader = DataLoader(env.docx_path)
     assert loader.extract_text_from_docx() == "\n".join(env.docx_content)
 
 
 def test_extract_text_corrupted_docx(
     env: EnvPaths, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Check error handling for non-zip files disguised as .docx."""
-    corrupt_path = env.dir / "corrupt.docx"
+    """Verify clean propagation or logging fallbacks for malformed zip archives."""
+    corrupt_path = env.dir_path / "corrupt.docx"
     corrupt_path.write_bytes(b"Not a zip file")
 
-    # Case 1: Exception raised
     loader = DataLoader(corrupt_path, raise_exception=True)
     with pytest.raises((PackageNotFoundError, BadZipFile)):
         loader.extract_text_from_docx()
 
-    # Case 2: Silent failure with logging
     loader_no_fail = DataLoader(corrupt_path, raise_exception=False)
     assert loader_no_fail.extract_text_from_docx() is None
     assert "Invalid or corrupted .docx" in caplog.text
@@ -63,8 +74,8 @@ def test_extract_text_corrupted_docx(
 
 
 def test_load_json_success(env: EnvPaths) -> None:
-    """Verify loading from a valid .json file."""
-    loader = DataLoader(env.json)
+    """Verify that validated JSON file load attempts succeed."""
+    loader = DataLoader(env.json_path)
     assert loader.load_json() == env.json_data
 
 
@@ -77,9 +88,9 @@ def test_load_json_invalid_format(
     raise_flag: bool,
     expected_behavior: str | None,
 ) -> None:
-    """Ensure malformed JSON triggers correct exception or warning."""
-    bad_json = env.dir / "bad.json"
-    bad_json.write_text("{ 'wrong': True }")
+    """Ensure raw decoding failures either bubble up or fall back cleanly."""
+    bad_json = env.dir_path / "bad.json"
+    bad_json.write_text("{ 'wrong': True }", encoding="utf-8")
 
     loader = DataLoader(bad_json, raise_exception=raise_flag)
 
@@ -92,14 +103,12 @@ def test_load_json_invalid_format(
 
 
 def test_load_json_with_validator_success(env: EnvPaths) -> None:
-    """Verify that load_json returns data when all items pass validation."""
-    # Setup a list of items
-    list_path = env.dir / "list.json"
+    """Ensure JSON arrays return correctly when all elements satisfy criteria."""
+    list_path = env.dir_path / "list.json"
     list_data = [{"id": 1}, {"id": 2}]
-    list_path.write_text(json.dumps(list_data))
+    list_path.write_text(json.dumps(list_data), encoding="utf-8")
 
     loader = DataLoader(list_path)
-    # Validator checks if 'id' key exists
     result = loader.load_json(validator=lambda x: "id" in x)
 
     assert result == list_data
@@ -109,15 +118,14 @@ def test_load_json_with_validator_success(env: EnvPaths) -> None:
 def test_load_json_with_validator_failure(
     env: EnvPaths, caplog: pytest.LogCaptureFixture, raise_flag: bool
 ) -> None:
-    """Verify that load_json returns None/raises when validation fails."""
-    list_path = env.dir / "invalid_list.json"
-    # Second item is missing 'id'
+    """Verify that validation schema exceptions or suppression logs execute safely."""
+    list_path = env.dir_path / "invalid_list.json"
     list_data = [{"id": 1}, {"name": "missing_id"}]
-    list_path.write_text(json.dumps(list_data))
+    list_path.write_text(json.dumps(list_data), encoding="utf-8")
 
     loader = DataLoader(list_path, raise_exception=raise_flag)
 
-    def validator(x):
+    def validator(x: dict[str, Any]) -> bool:
         return "id" in x
 
     if raise_flag:
@@ -140,13 +148,12 @@ def test_file_not_found_behavior(
     raise_flag: bool,
     expected_behavior: str,
 ) -> None:
-    """Verify FileNotFoundError handling and logging."""
-    missing_file = env.dir / "missing.txt"
+    """Verify initialization boundaries block or warn on missing payloads."""
+    missing_file = env.dir_path / "missing.txt"
 
     if expected_behavior == "raise":
         with pytest.raises(FileNotFoundError):
             DataLoader(missing_file, raise_exception=raise_flag)
     else:
-        # Check that initialization logs a warning instead of crashing
         DataLoader(missing_file, raise_exception=raise_flag)
         assert "Input file not found" in caplog.text
