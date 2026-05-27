@@ -227,7 +227,7 @@ def test_export_to_csv_strips_only_preserved_tags(
 ) -> None:
     """Verify that only configured preserved HTML tags are stripped from references."""
     output_csv = tmp_path / "output.csv"
-    test_config.preserved_html_tags = {"sub", "sup"}
+    test_config = test_config.model_copy(update={"preserved_html_tags": {"sub", "sup"}})
 
     citations = [
         CitationMetadata(first_authors_txt="Test", year_and_suffix="2026"),

@@ -90,8 +90,13 @@ def test_clean_to_plain_text(raw_input: str, expected_output: str) -> None:
 
 def test_html_cleaner_uses_injected_config(test_config: AppConfig) -> None:
     """Verify that HtmlCleaner respects custom tags configured via AppConfig."""
-    test_config.preserved_html_tags = {"custom-sup"}
-    test_config.discarded_html_tags = {"custom-i"}
+    test_config = test_config.model_copy(
+        update={
+            "preserved_html_tags": {"custom-sup"},
+            "discarded_html_tags": {"custom-i"},
+        }
+    )
+
     cleaner = HtmlCleaner(config=test_config)
     raw_input = (
         "<custom-sup>10</custom-sup> <custom-i>Text</custom-i> <sub>Skipped</sub>"

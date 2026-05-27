@@ -13,12 +13,17 @@ from manuscript_reference_lister.utils import AppConfig
 def configured_core_config(test_config: AppConfig) -> AppConfig:
     """Configure the isolated global test configuration specifically for core execution
     boundaries."""
-    test_config.crossref_api_journals_issn_url = "https://mock-crossref/journals/{issn}"
-    test_config.crossref_api_email = "test@example.com"
-    test_config.crossref_api_journals_url = "https://mock-crossref/journals"
-    test_config.crossref_api_styles_url = "https://mock-crossref/styles"
-    test_config.crossref_api_works_url = "https://mock-crossref/works"
-    test_config.doi_api_url = "https://mock-doi/{doi}"
+    test_config = test_config.model_copy(
+        update={
+            "crossref_api_journals_issn_url": "https://mock-crossref/journals/{issn}",
+            "crossref_api_email": "test@example.com",
+            "crossref_api_journals_url": "https://mock-crossref/journals",
+            "crossref_api_styles_url": "https://mock-crossref/styles",
+            "crossref_api_works_url": "https://mock-crossref/works",
+            "doi_api_url": "https://mock-doi/{doi}",
+        }
+    )
+
     return test_config
 
 

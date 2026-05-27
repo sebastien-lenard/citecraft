@@ -1,3 +1,4 @@
+import logging
 import logging.config
 import os
 import sys
@@ -5,18 +6,19 @@ import tempfile
 import uuid
 from pathlib import Path
 from types import MappingProxyType
+from typing import Any
 
 from dotenv import dotenv_values
 
 # Unique run_id valid for the session CLI
-RUN_ID = str(uuid.uuid4())[:8]
+RUN_ID: str = str(uuid.uuid4())[:8]
 
 
 class RunIdFilter(logging.Filter):
-    """Injects session run_id automatically in log."""
+    """Filter that automatically injects a unique run_id into logging records."""
 
-    def filter(self, record):
-        record.run_id = RUN_ID
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.run_id = RUN_ID  # type: ignore[attr-defined]
         return True
 
 
@@ -43,35 +45,33 @@ class ColorFormatter(logging.Formatter):
         }
     )  # immutable wrapper
 
-    def format(self, record):
-        """Generates the log string normally, clears the current progress bar line,
-        then wraps the entire log line with the appropriate level color.
-        """
+    def format(self, record: logging.LogRecord) -> str:
+        """Clear current terminal progress line and apply color to the output."""
         result = super().format(record)
         color = self.LEVEL_COLORS.get(record.levelno, self.RESET)
         return f"{self.CLEAR_LINE}{color}{result}{self.RESET}"
 
 
 def get_safe_log_dir() -> Path:
-    """Get environment LOG_DIR_PATH (may be overriden by conftest.py) or shifts to OS
-    temporary directory subfolder (Windows/Linux/macOS)."""
-    try:
-        env_val = os.environ.get("LOG_DIR_PATH")
-        if not env_val:
+    """Get validated log directory path from environment or system temp directory."""
+    env_val = os.environ.get("LOG_DIR_PATH")
+    if not env_val:
+        try:
             env_vars = dotenv_values(".env")
             env_val = env_vars.get("LOG_DIR_PATH")
-        if env_val:
-            return Path(env_val.strip('"').strip("'"))
-    except Exception:
-        pass
+        except Exception:
+            pass
+
+    if env_val:
+        return Path(env_val.strip('"').strip("'")).resolve()
 
     # Fallback solution C:\Users\Nom\AppData\Local\Temp\manuscript-reference-lister
     # on Windows or /tmp/manuscript-reference-lister on Linux/MacOS
-    return Path(tempfile.gettempdir()) / "manuscript-reference-lister"
+    return Path(tempfile.gettempdir()).resolve() / "manuscript-reference-lister"
 
 
-def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict:
-    """Log configuration dictionary."""
+def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
+    """Build the configuration dictionary for system loggers."""
     console_level = "WARNING"
     if verbose_level == 1:
         console_level = "INFO"
@@ -118,10 +118,11 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict:
         },
         "loggers": {
             "manuscript_reference_lister": {
-                "handlers": ["console"]
-                if os.environ.get("ENV") == "test"
-                else ["console", "file"],
-                # Avoid big files in testing phase
+                "handlers": (
+                    ["console"]
+                    if os.environ.get("ENV") == "test"
+                    else ["console", "file"]
+                ),  # Avoid big files in testing phase
                 "level": "DEBUG",
                 "propagate": False,
             },
@@ -130,7 +131,7 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict:
 
 
 def setup_logging(verbose_level: int = 0) -> Path:
-    """Set up global log system and returns log path."""
+    """Set up system loggers and return resolved log directory path."""
     log_dir = get_safe_log_dir()
 
     try:
@@ -138,7 +139,7 @@ def setup_logging(verbose_level: int = 0) -> Path:
         config = get_logging_config(log_dir, verbose_level=verbose_level)
         logging.config.dictConfig(config)
     except Exception as e:
-        # Fallback to stderr if locked disk
+        # Fallback to standard error console if directory is locked or unwritable
         print(
             f"CRITICAL: Failed to initialize log directory at {log_dir}: {e}",
             file=sys.stderr,

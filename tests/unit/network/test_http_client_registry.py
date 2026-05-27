@@ -14,13 +14,18 @@ from manuscript_reference_lister.utils import AppConfig
 def configured_test_config(test_config: AppConfig) -> AppConfig:
     """Configure mock-specific endpoint limits on the isolated configuration
     boundary."""
-    test_config.crossref_api_email = "user@test.com"
-    test_config.crossref_api_delay = 1.5
-    test_config.crossref_api_max_retry = 5
-    test_config.crossref_api_timeout = 45.0
-    test_config.doi_api_delay = 0.5
-    test_config.doi_api_max_retry = 2
-    test_config.doi_api_timeout = 15.0
+    test_config = test_config.model_copy(
+        update={
+            "crossref_api_email": "user@test.com",
+            "crossref_api_delay": 1.5,
+            "crossref_api_max_retry": 5,
+            "crossref_api_timeout": 45.0,
+            "doi_api_delay": 0.5,
+            "doi_api_max_retry": 2,
+            "doi_api_timeout": 15.0,
+        }
+    )
+
     return test_config
 
 

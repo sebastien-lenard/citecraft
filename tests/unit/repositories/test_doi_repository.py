@@ -120,19 +120,25 @@ def test_get_metadata_server_error_500_bubbles_up(repo: DoiRepository) -> None:
             repo.get_metadata("10.1000/broken")
 
 
-def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> None:
+def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) -> None:
     """Verify that configured schema blacklists strip fields from work and author
     scopes."""
-    repo.config.work_cls_schema_blacklist_fields = [
-        "ISSN",
-        "assertion",
-        "is-referenced-by-count",
-    ]
-    repo.config.author_cls_schema_blacklist_fields = [
-        "ORCID",
-        "authenticated-orcid",
-        "role",
-    ]
+    test_config = test_config.model_copy(
+        update={
+            "work_cls_schema_blacklist_fields": [
+                "ISSN",
+                "assertion",
+                "is-referenced-by-count",
+            ],
+            "author_cls_schema_blacklist_fields": [
+                "ORCID",
+                "authenticated-orcid",
+                "role",
+            ],
+        }
+    )
+    repo = DoiRepository(config=test_config)
+
     mock_raw_csl = {
         "DOI": "10.1038/s41561-020-0585-2",
         "ISSN": ["1752-0894"],
@@ -176,10 +182,15 @@ def test_get_metadata_applies_blacklists_successfully(repo: DoiRepository) -> No
         assert "role" not in authors[1]
 
 
-def test_get_metadata_with_empty_or_missing_blacklists(repo: DoiRepository) -> None:
+def test_get_metadata_with_empty_or_missing_blacklists(test_config: AppConfig) -> None:
     """Verify that blacklisting logic passes through unchanged when scopes are empty."""
-    repo.config.work_cls_schema_blacklist_fields = []
-    repo.config.author_cls_schema_blacklist_fields = []
+    test_config = test_config.model_copy(
+        update={
+            "work_cls_schema_blacklist_fields": [],
+            "author_cls_schema_blacklist_fields": [],
+        }
+    )
+    repo = DoiRepository(config=test_config)
     mock_json_data = {
         "id": "10.1000/182",
         "author": [{"family": "Doe", "ORCID": "0000-0001"}],

@@ -8,11 +8,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AppConfig(BaseSettings):
-    """.Env Configuration loader and validator. Don't load LOG_DIR_PATH, handled by
-    logging_config.py"""
+    """Configuration loader and validator for the environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        frozen=True,
     )
 
     # --- Directory Paths ---
@@ -110,9 +112,11 @@ class AppConfig(BaseSettings):
 
     # HTML Cleaning Configuration
     # Structural tags to explicitly preserve in the local repository
-    preserved_html_tags: set[str] = Field(default={"sup", "sub"})
+    preserved_html_tags: set[str] = Field(default_factory=lambda: {"sup", "sub"})
     # Styling tags whose inner text is kept but boundaries are discarded
-    discarded_html_tags: set[str] = Field(default={"i", "b", "strong", "u", "small"})
+    discarded_html_tags: set[str] = Field(
+        default_factory=lambda: {"i", "b", "strong", "u", "small"}
+    )
 
     # --- Advanced Pre-Validation (Before) ---
     @model_validator(mode="before")
@@ -146,7 +150,8 @@ class AppConfig(BaseSettings):
                     updated_data[key] = urlunparse(parsed)
                 else:
                     raise ValueError(
-                        f"Field '{key}' must use 'https://' scheme. Got unsupported: '{parsed.scheme}'"
+                        f"Field '{key}' must use 'https://' scheme. "
+                        f"Got unsupported: '{parsed.scheme}'"
                     )
 
         return updated_data
@@ -155,6 +160,7 @@ class AppConfig(BaseSettings):
     @field_validator("crossref_api_journals_issn_url", mode="after")
     @classmethod
     def validate_issn_template(cls, v: str) -> str:
+        """Validate presence of the required '{issn}' placeholder."""
         if "{issn}" not in v:
             raise ValueError("URL must contain the mandatory '{issn}' placeholder.")
         return v
@@ -162,37 +168,37 @@ class AppConfig(BaseSettings):
     @field_validator("doi_api_url", mode="after")
     @classmethod
     def validate_doi_template(cls, v: str) -> str:
+        """Validate presence of the required '{doi}' placeholder."""
         if "{doi}" not in v:
             raise ValueError("URL must contain the mandatory '{doi}' placeholder.")
         return v
 
-    @field_validator("style_repo_url", mode="after")
+    @field_validator("style_repo_url", "child_style_repo_url", mode="after")
     @classmethod
     def validate_style_template(cls, v: str) -> str:
+        """Validate presence of the required '{style}' placeholder."""
         if "{style}" not in v:
             raise ValueError("URL must contain the mandatory '{style}' placeholder.")
         return v
 
     # --- Directory Lifecycle Methods ---
     def ensure_repo_directory(self) -> None:
-        """Create local repo directory."""
-        self.local_repo_dir_path.mkdir(parents=True, exist_ok=True)
+        """Create the validated local repository directory."""
+        self.local_repo_dir_path.resolve().mkdir(parents=True, exist_ok=True)
 
     def ensure_output_directory(self) -> None:
-        """Create default output directory."""
-        self.output_dir_path.mkdir(parents=True, exist_ok=True)
+        """Create the validated output directory."""
+        self.output_dir_path.resolve().mkdir(parents=True, exist_ok=True)
 
 
 def create_config(**kwargs: Any) -> AppConfig:
-    """Factory to always instantiate a fresh configuration payload (perfect for
-    tests). Accepts Pydantic Settings kwargs (like _env_file) for testing isolation.
-    """
+    """Instantiate a fresh configuration payload for runtime or isolation testing."""
     return AppConfig(**kwargs)
 
 
 @lru_cache(maxsize=1)
 def get_config() -> AppConfig:
-    """Gets current cached config or load it with validation.
+    """Retrieve the globally cached configuration configuration.
     WARNING: Should either be called in cli.py or inside class methods, not outside, so
     as to make tests not interfering with production directories."""
     return create_config()
