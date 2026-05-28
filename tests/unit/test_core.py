@@ -1,11 +1,13 @@
 import logging
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from manuscript_reference_lister.core import ProgressStep, run
+from manuscript_reference_lister.services.bibliography_service import ExportResult
 from manuscript_reference_lister.utils import AppConfig
 
 
@@ -39,11 +41,18 @@ def mock_pipeline_dependencies() -> Generator[dict[str, Any], None, None]:
         ) as mock_journal_repo,
         patch("manuscript_reference_lister.core.WorkRepository") as mock_work_repo,
         patch("manuscript_reference_lister.core.ReferenceService"),
-        patch("manuscript_reference_lister.core.BibliographyService"),
+        patch(
+            "manuscript_reference_lister.core.BibliographyService"
+        ) as mock_bib_service,
         patch("manuscript_reference_lister.core.get_http_client_registry"),
     ):
         mock_loader.return_value.extract_text_from_docx.return_value = "Sample text"
         mock_style_repo.return_value.favored_style_is_valid = True
+        mock_bib_service.return_value.export_to_csv.return_value = ExportResult(
+            total_rows=0,
+            output_filepath=Path("dummy_references.csv"),
+            export_format="CSV",
+        )
 
         yield {
             "loader": mock_loader,
@@ -81,6 +90,33 @@ def test_run_pipeline_progress_callback_sequences(
     assert tracked_steps[1].status == "completed"
     assert tracked_steps[1].current == 1
     assert tracked_steps[1].total == 5
+
+
+def test_run_pipeline_with_journal_title_style_lookup(
+    configured_core_config: AppConfig, mock_pipeline_dependencies: dict[str, Any]
+) -> None:
+    """Verify that specifying a journal title triggers style lookup inside the
+    StyleRepository."""
+    with patch("manuscript_reference_lister.core.StyleRepository") as mock_style_repo:
+        mock_style_inst = mock_style_repo.return_value
+        mock_style_inst.favored_style_is_valid = True
+        mock_style_inst.favored_style = "copernicus-publications"
+        mock_style_inst.csl_content = "<style>XML</style>"
+
+        run(
+            input_file_path="dummy.docx",
+            input_text=None,
+            journal_title="Geomorphology",
+            config=configured_core_config,
+        )
+
+        mock_style_repo.assert_called_once_with(
+            favored_style="apa",
+            favored_journal_title="Geomorphology",
+            config=configured_core_config,
+        )
+        mock_style_inst.fetch_style_metadata.assert_called_once()
+        mock_style_inst.validate_favored_style.assert_called_once()
 
 
 @pytest.mark.parametrize(

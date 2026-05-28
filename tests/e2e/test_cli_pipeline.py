@@ -70,6 +70,58 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
 
 
 @pytest.mark.e2e
+def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
+    """Validation of full pipeline from a temporary .docx using the journal style lookup option (-j)."""
+    input_file = tmp_path / "test_manuscript_j.docx"
+    output_csv = tmp_path / "output_test_references_j.csv"
+    doc = Document()
+
+    doc.add_paragraph(
+        "Le voila (Lenard et al., 2020), sans parler des erreurs oubliées "
+        "(e.g. Fig. 7 in Guns and Vanacker, 2014). Jeu de donnees de Croissant et al. "
+        "(2019)."
+    )
+
+    doc.add_paragraph("Journals\nGeology\nNature Geoscience\nAnthropocene")
+
+    doc.save(input_file)
+
+    cmd = [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "src.manuscript_reference_lister",
+        "-v",
+        "-f",
+        str(input_file),
+        "-o",
+        str(output_csv),
+        "-j",
+        "Geomorphology",
+    ]
+
+    isolated_env = os.environ.copy()
+    isolated_env["LOCAL_REPO_DIR_PATH"] = str(tmp_path / "repo")
+    isolated_env["LOG_DIR_PATH"] = str(tmp_path / "log")
+    isolated_env["OUTPUT_DIR_PATH"] = str(tmp_path / "output")
+    isolated_env["PYTHONIOENCODING"] = "utf-8"
+    isolated_env["DEFAULT_REFERENCE_STYLE"] = "apa"
+
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, check=False, env=isolated_env
+    )
+
+    assert result.returncode == 0, f"Failed journal style pipeline:\n{result.stderr}"
+    assert output_csv.exists(), f"No output file generated: {output_csv}"
+    with open(output_csv, encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        assert reader.fieldnames == ["Citation", "Status", "Reference"]
+        rows = list(reader)
+        assert len(rows) > 0
+
+
+@pytest.mark.e2e
 def test_stdin_pipeline_execution(tmp_path: Path) -> None:
     """Validation of full pipeline from stdin, relying on the default style
     configured via environment variables."""

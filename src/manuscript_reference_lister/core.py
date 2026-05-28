@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from dataclasses import is_dataclass, replace
 from pathlib import Path
 from typing import Any, NamedTuple, Protocol
 
@@ -39,6 +40,7 @@ class PipelineContext(BaseModel):
     input_file_path: str | None = None
     input_text: str | None = None
     style: str = "apa"
+    journal_title: str | None = None
     output_filepath: Path | None = None
     config: AppConfig
     skip_journal_update: bool = False
@@ -56,7 +58,7 @@ class PipelineContext(BaseModel):
 
     # Output payloads
     anomalies_map: dict[str, Any] = {}
-    export_result: ExportResult | dict[str, Any] = {}
+    export_result: ExportResult | None = None
 
 
 class PipelineStep(Protocol):
@@ -87,12 +89,22 @@ class ParsingStep:
             ctx.input_text = DataLoader(ctx.input_file_path).extract_text_from_docx()
         if not ctx.input_text:
             raise ValueError("No manuscript text or input file provided.")
-        ctx.style_repo = StyleRepository(favored_style=ctx.style, config=ctx.config)
+
+        ctx.style_repo = StyleRepository(
+            favored_style=ctx.style,
+            favored_journal_title=ctx.journal_title,
+            config=ctx.config,
+        )
         ctx.style_repo.fetch_style_metadata()
         ctx.style_repo.validate_favored_style()
+
         if not ctx.style_repo.favored_style_is_valid:
+            style_identifier = (
+                ctx.style_repo.favored_style or ctx.journal_title or ctx.style
+            )
             raise ValueError(
-                f"Style '{ctx.style}' is not found in Crossref API styles."
+                f"Style '{style_identifier}' is not found in CSL repository "
+                "https://github.com/citation-style-language/styles."
             )
 
         ctx.journal_required_titles = JournalParser().extract_all(ctx.input_text)
@@ -151,7 +163,12 @@ class ReferenceFormattingStep:
             ctx.work_repo.load_all()
 
         if ctx.style_repo is None:
-            ctx.style_repo = StyleRepository(ctx.style, config=ctx.config)
+            ctx.style_repo = StyleRepository(
+                favored_style=ctx.style,
+                favored_journal_title=ctx.journal_title,
+                config=ctx.config,
+            )
+
         ctx.doi_repo = DoiRepository(config=ctx.config)
         reference_service = ReferenceService(config=ctx.config)
 
@@ -192,6 +209,10 @@ class ExportStep:
             output_path=ctx.output_filepath,
         )
 
+        if ctx.export_result is not None and is_dataclass(ctx.export_result):
+            style_name = ctx.style_repo.favored_style if ctx.style_repo else ctx.style
+            ctx.export_result = replace(ctx.export_result, style=style_name)
+
         for j in ctx.journal_repo.records:
             if j.status != "OK":
                 all_found_issns = ctx.journal_repo.get_issns_by_input_title(
@@ -215,6 +236,7 @@ def run(
     input_text: str | None,
     *,
     style: str = "apa",
+    journal_title: str | None = None,
     output_filepath: str | Path | None = None,
     config: AppConfig | None = None,
     progress_callback: Callable[[ProgressStep], None] | None = None,
@@ -231,6 +253,7 @@ def run(
         input_file_path=input_file_path,
         input_text=input_text,
         style=style,
+        journal_title=journal_title,
         output_filepath=out_path,
         config=app_config,
         skip_journal_update=skip_journal_update,

@@ -37,6 +37,13 @@ def cli(ctx: click.Context) -> None:
     help="Filepath to docx manuscript",
 )
 @click.option(
+    "-j",
+    "--journal-title",
+    "--journal_title",
+    default=None,
+    help=("Exact journal title aimed for publication (e.g. Geomorphology)."),
+)
+@click.option(
     "-t", "--text", type=str, default=None, help="Text to parse (can also be piped)"
 )
 @click.option(
@@ -84,6 +91,7 @@ def main(
     text: str | None,
     output_file: str | None,
     style: str | None,
+    journal_title: str | None,
     skip_journal_update: bool,
     skip_work_update: bool,
     verbose: int,
@@ -107,7 +115,7 @@ def main(
         # Clear the local cache safely
         $ uv run python -m manuscript_reference_lister --clear-cache
     """
-    # Force console to replace caracters that can't be encoded rather than throw fatal
+    # Force console to replace characters that can't be encoded rather than throw fatal
     if sys.platform == "win32":
         sys.stdout.reconfigure(errors="replace")
         sys.stderr.reconfigure(errors="replace")
@@ -230,6 +238,7 @@ def main(
                 output_filepath=output_file,
                 config=config,
                 style=style,
+                journal_title=journal_title,
                 progress_callback=ctx_manager.update if ctx_manager.is_active else None,
                 skip_journal_update=skip_journal_update,
                 skip_work_update=skip_work_update,
@@ -276,9 +285,12 @@ def main(
             click.echo("", err=True)
 
         if export_metadata:
+            resolved_style = export_metadata.style or ""
+            style_label = f" ({resolved_style})" if resolved_style else ""
+
             click.echo("")
             click.secho(
-                f"✨ Success: Generated and saved bibliography with"
+                f"✨ Success: Generated and saved bibliography{style_label} with"
                 f" {export_metadata.total_rows} rows "
                 f"to {export_metadata.output_filepath}",
                 fg="green",

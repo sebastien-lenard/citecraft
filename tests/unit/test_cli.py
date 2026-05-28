@@ -57,10 +57,68 @@ def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
             output_filepath=None,
             config=test_config,
             style="apa",
+            journal_title=None,
             progress_callback=ANY,
             skip_journal_update=False,
             skip_work_update=False,
         )
+
+
+def test_cli_journal_title_option_propagates(
+    runner: CliRunner, test_config: AppConfig
+) -> None:
+    """Verify that the -j / --journal-title option is correctly propagated to the core
+    pipeline."""
+    with patch(
+        "manuscript_reference_lister.cli.run", return_value=({}, {})
+    ) as mock_run:
+        result = runner.invoke(
+            cli,
+            ["main", "-f", "manuscript.docx", "-j", "Geomorphology"],
+            obj={"config": test_config},
+        )
+
+        assert result.exit_code == 0
+        mock_run.assert_called_once_with(
+            input_file_path="manuscript.docx",
+            input_text="",
+            output_filepath=None,
+            config=test_config,
+            style="apa",
+            journal_title="Geomorphology",
+            progress_callback=ANY,
+            skip_journal_update=False,
+            skip_work_update=False,
+        )
+
+
+def test_cli_success_message_includes_resolved_style(
+    runner: CliRunner,
+    test_config: AppConfig,
+) -> None:
+    """Verify that the success message printed by the CLI contains the resolved style
+    name."""
+    mock_export_metadata = ExportResult(
+        total_rows=3,
+        output_filepath=Path("/mock/path/references.csv"),
+        export_format="CSV",
+        style="copernicus-publications",
+    )
+
+    with patch(
+        "manuscript_reference_lister.cli.run",
+        return_value=((), mock_export_metadata),
+    ):
+        result = runner.invoke(
+            cli,
+            ["main", "-t", "Some citation text.", "-s", "copernicus-publications"],
+            obj={"config": test_config},
+        )
+        assert result.exit_code == 0
+        assert (
+            "Success: Generated and saved bibliography (copernicus-publications)"
+            " with 3 rows"
+        ) in result.output
 
 
 @pytest.mark.parametrize(
@@ -78,7 +136,8 @@ def test_cli_exception_handling_paths(
     verbose_args: list[str],
     expect_traceback: bool,
 ) -> None:
-    """Verify that unexpected pipeline crashes are caught with correct traceback display settings."""
+    """Verify that unexpected pipeline crashes are caught with correct traceback
+    display settings."""
     with patch("manuscript_reference_lister.cli.run") as mock_run:
         mock_run.side_effect = RuntimeError("Database or File system corruption")
 
@@ -108,7 +167,8 @@ def test_cli_exception_handling_paths(
 def test_cli_piped_input_default_style(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify standard input redirection (piping) forwards strings correctly using APA defaults."""
+    """Verify standard input redirection (piping) forwards strings correctly using APA
+    defaults."""
     piped_text = "Some citation (Lenard et al., 2025)"
 
     with patch(
@@ -126,6 +186,7 @@ def test_cli_piped_input_default_style(
             output_filepath=None,
             config=test_config,
             style="apa",
+            journal_title=None,
             progress_callback=ANY,
             skip_journal_update=False,
             skip_work_update=False,
@@ -135,7 +196,8 @@ def test_cli_piped_input_default_style(
 def test_cli_custom_style_and_output_options(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify custom styles and output paths are propagated cleanly to core pipelines."""
+    """Verify custom styles and output paths are propagated cleanly to core
+    pipelines."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -160,6 +222,7 @@ def test_cli_custom_style_and_output_options(
             output_filepath="custom_output.csv",
             config=test_config,
             style="copernicus-publications",
+            journal_title=None,
             progress_callback=ANY,
             skip_journal_update=False,
             skip_work_update=False,
@@ -169,7 +232,8 @@ def test_cli_custom_style_and_output_options(
 def test_cli_skip_update_flags_propagate(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify that bypass flags propagate to core runs and display skipped indicators."""
+    """Verify that bypass flags propagate to core runs and display skipped
+    indicators."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -192,19 +256,21 @@ def test_cli_skip_update_flags_propagate(
             output_filepath=None,
             config=test_config,
             style="apa",
+            journal_title=None,
             progress_callback=ANY,
             skip_journal_update=True,
             skip_work_update=True,
         )
         assert "ℹ️  Pipeline Skips:" in result.output
         assert "- Journal metadata update was skipped." in result.output
-        assert "- Work DOI search and update was skipped" in result.output
+        assert "- Work DOI search and update was skipped." in result.output
 
 
 def test_cli_displays_journal_anomalies_warning_table(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify metadata anomalies are detected and displayed inside status formatting grids."""
+    """Verify metadata anomalies are detected and displayed inside status formatting
+    grids."""
     mock_anomalies = {
         ("Natural Hazards", "1234-5678"): {
             "input_title": "Natural Hazards",
@@ -264,7 +330,8 @@ def test_cli_final_summary_display_integrity(
     test_local_repo_filepaths: tuple[Path, list[Path]],
     tmp_path: Path,
 ) -> None:
-    """Verify formatting metrics and output textwrapping grids on final CLI summary cards."""
+    """Verify formatting metrics and output textwrapping grids on final CLI summary
+    cards."""
     mock_manuscript = tmp_path / "mock_manuscript.docx"
     mock_manuscript.write_text("dummy content", encoding="utf-8")
 
@@ -272,6 +339,7 @@ def test_cli_final_summary_display_integrity(
         total_rows=4,
         output_filepath=Path("/mock/path/manuscript_references.csv"),
         export_format="CSV",
+        style="apa",
         ok_count=1,
         missing_count=1,
         duplicate_count=2,
@@ -318,6 +386,7 @@ def test_cli_final_summary_display_integrity(
         f"CLI crashed with: {result.exception}\nOutput: {result.output}"
     )
 
+    assert "Success: Generated and saved bibliography (apa) with" in result.output
     assert "Export Summary:" in result.output
     assert "Valid references (OK)   : 1" in result.output
     assert "Missing DOI/Reference   : 1" in result.output
@@ -352,7 +421,8 @@ def test_cli_clear_cache_option_absent_does_not_touch_files(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Verify cache directories remain untouched unless clear-cache flags are declared."""
+    """Verify cache directories remain untouched unless clear-cache flags are
+    declared."""
     _, local_repo_files = test_local_repo_filepaths
 
     with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
@@ -414,7 +484,8 @@ def test_cli_clear_cache_then_proceeds_to_run(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Verify clean cache setup triggers first before compiling the manuscript target."""
+    """Verify clean cache setup triggers first before compiling the manuscript
+    target."""
     local_repo_dir_path, local_repo_files = test_local_repo_filepaths
 
     with patch(
@@ -443,7 +514,8 @@ def test_cli_clear_cache_summary_displayed_at_the_very_end(
     test_config: AppConfig,
     test_local_repo_filepaths: tuple[Path, list[Path]],
 ) -> None:
-    """Verify that cache maintenance completions print confirmation statuses before exiting."""
+    """Verify that cache maintenance completions print confirmation statuses before
+    exiting."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:

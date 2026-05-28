@@ -47,7 +47,11 @@ The application uses environment variables for path management and API settings.
 Run the tool using the uv run prefix.
 
 # Process a manuscript file and specify the output path
+For a specific style:
 ```uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -s "copernicus-publications"```
+
+For a submission journal (autodetection of style):
+```uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -j "Geomorphology"```
 
 # Control log verbosity (-v for INFO, -vv for DEBUG):
 ```uv run references-lister -f "C:\Documents\manuscript.docx" -v```
@@ -69,6 +73,7 @@ The tool will display a confirmation message.
 * `-f` : Path to the `.docx` manuscript to parse.
 * `-o` : Path to the output CSV file. Contains the parsed citations, Crossref/DOI lookup status, and formatted references. *(Default: `OUTPUT_DIR_PATH / "manuscript_references.csv"` if omitted)*.
 * `-s` : Style identifier recognized by [citation.doi.org](https://citation.doi.org/). *(Default: `apa` if omitted)*.
+* `-j` : Targeted journal title for submission, e.g. "Geomorphology". Title should be exact. The journal style overrides the style above.
 * `--skip-journal-update` : Skips the remote Crossref API lookup for journal metadata and ISSNs. New journal titles are still registered locally, but without fetching remote metadata. Useful to bypass API latency when no new journals have been added to the manuscript.
 * `--skip-work-update` : Skips the remote Crossref API lookup for work DOIs. Existing local records are processed normally, but no network calls are made to fetch missing DOIs. Useful to speed up re-runs when no new citations have been added to the manuscript.
 
@@ -76,7 +81,7 @@ The tool will display a confirmation message.
 
 A manuscript with in-text citations of works following the APA style: format author last name 1 et al., year; author last name 1 and/et author last name 2, year; author last name 1, year. A suffix (e.g. a or b) works. The tool cannot parse other in-text citation styles, such as bracketed numbers (IEEE), superscript numbers (Chicago history), author last name page number (MLA).
 
-The manuscript should have a section Journals at its end, which list the journal titles on which the work lookup will be carried out. The tool currently cannot find a work published in a journal not in this section. For instance:
+The manuscript should have a section Journals at its end, which lists the journal titles on which the work lookup will be carried out. The tool currently cannot find a work published in a journal not in this section. For instance:
 ```
 
 Journals
@@ -140,7 +145,15 @@ Integration (included Crossref API and DOI negotiation service) tests only:
 End to end tests only:
 ```uv run pytest -m e2e```
 
+## 💡 Additional tips about options
 
+### 💡 Finding the Correct Style Name (`-s`)
+
+The tool formats references using the CSL style identifiers recognized by [citation.doi.org](https://citation.doi.org/).
+
+For some major journals, the identifier is simply the lowercase title with spaces replaced by hyphens (e.g., `earth-surface-processes-and-landforms`). However, many journals do not have a unique style and instead inherit a parent format (e.g., Copernicus journals use `copernicus-publications`, AGU journals such as Geophysical Research Letters use `american-geophysical-union`).
+
+If you give the journal title as an option, the tool automates this lookup using the official CSL repository [CSL Styles GitHub Repository](https://github.com/citation-style-language/styles).
 
 ## 🐛 Known Bugs
 
@@ -149,48 +162,6 @@ None reported. Feel free to open an issue if you encounter unexpected behavior.
 ## ⚠️ Limitations with moderate impact
 
 ## 📝 Limitations with minor impact
-
-### 📝 Finding the Correct Style Name (`-s`)
-
-The tool formats references using the CSL style identifiers recognized by [citation.doi.org](https://citation.doi.org/).
-
-For many major journals, the identifier is simply the lowercase title with spaces replaced by hyphens (e.g., `earth-surface-processes-and-landforms`). However, many journals do not have a unique style and instead inherit a parent format (e.g., Copernicus journals use `copernicus-publications`, AGU journals use `american-geophysical-union`).
-
-Since the tool does not yet automate this lookup, you can find the exact string manually using the official CSL repository:
-
-1. Search for your target journal title on the [CSL Styles GitHub Repository](https://github.com/citation-style-language/styles).
-2. Open the journal's `.csl` file and inspect the first few lines:
-
-#### Case A: The journal has its own independent style
-
-Look at the `<id>` tag. If there is no link containing `rel="independent-parent"`, your style name is the final part of the URL inside the `<id>` tag.
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<style xmlns="http://purl.org/net/xbiblio/csl" default-locale="en-US" class="in-text" version="1.0">
-  <info>
-    <title>Earth Surface Processes and Landforms</title>
-    <id>http://www.zotero.org/styles/earth-surface-processes-and-landforms</id>
-
-```
-
-👉 *Value to pass to `-s`:* `earth-surface-processes-and-landforms`
-
-#### Case B: The journal shares a style with a parent publisher
-
-If the file includes a link with `rel="independent-parent"`, the tool requires the parent style name found at the end of that specific `href` attribute.
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" default-locale="en-US">
-  <info>
-    <title>Geophysical Research Letters</title>
-    <id>http://www.zotero.org/styles/geophysical-research-letters</id>
-    <link href="http://www.zotero.org/styles/american-geophysical-union" rel="independent-parent"/>
-
-```
-
-👉 *Value to pass to `-s`:* `american-geophysical-union`
 
 ### 📝 Coarse-Grained Cache Updates for Incomplete Journals
 
@@ -216,7 +187,7 @@ In default mode (without `-v` or `-vv`), the application displays a progress bar
 The tool relies on two external web services to automate reference generation:
 
 * **Crossref REST API:** Used in two distinct phases. First, it queries the `/journals` endpoint to resolve exact journal titles into standard ISSNs. Second, it queries the `/works` endpoint using author and year metadata combined with these ISSNs to isolate the specific publication.
-* **DOI Citation Negotiation Service (`doi.org`):** Once a unique DOI is successfully retrieved from Crossref, this service is queried with specific HTTP headers (`Accept: text/x-bibliography; style=apa` or other style-specific strings) to fetch the fully formatted bibliographic reference.
+* **DOI Citation Negotiation Service (`doi.org`):** Once a unique DOI is successfully retrieved from Crossref, this service is queried with specific HTTP headers (`Accept: application/vnd.citationstyles.csl+json` or other style-specific strings) to fetch all metadata associated with the DOI. The tool locally constructs the fully formatted bibliographic reference using these metadata.
 
 ### 2. API Limitations & Operational Impact
 
@@ -245,5 +216,4 @@ When a journal title fails to resolve to an ISSN, or when an author keyword sear
 
 ## 📅 Roadmap
 
-* [ ] **Automated Style Lookup:** Resolve journal titles to their official CSL style identifier automatically.
 * [ ] **Context-Aware Author Matching:** Implement secondary filters to improve DOI resolution accuracy for common surnames (e.g., Smith, Singh, Müller).

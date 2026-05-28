@@ -16,11 +16,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ExportResult:
-    """Data carrier representing metric aggregations and structural outputs of bibliography exports."""
+    """Data carrier representing metric aggregations and structural outputs of
+    bibliography exports."""
 
     total_rows: int
     output_filepath: Path
     export_format: str = "CSV"
+    style: str | None = None
 
     # Metrics
     ok_count: int = 0
@@ -34,7 +36,8 @@ class ExportResult:
 
 
 class BibliographyService:
-    """Coordinates clean reference resolution and automated file export of bibliographies."""
+    """Coordinates clean reference resolution and automated file export of
+    bibliographies."""
 
     def __init__(
         self,
