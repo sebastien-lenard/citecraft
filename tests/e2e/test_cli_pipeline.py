@@ -48,7 +48,12 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
     isolated_env["DEFAULT_REFERENCE_STYLE"] = "apa"
 
     result = subprocess.run(
-        cmd, capture_output=True, text=True, check=False, env=isolated_env
+        cmd,
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+        check=False,
+        env=isolated_env,
     )
 
     assert result.returncode == 0, f"Failed .docx pipeline:\n{result.stderr}"
@@ -71,7 +76,8 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
 
 @pytest.mark.e2e
 def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
-    """Validation of full pipeline from a temporary .docx using the journal style lookup option (-j)."""
+    """Validation of full pipeline from a temporary .docx using the journal style
+    lookup option (-j)."""
     input_file = tmp_path / "test_manuscript_j.docx"
     output_csv = tmp_path / "output_test_references_j.csv"
     doc = Document()
@@ -109,7 +115,12 @@ def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
     isolated_env["DEFAULT_REFERENCE_STYLE"] = "apa"
 
     result = subprocess.run(
-        cmd, capture_output=True, text=True, check=False, env=isolated_env
+        cmd,
+        capture_output=True,
+        encoding="utf-8",
+        text=True,
+        check=False,
+        env=isolated_env,
     )
 
     assert result.returncode == 0, f"Failed journal style pipeline:\n{result.stderr}"
@@ -141,6 +152,7 @@ def test_stdin_pipeline_execution(tmp_path: Path) -> None:
         cmd,
         input=input_data,
         capture_output=True,
+        encoding="utf-8",
         text=True,
         check=False,
         env=isolated_env,
