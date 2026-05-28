@@ -12,6 +12,17 @@ from manuscript_reference_lister.network.http_client_registry import (
 from manuscript_reference_lister.utils import AppConfig, create_config, get_config
 
 
+def pytest_collection_modifyitems(config, items):
+    """Assign 'unit' marker to any test without 'e2e' or 'integration' markers."""
+    for item in items:
+        has_other_marker = any(
+            item.get_closest_marker(name) for name in ["e2e", "integration"]
+        )
+
+        if not has_other_marker:
+            item.add_marker(pytest.mark.unit)
+
+
 @pytest.fixture(autouse=True)
 def block_network_calls(monkeypatch: pytest.MonkeyPatch) -> None:
     """Guard rails to prevent any outbound network requests during testing."""

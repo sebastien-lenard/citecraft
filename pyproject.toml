@@ -39,7 +39,7 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
     "e2e: end to end tests (slower)",
-    "integration: api tests (slower)",
+    "integration: integration and api tests (slower)",
     "unit: unit tests (faster)"
 ]
 
