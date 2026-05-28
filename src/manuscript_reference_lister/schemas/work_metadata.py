@@ -13,6 +13,7 @@ class WorkMetadata(BaseSchema):
     )  # e.g. Lenard et al., Guns and Vanacker
     input_year_and_suffix: str = Field(min_length=1)  # e.g. 2020a
     input_ISSN: str | None = None  # e.g. 1752-0894
+    looked_up_ISSNs: list[str] | None = None  # e.g. ["1752-0894", "1700-0894"]
     raw_reference: str | None = (
         None  # reference from doi service. e.g. Lenard, S. J. P., Lavé, J., France-Lanord, C., Aumaître, G., Bourlès, D. L., & Keddadouche, K. (2020). Steady erosion rates in the Himalayas through late Cenozoic climatic changes. Nature Geoscience, 13(6), 448–452. https://doi.org/10.1038/s41561-020-0585-2
     )

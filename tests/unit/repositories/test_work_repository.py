@@ -377,3 +377,97 @@ def test_update_all_skips_if_no_results_found(
         assert "Work resolution completed. Updated: 0, Failed: 1" in caplog.text
         assert len(repo.records) == 1
         assert repo.records[0].DOI is None
+
+
+def test_update_all_filters_already_queried_issns(
+    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify that update_all queries only the new ISSNs and skips previously searched
+    ones."""
+    caplog.set_level(logging.INFO)
+
+    template = WorkMetadata(
+        input_first_authors_txt="Lenard et al.",
+        input_year_and_suffix="2020a",
+        looked_up_ISSNs=["1111-1111"],
+    )
+    repo.records = [template]
+
+    # Mock the return for the new ISSN "2222-2222"
+    mock_rich_result = WorkMetadata(
+        input_first_authors_txt="Lenard et al.",
+        input_year_and_suffix="2020a",
+        input_ISSN="2222-2222",
+        DOI="https://doi.org/10.1038/s41561-020-0585-2",
+        type="journal-article",
+    )
+
+    with patch.object(
+        repo, "get_work_metadata", return_value=[mock_rich_result]
+    ) as mock_get:
+        # Call update_all with both old and new ISSNs
+        repo.update_all(ISSNs=["1111-1111", "2222-2222"])
+
+        # Check that get_work_metadata was called exactly once, with the new ISSN
+        mock_get.assert_called_once_with(
+            input_citation_metadata=CitationMetadata(
+                first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+            ),
+            input_ISSN="2222-2222",
+        )
+
+        assert "on 1 new ISSNs" in caplog.text
+
+        # Verify that both ISSNs are now marked as looked up on the resolved record
+        updated_record = repo.records[0]
+        assert updated_record.looked_up_ISSNs == ["1111-1111", "2222-2222"]
+
+
+def test_update_all_skips_when_all_issns_previously_queried(
+    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify that update_all issues a warning and completely skips API lookup if all
+    input ISSNs were already searched."""
+    caplog.set_level(logging.WARNING)
+
+    template = WorkMetadata(
+        input_first_authors_txt="Lenard et al.",
+        input_year_and_suffix="2020a",
+        looked_up_ISSNs=["1111-1111", "2222-2222"],
+    )
+    repo.records = [template]
+
+    with patch.object(repo, "get_work_metadata") as mock_get:
+        repo.update_all(ISSNs=["1111-1111", "2222-2222"])
+
+        # API should not be called at all
+        mock_get.assert_not_called()
+
+        # Check for specific warning log
+        warning_msg = (
+            "All provided ISSNs already searched for citation (Lenard et "
+            "al., 2020a). Skipping lookup."
+        )
+        assert any(warning_msg in record.message for record in caplog.records)
+
+
+def test_update_all_updates_history_on_failure(
+    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify that when lookups fail, the queried ISSNs are appended to the template's
+    search history."""
+    caplog.set_level(logging.INFO)
+
+    template = WorkMetadata(
+        input_first_authors_txt="Unresolvable et al.",
+        input_year_and_suffix="2023",
+        looked_up_ISSNs=["1111-1111"],
+    )
+    repo.records = [template]
+
+    with patch.object(repo, "get_work_metadata", return_value=[]):
+        repo.update_all(ISSNs=["1111-1111", "3333-3333"])
+
+        assert len(repo.records) == 1
+        # The template record is retained and its lookup list now includes the new ISSN
+        assert repo.records[0].looked_up_ISSNs == ["1111-1111", "3333-3333"]

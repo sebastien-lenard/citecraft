@@ -224,7 +224,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
 
     def update_all(self, ISSNs: list[str]) -> None:
         """Query Crossref API to find and commit DOIs for unpopulated works.
-        ISSNs allow to filter Crossref API results.
+        ISSNs filter Crossref API results. Previously queried ISSNs are ignored.
         """
         # 1. Identify templates needing info
         templates_to_process = [r for r in self.records if not r.DOI]
@@ -240,28 +240,62 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                 first_authors_txt=record.input_first_authors_txt,
                 year_and_suffix=record.input_year_and_suffix,
             )
+
+            already_looked_up = record.looked_up_ISSNs or []
+            filtered_ISSNs = [issn for issn in ISSNs if issn not in already_looked_up]
+
+            if not filtered_ISSNs:
+                logger.warning(
+                    (
+                        "All provided ISSNs already searched for citation (%s, %s). "
+                        "Skipping lookup."
+                    ),
+                    citation_info.first_authors_txt,
+                    citation_info.year_and_suffix,
+                    extra={
+                        "event": "skip_all_issns_already_searched",
+                        "author": citation_info.first_authors_txt,
+                        "year": citation_info.year_and_suffix,
+                        "looked_up_ISSNs": already_looked_up,
+                    },
+                )
+                continue
+
             logger.info(
-                "Retrieving citation (%s, %s) metadata from Crossref...",
+                (
+                    "Retrieving citation (%s, %s) metadata from Crossref on %d new"
+                    " ISSNs..."
+                ),
                 citation_info.first_authors_txt,
                 citation_info.year_and_suffix,
+                len(filtered_ISSNs),
                 extra={
                     "status": "OK",
                     "event": "crossref_journal_query_start",
                     "first_authors_txt": citation_info.first_authors_txt,
                     "year_and_suffix": citation_info.year_and_suffix,
+                    "filtered_issns_count": len(filtered_ISSNs),
                 },
             )
 
             found_for_this_record = False
-            for issn in ISSNs:
-                # Call your existing API wrapper
+            updated_lookups = list(already_looked_up)
+
+            for issn in filtered_ISSNs:
+                if issn not in updated_lookups:
+                    updated_lookups.append(issn)
+
                 results = self.get_work_metadata(
                     input_citation_metadata=citation_info, input_ISSN=issn
                 )
 
                 if results:
+                    for r in results:
+                        r.looked_up_ISSNs = updated_lookups
                     new_rich_records.extend(results)
                     found_for_this_record = True
+
+            record.looked_up_ISSNs = updated_lookups
 
             if found_for_this_record:
                 processed_templates.append(record)
@@ -275,8 +309,10 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                         "event": "work_resolution_failed",
                         "author": citation_info.first_authors_txt,
                         "year": citation_info.year_and_suffix,
+                        "looked_up_ISSNs": updated_lookups,
                     },
                 )
+
             last_display_time = self._log_heartbeat_if_needed(
                 len(processed_templates) + failed_count,
                 len(templates_to_process),
