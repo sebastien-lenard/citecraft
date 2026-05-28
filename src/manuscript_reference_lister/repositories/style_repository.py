@@ -50,6 +50,11 @@ class StyleRepository:
         """Fetch the CSL style content for the target style from remote repository."""
         if not self.favored_style and self.favored_journal_title:
             self.favored_style = self.get_style(self.favored_journal_title)
+            logger.info(
+                "Style '%s' of journal '%s' will be applied for bibliography.",
+                self.favored_style,
+                self.favored_journal_title,
+            )
         if not self.favored_style:
             logger.warning("No favored style determined. Aborting metadata fetch.")
             return
