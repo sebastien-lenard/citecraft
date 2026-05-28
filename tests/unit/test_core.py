@@ -17,12 +17,14 @@ def configured_core_config(test_config: AppConfig) -> AppConfig:
     boundaries."""
     test_config = test_config.model_copy(
         update={
-            "crossref_api_journals_issn_url": "https://mock-crossref/journals/{issn}",
+            "crossref_api_journals_issn_url": (
+                "https://mock-crossref/journals/{object_name}"
+            ),
             "crossref_api_email": "test@example.com",
             "crossref_api_journals_url": "https://mock-crossref/journals",
             "crossref_api_styles_url": "https://mock-crossref/styles",
             "crossref_api_works_url": "https://mock-crossref/works",
-            "doi_api_url": "https://mock-doi/{doi}",
+            "doi_api_url": "https://mock-doi/{object_name}",
         }
     )
 

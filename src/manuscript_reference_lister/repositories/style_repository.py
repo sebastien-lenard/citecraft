@@ -59,7 +59,9 @@ class StyleRepository:
             logger.warning("No favored style determined. Aborting metadata fetch.")
             return
 
-        url = self.config.style_repo_url.replace("{style}", str(self.favored_style))
+        url = self.config.style_repo_url.replace(
+            "{object_name}", str(self.favored_style)
+        )
 
         try:
             res = self.http_client_wrapper.get(url, headers=self.headers)
@@ -94,11 +96,15 @@ class StyleRepository:
         """
 
         # the valid namespaces are stored in the dict self.config.csl_xml_namespaces
-        # the string "https://raw.githubusercontent.com/citation-style-language/styles/master/{style}.csl" is stored in self.config.style_repo_url
-        # the string "https://www.zotero.org/styles-files/styles.json" is stored in self.config.all_styles_repo_url
+        # the string
+        # "https://raw.githubusercontent.com/citation-style-language/styles/master/{object_name}.csl"
+        # is stored in self.config.style_repo_url
+        # the string "https://www.zotero.org/styles-files/styles.json" is stored in
+        # self.config.all_styles_repo_url
         # the string "" is stored in self.config.child_style_repo_url
 
-        # Should warning http 404, json decode error, but bubble up all these errors as fatal crashes to stop the full program (controlled by a cli.py script)
+        # Should warning http 404, json decode error, but bubble up all these errors as
+        # fatal crashes to stop the full program (controlled by a cli.py script)
 
         # Should info on start and success, debug on intermediary steps if relevant.
         if not journal_title:
@@ -181,7 +187,9 @@ class StyleRepository:
 
     def _resolve_independent_parent(self, child_style_name: str) -> str | None:
         """Parse a dependent CSL file and extract its parent layout slug identifier."""
-        url = self.config.child_style_repo_url.replace("{style}", child_style_name)
+        url = self.config.child_style_repo_url.replace(
+            "{object_name}", child_style_name
+        )
 
         try:
             response = self.http_client_wrapper.get(url, headers=self.headers)

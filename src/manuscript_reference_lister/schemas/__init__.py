@@ -5,6 +5,7 @@ from .csl_date import CSLDate
 from .csl_name import CSLName
 from .csl_reference import CSLReference
 from .journal_metadata import JournalMetadata
+from .types import HttpsUrlStr, UrlWithObjectName
 from .work_metadata import WorkMetadata
 
 __all__ = [
@@ -14,6 +15,8 @@ __all__ = [
     "CSLReference",
     "CitationMetadata",
     "CrossrefAuthor",
+    "HttpsUrlStr",
     "JournalMetadata",
+    "UrlWithObjectName",
     "WorkMetadata",
 ]

@@ -32,7 +32,7 @@ class DoiRepository:
         CSLReference validation.
         """
         headers = {"Accept": "application/vnd.citationstyles.csl+json"}
-        url = self.config.doi_api_url.replace("{doi}", str(doi))
+        url = self.config.doi_api_url.replace("{object_name}", str(doi))
 
         try:
             res = self.http_client_wrapper.get(url, headers=headers)

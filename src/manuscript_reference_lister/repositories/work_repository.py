@@ -92,7 +92,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                         input_first_authors_txt=input_first_authors_txt,
                         input_year_and_suffix=input_year_and_suffix,
                         input_ISSN=input_ISSN,
-                        DOI=self.config.doi_api_url.replace("{doi}", str(doi)),
+                        DOI=self.config.doi_api_url.replace("{object_name}", str(doi)),
                         type=item.get("type"),
                     )
                 )

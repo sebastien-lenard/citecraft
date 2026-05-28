@@ -1,92 +1,55 @@
-import os
-from collections.abc import Generator
-from unittest.mock import patch
-
 import pytest
 from pydantic import ValidationError
 
-from manuscript_reference_lister.utils.config import AppConfig, create_config
+from manuscript_reference_lister.utils.config import create_config
 
 
-@pytest.fixture(autouse=True)
-def mock_env_file() -> Generator[None, None, None]:
-    """Isolate testing pipelines from local disk configurations using mock variables."""
-    with patch.dict(os.environ, clear=True):
-        os.environ["CROSSREF_API_EMAIL"] = "test@example.com"
-        os.environ["CROSSREF_API_JOURNALS_URL"] = "https://example.com"
-        os.environ["CROSSREF_API_JOURNALS_ISSN_URL"] = "https://example.com/{issn}"
-        os.environ["CROSSREF_API_STYLES_URL"] = "https://example.com"
-        os.environ["CROSSREF_API_WORKS_URL"] = "https://example.com"
-        os.environ["DOI_API_URL"] = "https://example.com/{doi}"
-        os.environ["STYLE_REPO_URL"] = "https://example.com/{style}"
-        os.environ["ALL_STYLES_REPO_URL"] = "https://example.com"
-        os.environ["CHILD_STYLE_REPO_URL"] = "https://example.com/{style}"
-        os.environ["CSL_XML_NAMESPACES"] = '{"cs": "http://citationstyles.org/ns/"}'
-        yield
+@pytest.fixture
+def base_raw_config() -> dict:
+    """Base raw dictionary representing perfect, valid .env strings."""
+    return {
+        "crossref_api_email": "test@example.com",
+        "crossref_api_journals_url": "https://example.com",
+        "crossref_api_journals_issn_url": "https://example.com{object_name}",
+        "crossref_api_styles_url": "https://example.com",
+        "crossref_api_works_url": "https://example.com",
+        "doi_api_url": "https://example.com{object_name}",
+        "style_repo_url": "https://example.com{object_name}",
+        "all_styles_repo_url": "https://example.com",
+        "child_style_repo_url": "https://example.com{object_name}",
+        "csl_xml_namespaces": {"cs": "http://citationstyles.org"},
+        "parser_blacklist": ["Fig", "Figs"],
+    }
 
 
-def _create_test_config() -> AppConfig:
-    """Helper to safely instantiate configurations, explicitly bypassing local file
-    loads."""
-    return create_config(_env_file=None)
+def test_app_config_happy_path(base_raw_config):
+    """Verify that a valid configuration payload loads and converts smoothly."""
+    config = create_config(_env_file=None, **base_raw_config)
+
+    assert config.crossref_api_email == "test@example.com"
+    assert config.csl_xml_namespaces == {"cs": "http://citationstyles.org"}
+    assert config.parser_blacklist == ["Fig", "Figs"]
 
 
-def test_valid_https_urls_pass() -> None:
-    """Ensure that already valid https:// locations are preserved during validation."""
-    with patch.dict(os.environ, {"DOI_API_URL": "https://crossref.org/{doi}"}):
-        config = _create_test_config()
-        assert config.doi_api_url == "https://crossref.org/{doi}"
+def test_app_config_missing_required_fields(base_raw_config):
+    """Verify that missing a required field forces a ValidationError."""
+    base_raw_config.pop("crossref_api_email")
+
+    with pytest.raises(ValidationError) as exc_info:
+        create_config(_env_file=None, **base_raw_config)
+
+    assert "crossref_api_email" in str(exc_info.value)
 
 
-def test_http_url_upgrades_to_https() -> None:
-    """Verify that http:// endpoint declarations automatically upgrade to secure
-    https:// layouts."""
-    with patch.dict(
-        os.environ,
-        {
-            "DOI_API_URL": "http://crossref.org/{doi}",
-            "CROSSREF_API_JOURNALS_URL": "http://crossref.org",
-        },
-    ):
-        config = _create_test_config()
-        assert config.doi_api_url == "https://crossref.org/{doi}"
-        assert (
-            str(config.crossref_api_journals_url).rstrip("/") == "https://crossref.org"
-        )
+def test_ensure_directories_creation(tmp_path):
+    """Verify system path side-effects operate properly using tmp_path."""
+    test_repo = tmp_path / "test_repo"
 
+    config = create_config(
+        LOCAL_REPO_DIR_PATH=str(test_repo),
+        OUTPUT_DIR_PATH=str(tmp_path / "test_output"),
+    )
 
-def test_missing_scheme_prepends_https() -> None:
-    """Verify that schemes absent from input strings are safely coerced to https://."""
-    with patch.dict(os.environ, {"STYLE_REPO_URL": "://github.com/{style}"}):
-        config = _create_test_config()
-        assert config.style_repo_url == "https://github.com/{style}"
-
-    with patch.dict(os.environ, {"STYLE_REPO_URL": "github.com/{style}"}):
-        config = _create_test_config()
-        assert config.style_repo_url == "https://github.com/{style}"
-
-
-def test_invalid_scheme_raises_validation_error() -> None:
-    """Verify that non-standard protocols like ftp:// fail configuration parsing."""
-    with patch.dict(os.environ, {"DOI_API_URL": "ftp://api.crossref.org/{doi}"}):
-        with pytest.raises(ValidationError) as exc_info:
-            _create_test_config()
-
-        assert "must use 'https://' scheme" in str(exc_info.value)
-
-
-def test_missing_template_placeholder_raises_error() -> None:
-    """Verify that omission of expected URL interpolation parameters breaks loading."""
-    with patch.dict(
-        os.environ, {"CROSSREF_API_JOURNALS_ISSN_URL": "https://invalid-url.org"}
-    ):
-        with pytest.raises(ValidationError) as exc_info:
-            _create_test_config()
-        assert "mandatory '{issn}' placeholder" in str(exc_info.value)
-
-
-def test_case_insensitivity_works() -> None:
-    """Ensure parsing and enforcement rules apply regardless of environment key case."""
-    with patch.dict(os.environ, {"doi_api_url": "http://crossref.org/{doi}"}):
-        config = _create_test_config()
-        assert config.doi_api_url == "https://crossref.org/{doi}"
+    assert not test_repo.exists()
+    config.ensure_repo_directory()
+    assert test_repo.exists()

@@ -366,7 +366,7 @@ def test_get_issn_year_endpoint_scenarios(
         if expected_year is not None or len(mock_items) == 0:
             mock_get.assert_called_with(
                 repo.config.crossref_api_journals_issn_url.replace(
-                    "{issn}", "1234-5678"
+                    "{object_name}", "1234-5678"
                 ),
                 params={
                     "sort": "published",

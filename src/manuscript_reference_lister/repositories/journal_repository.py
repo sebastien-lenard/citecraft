@@ -283,7 +283,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             "rows": 1,
             "mailto": self.config.crossref_api_email,
         }
-        url = self.config.crossref_api_journals_issn_url.replace("{issn}", str(issn))
+        url = self.config.crossref_api_journals_issn_url.replace(
+            "{object_name}", str(issn)
+        )
         response = self.http_client_wrapper.get(
             url,
             params=params,

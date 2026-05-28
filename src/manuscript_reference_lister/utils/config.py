@@ -1,10 +1,17 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse, urlunparse
 
-from pydantic import EmailStr, Field, HttpUrl, field_validator, model_validator
+from pydantic import (
+    EmailStr,
+    Field,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from manuscript_reference_lister.schemas import (
+    HttpsUrlStr,
+    UrlWithObjectName,
+)
 
 
 class AppConfig(BaseSettings):
@@ -15,6 +22,7 @@ class AppConfig(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         frozen=True,
+        json_inner_max_depth=2,  # Force to parse complex strings from .env
     )
 
     # --- Directory Paths ---
@@ -24,24 +32,25 @@ class AppConfig(BaseSettings):
     # --- Crossref API ---
     crossref_api_delay: float = 0.5
     crossref_api_email: EmailStr
-    crossref_api_journals_url: HttpUrl
-    crossref_api_journals_issn_url: str  # Contains template {issn}
-    crossref_api_styles_url: HttpUrl
-    crossref_api_works_url: HttpUrl
+    crossref_api_journals_url: HttpsUrlStr
+    # Contains oject_name placeholder for issn
+    crossref_api_journals_issn_url: UrlWithObjectName
+    crossref_api_styles_url: HttpsUrlStr
+    crossref_api_works_url: HttpsUrlStr
     crossref_api_works_get_limit: int = 20
     crossref_api_timeout: float = 20.0
     crossref_api_max_retry: int = 10
 
     # --- DOI Service ---
     doi_api_delay: float = 0.4
-    doi_api_url: str  # Contains template {doi}
+    doi_api_url: UrlWithObjectName  # Contains oject_name placeholder for doi
     doi_api_timeout: float = 10.0
     doi_api_max_retry: int = 10
 
     # --- Style Repositories ---
-    style_repo_url: str  # Contains template {style}
-    child_style_repo_url: str  # Contains template {style}
-    all_styles_repo_url: HttpUrl
+    style_repo_url: UrlWithObjectName  # Contains oject_name placeholder for style
+    child_style_repo_url: UrlWithObjectName  # Contains template style
+    all_styles_repo_url: HttpsUrlStr
     csl_xml_namespaces: dict[str, str]
     # Warning: csl_xml_namespaces with no HttpUrl type that Pydantic could alterate
 
@@ -52,134 +61,15 @@ class AppConfig(BaseSettings):
     default_reference_style: str = "apa"
 
     # --- Blacklists & Cleaners ---
-    parser_blacklist: list[str] = Field(
-        default_factory=lambda: [
-            "Fig",
-            "Figs",
-            "Figure",
-            "Figures",
-            "Tab",
-            "Table",
-            "Eq",
-            "Plate",
-            "Section",
-            "See",
-            "e.g.",
-            "i.e.",
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December",
-        ]
-    )
-
-    work_cls_schema_blacklist_fields: list[str] = Field(
-        default_factory=lambda: [
-            "URL",
-            "alternative-id",
-            "assertion",
-            "content-domain",
-            "is-referenced-by-count",
-            "license",
-            "link",
-            "member",
-            "prefix",
-            "reference",
-            "reference-count",
-            "references-count",
-            "score",
-            "source",
-            "update-policy",
-        ]
-    )
-
-    author_cls_schema_blacklist_fields: list[str] = Field(
-        default_factory=lambda: [
-            "ORCID",
-            "affiliation",
-            "authenticated-orcid",
-            "role",
-        ]
-    )
+    parser_blacklist: list[str] = Field(default_factory=list)
+    work_cls_schema_blacklist_fields: list[str] = Field(default_factory=list)
+    author_cls_schema_blacklist_fields: list[str] = Field(default_factory=list)
 
     # HTML Cleaning Configuration
     # Structural tags to explicitly preserve in the local repository
-    preserved_html_tags: set[str] = Field(default_factory=lambda: {"sup", "sub"})
+    preserved_html_tags: set[str] = Field(default_factory=set)
     # Styling tags whose inner text is kept but boundaries are discarded
-    discarded_html_tags: set[str] = Field(
-        default_factory=lambda: {"i", "b", "strong", "u", "small"}
-    )
-
-    # --- Advanced Pre-Validation (Before) ---
-    @model_validator(mode="before")
-    @classmethod
-    def enforce_https_urls(cls, data: Any) -> Any:
-        """Enforce and upgrade scheme to https:// for any field ending in _url."""
-        if not isinstance(data, dict):
-            return data
-
-        updated_data = {**data}
-        for key, value in updated_data.items():
-            if key.lower().endswith("_url") and isinstance(value, str):
-                val_str = value.strip()
-
-                # Bypass empty targets or typical filesystem indicators
-                if not val_str or val_str.startswith(("/", ".")):
-                    continue
-
-                # Handle malformed prefixing or absolute absence of scheme safely
-                if val_str.startswith("://"):
-                    val_str = f"https{val_str}"
-                elif "://" not in val_str:
-                    val_str = f"https://{val_str}"
-
-                parsed = urlparse(val_str)
-
-                if parsed.scheme == "http":
-                    parsed = parsed._replace(scheme="https")
-                    updated_data[key] = urlunparse(parsed)
-                elif parsed.scheme == "https":
-                    updated_data[key] = urlunparse(parsed)
-                else:
-                    raise ValueError(
-                        f"Field '{key}' must use 'https://' scheme. "
-                        f"Got unsupported: '{parsed.scheme}'"
-                    )
-
-        return updated_data
-
-    # --- Structural Post-Validation (After) ---
-    @field_validator("crossref_api_journals_issn_url", mode="after")
-    @classmethod
-    def validate_issn_template(cls, v: str) -> str:
-        """Validate presence of the required '{issn}' placeholder."""
-        if "{issn}" not in v:
-            raise ValueError("URL must contain the mandatory '{issn}' placeholder.")
-        return v
-
-    @field_validator("doi_api_url", mode="after")
-    @classmethod
-    def validate_doi_template(cls, v: str) -> str:
-        """Validate presence of the required '{doi}' placeholder."""
-        if "{doi}" not in v:
-            raise ValueError("URL must contain the mandatory '{doi}' placeholder.")
-        return v
-
-    @field_validator("style_repo_url", "child_style_repo_url", mode="after")
-    @classmethod
-    def validate_style_template(cls, v: str) -> str:
-        """Validate presence of the required '{style}' placeholder."""
-        if "{style}" not in v:
-            raise ValueError("URL must contain the mandatory '{style}' placeholder.")
-        return v
+    discarded_html_tags: set[str] = Field(default_factory=set)
 
     # --- Directory Lifecycle Methods ---
     def ensure_repo_directory(self) -> None:
