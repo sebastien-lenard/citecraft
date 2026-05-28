@@ -47,7 +47,10 @@ class ColorFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         """Clear current terminal progress line and apply color to the output."""
+        orig_name = record.name
+        record.name = orig_name.rpartition(".")[-1]
         result = super().format(record)
+        record.name = orig_name  # Restore to avoid breaking other handlers
         color = self.LEVEL_COLORS.get(record.levelno, self.RESET)
         return f"{self.CLEAR_LINE}{color}{result}{self.RESET}"
 
