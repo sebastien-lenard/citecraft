@@ -1,13 +1,13 @@
 ## Manuscript Reference Lister
 A lightweight Python tool designed for scientists to generate formatted reference lists directly from a .docx manuscript. By matching citations against a provided list of target journals, it automates the DOI lookup and citation formatting process using the Crossref API and DOI.org.
+
 ## 🚀 The Concept
 Unlike complex reference managers, this tool focuses on simplicity:
 
    1. The Manuscript: A .docx file containing your text and citations (e.g., Lenard et al., 2020).
    2. The Journal List: A section at the end of your document under the heading Journals, with one exact journal title per line.
-   3. The Result: The tool identifies the citations, matches them to the journals to resolve ISSNs, and retrieves metadata via the Crossref "Polite Pool."
+   3. The Result: The tool identifies the citations, matches them to the journals to resolve DOIs, and retrieves metadata via the Crossref "Polite Pool."
 
-Note on Journal Titles: This tool uses the journal list to resolve ISSNs. Because the Crossref API can return hundreds of results for generic titles like "Science," only exact matches are currently supported to ensure the metadata retrieved is correct.
 
 ## 🛠 Installation
 This project uses uv for package and project management.
@@ -145,7 +145,7 @@ Integration (included Crossref API and DOI negotiation service) tests only:
 End to end tests only:
 ```uv run pytest -m e2e```
 
-## 💡 Additional tips about options
+## 💡 Additional tips
 
 ### 💡 Finding the Correct Style Name (`-s`)
 
@@ -154,6 +154,19 @@ The tool formats references using the CSL style identifiers recognized by [citat
 For some major journals, the identifier is simply the lowercase title with spaces replaced by hyphens (e.g., `earth-surface-processes-and-landforms`). However, many journals do not have a unique style and instead inherit a parent format (e.g., Copernicus journals use `copernicus-publications`, AGU journals such as Geophysical Research Letters use `american-geophysical-union`).
 
 If you give the journal title as an option, the tool automates this lookup using the official CSL repository [CSL Styles GitHub Repository](https://github.com/citation-style-language/styles).
+
+### 💡 Journal lookup
+
+This tool resolves ISSNs using a curated journal list in the manuscript.To ensure metadata accuracy, the tool only supports exact matches (ignoring differences in case and punctuation). This strict matching prevents errors caused by the Crossref API, which can return hundreds of irrelevant results for generic titles like "Science."
+
+### 💡 Work lookup
+
+This tool resolves DOIs by filtering Crossref API results against the journal's ISSNs.
+To maximize performance, the tool caches its results using the following rules:
+
+* Permanence: Once a citation is checked against a specific set of ISSNs, the tool records the result. It will not check those same ISSNs again in future runs, whether the initial lookup succeeded or failed.
+* Updates: If you add a new journal title to your manuscript, the tool will automatically attempt a DOI lookup for that new journal on the next run.
+* Forced Reloads: To force a complete rerun across all ISSNs, you must clear the system cache using the --clear-cache flag. We advise against doing this for standard runs.
 
 ## 🐛 Known Bugs
 
@@ -172,7 +185,7 @@ However, if a journal title is flagged with incomplete metadata during a run, th
 * **Missing Works:** An ISSN exists but has no registered publication years or historical records (`Found without work`).
 
 **The Limitation:** 
-The update mechanism operates at the **journal title level**, not the individual ISSN level. If a journal possesses multiple ISSNs (such as an old print ISSN and a modern e-ISSN) and *only one* of these records lacks metadata, the tool will force a full Crossref API reload for **all** records sharing that input title. While this ensures data completeness, it leads to redundant API queries for the valid ISSNs of that same journal.
+The update mechanism operates at the **journal title level**, not the individual ISSN level. If a journal possesses multiple ISSNs (such as an old print ISSN and a modern e-ISSN) and *only one* of these records lacks metadata, the tool will force a full Crossref API reload for **all** journal records sharing that input title. While this ensures data completeness, it leads to redundant API queries for the valid ISSNs of that same journal.
 
 ### 📝 Coarse-Grained Progress Bar ETA
 In default mode (without `-v` or `-vv`), the application displays a progress bar tracking high-level execution phases (e.g., transitions between parsing, journal metadata resolution, and work metadata fetching).
