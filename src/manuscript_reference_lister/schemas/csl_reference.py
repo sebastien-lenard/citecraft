@@ -1,15 +1,25 @@
+import logging
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from .csl_date import CSLDate
 from .csl_name import CSLName
 
+logger = logging.getLogger(__name__)
+
 
 class CSLReference(BaseModel):
-    """Main schema representing a strict, valid CSL-JSON reference item."""
+    """Main schema representing a CSL-JSON reference item."""
 
-    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
 
     # Required structural roots
     id: str
@@ -35,6 +45,12 @@ class CSLReference(BaseModel):
     collection_title: str | None = Field(None, alias="collection-title")
     publisher: str | None = None
     publisher_place: str | None = Field(None, alias="publisher-place")
+
+    # Info for book chapters and proceedings
+    event_title: str | None = Field(None, alias="event-title")
+    event_place: str | None = Field(None, alias="event-place")
+    collection_number: int | str | None = Field(None, alias="collection-number")
+    volume_title: str | None = Field(None, alias="volume-title")
 
     # Locators, Index numbers & Registry IDs
     volume: int | str | None = None
@@ -68,4 +84,36 @@ class CSLReference(BaseModel):
         if isinstance(data, dict):
             if "id" not in data and "DOI" in data:
                 data["id"] = data["DOI"]
+        return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_type_against_config(cls, data: Any, info: ValidationInfo) -> Any:
+        """Validate standard CSL types via context, logging unknown categories."""
+        if not isinstance(data, dict):
+            return data
+
+        csl_type = data.get("type")
+        if not isinstance(csl_type, str):
+            return data
+
+        context = info.context or {}
+        config = context.get("config")
+
+        if config and hasattr(config, "work_csl_schema_types"):
+            allowed_types = set(config.work_csl_schema_types)
+
+            if csl_type not in allowed_types:
+                ref_id = data.get("id") or data.get("DOI") or "unknown"
+                logger.warning(
+                    "Unknown CSL reference type encountered: '%s' for ID: %s",
+                    csl_type,
+                    ref_id,
+                    extra={
+                        "status": "WARN",
+                        "event": "unknown_csl_reference_type",
+                        "csl_type": csl_type,
+                        "reference_id": ref_id,
+                    },
+                )
         return data

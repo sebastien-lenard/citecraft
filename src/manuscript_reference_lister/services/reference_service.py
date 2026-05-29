@@ -131,7 +131,9 @@ class ReferenceService:
             return "Reference unavailable in doi.org."
 
         try:
-            validated_csl = CSLReference.model_validate(csl_metadata)
+            validated_csl = CSLReference.model_validate(
+                csl_metadata, context={"config": self.config}
+            )
             clean_csl_dict = validated_csl.model_dump(by_alias=True, exclude_none=True)
         except ValidationError as e:
             logger.warning(

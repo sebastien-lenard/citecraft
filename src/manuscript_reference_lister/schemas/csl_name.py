@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict
 class CSLName(BaseModel):
     """CSL Schema for individual contributors and organizations."""
 
-    model_config = ConfigDict(populate_by_name=True, extra="ignore")
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
 
     family: str | None = None
     given: str | None = None

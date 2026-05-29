@@ -60,6 +60,9 @@ class AppConfig(BaseSettings):
     journal_update_limit: int = 100
     default_reference_style: str = "apa"
 
+    # --- Values for schemas ---
+    work_csl_schema_types: list[str] = Field(default_factory=list)
+
     # --- Blacklists & Cleaners ---
     parser_blacklist: list[str] = Field(default_factory=list)
     work_cls_schema_blacklist_fields: list[str] = Field(default_factory=list)
