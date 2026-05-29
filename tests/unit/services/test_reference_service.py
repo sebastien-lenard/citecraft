@@ -1,5 +1,5 @@
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -84,15 +84,33 @@ def test_fill_missing_references_success(
         ),
     ]
 
-    reference_service = ReferenceService(config=test_config)
-    reference_service.fill_missing_references(
-        records, mock_doi_repo, csl_style_content=sample_csl_style, target_style="apa"
-    )
-
     expected_reference = (
         "Sebastien J. P. Lenard, Jérôme Lavé, Christian France-Lanord (2020)."
         " Steady erosion rates in the Himalayas through late Cenozoic climatic."
     )
+
+    with (
+        patch(
+            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.create_json_source"
+        ) as mock_src,
+        patch(
+            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.parse_csl_style"
+        ) as mock_style,
+        patch(
+            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.render_bibliography"
+        ) as mock_render,
+    ):
+        mock_src.return_value = (MagicMock(), None)
+        mock_style.return_value = (MagicMock(), None)
+        mock_render.return_value = (expected_reference, None)
+
+        reference_service = ReferenceService(config=test_config)
+        reference_service.fill_missing_references(
+            records,
+            mock_doi_repo,
+            csl_style_content=sample_csl_style,
+            target_style="apa",
+        )
 
     assert records[0].reference == expected_reference
     assert records[1].style == "apa"
@@ -129,7 +147,7 @@ def test_fill_missing_references_raises_on_repository_error(
 
 
 @pytest.mark.parametrize(
-    "csl_metadata, doi, expected_result",
+    "csl_metadata, doi, expected_result, should_mock_success",
     [
         # Happy path: Complete, valid CSL-JSON metadata
         (
@@ -143,12 +161,14 @@ def test_fill_missing_references_raises_on_repository_error(
             },
             "10.1000/182",
             "J. Doe (2023). Title of the Paper.",
+            True,
         ),
         # Empty metadata dict
         (
             {},
             "invalid/doi",
             "Reference unavailable in doi.org.",
+            False,
         ),
         # Missing structural 'id' key
         (
@@ -158,6 +178,7 @@ def test_fill_missing_references_raises_on_repository_error(
             },
             "10.1000/missing-id",
             "Reference unavailable in doi.org.",
+            False,
         ),
         # Special Unicode characters (accents, em-dashes)
         (
@@ -171,6 +192,7 @@ def test_fill_missing_references_raises_on_repository_error(
             },
             "10.1038/s41561-020-0585-2",
             "J. Lavé (2020). Steady erosion — Himalayas..",
+            True,
         ),
     ],
 )
@@ -180,10 +202,32 @@ def test_get_reference_scenarios(
     csl_metadata: dict[str, Any],
     doi: str,
     expected_result: str,
+    should_mock_success: bool,
 ) -> None:
     """Verify formatted reference outputs under standard metadata states."""
     reference_service = ReferenceService(config=test_config)
 
-    result = reference_service.get_reference(csl_metadata, sample_csl_style, doi=doi)
+    with (
+        patch(
+            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.create_json_source"
+        ) as mock_src,
+        patch(
+            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.parse_csl_style"
+        ) as mock_style,
+        patch(
+            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.render_bibliography"
+        ) as mock_render,
+    ):
+        if should_mock_success:
+            mock_src.return_value = (MagicMock(), None)
+            mock_style.return_value = (MagicMock(), None)
+            mock_render.side_effect = lambda *args, **kwargs: (expected_result, None)
+        else:
+            # If Pydantic fails, the adapter methods shouldn't even be called
+            mock_src.return_value = (None, "Should not be reached")
 
-    assert result == expected_result
+        result = reference_service.get_reference(
+            csl_metadata, sample_csl_style, doi=doi
+        )
+
+        assert result == expected_result

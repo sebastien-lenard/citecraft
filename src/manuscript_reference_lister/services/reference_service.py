@@ -1,18 +1,10 @@
-import io
 import logging
 import time
 from typing import Any
 
-import citeproc
-from citeproc import (
-    Citation,
-    CitationItem,
-    CitationStylesBibliography,
-    CitationStylesStyle,
-)
-from citeproc.source.json import CiteProcJSON
 from pydantic import ValidationError
 
+from manuscript_reference_lister.adapters import CiteprocAdapter
 from manuscript_reference_lister.parsers import HtmlCleaner
 from manuscript_reference_lister.repositories import DoiRepository
 from manuscript_reference_lister.schemas import WorkMetadata
@@ -150,24 +142,22 @@ class ReferenceService:
             )
             return "Reference unavailable in doi.org."
 
-        bib_source = CiteProcJSON([clean_csl_dict])
-        style_bytes = csl_style_content.encode("utf-8")
-        style_file = io.BytesIO(style_bytes)
-
-        # CitationStylesStyle handles the CSL file parsing. validate=False disables
-        # strict XSD check.
-        bib_style = CitationStylesStyle(style_file, validate=False)
-        bibliography = CitationStylesBibliography(
-            bib_style, bib_source, citeproc.formatter.plain
+        bib_source, err_msg = CiteprocAdapter.create_json_source(
+            clean_csl_dict, doi=doi
         )
 
-        item_id = csl_metadata["id"]
-        citation = Citation([CitationItem(item_id)])
-        bibliography.register(citation)
+        if not bib_source or err_msg:
+            return f"Reference unavailable in doi.org. {err_msg}"
+        bib_style, err_msg = CiteprocAdapter.parse_csl_style(csl_style_content, doi=doi)
+        if not bib_style or err_msg:
+            return f"Reference unavailable in doi.org. {err_msg}"
+        render_output, err_msg = CiteprocAdapter.render_bibliography(
+            bib_style, bib_source, item_id=validated_csl.id, doi=doi
+        )
+        if not render_output or err_msg:
+            return f"Reference unavailable in doi.org. {err_msg}"
 
-        render_output = bibliography.bibliography()
         if render_output:
-            reference_text = "".join(str(token) for token in render_output[0]).strip()
             logger.debug(
                 "Successfully resolved bibliography reference generation for DOI: %s",
                 doi,
@@ -177,6 +167,6 @@ class ReferenceService:
                     "doi": doi,
                 },
             )
-            return reference_text
+            return render_output
 
         return "Reference unavailable in doi.org."
