@@ -47,6 +47,15 @@ class AppConfig(BaseSettings):
     doi_api_timeout: float = 10.0
     doi_api_max_retry: int = 10
 
+    # --- OpenAlex API ---
+    openalex_api_works_url: HttpsUrlStr
+    openalex_api_key: str
+    openalex_api_delay: float = 0.5
+    openalex_api_works_url: HttpsUrlStr
+    openalex_api_works_get_limit: int = 200
+    openalex_api_timeout: float = 20.0
+    openalex_api_max_retry: int = 10
+
     # --- Style Repositories ---
     style_repo_url: UrlWithObjectName  # Contains oject_name placeholder for style
     child_style_repo_url: UrlWithObjectName  # Contains template style

@@ -22,7 +22,10 @@ class WorkMetadata(BaseSchema):
     )
     style: str | None = None  # e.g. apa
     DOI: str | None = None  # e.g. 10.1038/s41561-020-0585-2
-    csl_metadata: dict[str, Any] | None = None  # CSL-dict metadata of the work
+    # CSL-dict metadata of the work from DOI negotiation service / crossref
+    csl_metadata: dict[str, Any] | None = None
+    # OpenAlex dict metadata of the work
+    alex_metadata: dict[str, Any] | None = None
     type: str | None = None  # e.g. journal-article
 
     @field_validator("DOI", mode="before")

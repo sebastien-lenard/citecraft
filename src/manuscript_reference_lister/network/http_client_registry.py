@@ -27,6 +27,13 @@ class HTTPClientRegistry:
                     max_retries=self.config.doi_api_max_retry,
                     timeout=self.config.doi_api_timeout,
                 )
+            elif domain_key == "openalex":
+                self._registry[domain_key] = HTTPClientWrapper(
+                    delay=self.config.openalex_api_delay,
+                    email=self.config.crossref_api_email,
+                    max_retries=self.config.openalex_api_max_retry,
+                    timeout=self.config.openalex_api_timeout,
+                )
             else:
                 self._registry[domain_key] = HTTPClientWrapper(
                     email=self.config.crossref_api_email

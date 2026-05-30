@@ -42,6 +42,7 @@ The application uses environment variables for path management and API settings.
 
 * Paths: Update WORK_DIR_PATH and OUTPUT_DIR_PATH.
 * Crossref API: Set CROSSREF_API_EMAIL to your valid email to use the "Polite Pool" for better reliability.
+* OpenAlex API: Set OPENALEX_API_KEY to a key to request at https://openalex.org/settings/api-key
 
 ## 📖 Usage
 Run the tool using the uv run prefix.

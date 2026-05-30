@@ -18,6 +18,7 @@ def test_work_metadata_instantiation_defaults() -> None:
     assert work.style is None
     assert work.type is None
     assert work.csl_metadata is None
+    assert work.alex_metadata is None
 
 
 def test_work_metadata_identity_key_with_none_doi() -> None:
