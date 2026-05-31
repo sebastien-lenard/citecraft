@@ -13,30 +13,34 @@ class HTTPClientRegistry:
     def get_client(self, domain_key: str) -> HTTPClientWrapper:
         """Return an existing HTTP client wrapper or initialize a new instance."""
         if domain_key not in self._registry:
-            if domain_key in ("crossref", "default"):
+            if domain_key in ("crossref"):
                 self._registry[domain_key] = HTTPClientWrapper(
+                    api_key=self.config.crossref_api_key,
                     delay=self.config.crossref_api_delay,
-                    email=self.config.crossref_api_email,
+                    email=self.config.user_email,
                     max_retries=self.config.crossref_api_max_retry,
                     timeout=self.config.crossref_api_timeout,
-                )
-            elif domain_key == "doi":
-                self._registry[domain_key] = HTTPClientWrapper(
-                    delay=self.config.doi_api_delay,
-                    email=self.config.crossref_api_email,
-                    max_retries=self.config.doi_api_max_retry,
-                    timeout=self.config.doi_api_timeout,
+                    url_max_character_length=(
+                        self.config.crossref_api_url_max_character_length
+                    ),
+                    config=self.config,
                 )
             elif domain_key == "openalex":
                 self._registry[domain_key] = HTTPClientWrapper(
+                    api_key=self.config.openalex_api_key,
                     delay=self.config.openalex_api_delay,
-                    email=self.config.crossref_api_email,
+                    email=self.config.user_email,
                     max_retries=self.config.openalex_api_max_retry,
                     timeout=self.config.openalex_api_timeout,
+                    url_max_character_length=(
+                        self.config.openalex_api_url_max_character_length
+                    ),
+                    config=self.config,
                 )
             else:
                 self._registry[domain_key] = HTTPClientWrapper(
-                    email=self.config.crossref_api_email
+                    email=self.config.user_email,
+                    config=self.config,
                 )
 
         return self._registry[domain_key]

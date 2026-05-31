@@ -11,26 +11,46 @@ from tenacity import (
     wait_exponential,
 )
 
+from manuscript_reference_lister.utils import AppConfig, get_config
+
 logger = logging.getLogger(__name__)
 
 
 class HTTPClientWrapper:
-    """Synchronous HTTPX client wrapper with embedded Tenacity retry and delay protocols."""
+    """Synchronous HTTPX client wrapper with Tenacity retry protocols."""
 
     def __init__(
         self,
         email: str,
         *,
-        timeout: float = 30.0,
-        max_retries: int = 3,
+        api_key: str | None = None,
+        timeout: float | None = None,
+        max_retries: int | None = None,
         backoff_factor: float = 2.0,
-        delay: float = 1.0,
+        delay: float | None = None,
+        url_max_character_length: int | None = None,
+        config: AppConfig | None = None,
     ) -> None:
+        self.config: AppConfig = config or get_config()
         self.email: str = email
-        self.timeout: float = timeout
-        self.max_retries: int = max_retries
+        self.api_key: str | None = api_key if api_key else None
+        self.timeout: float = (
+            timeout if timeout is not None else self.config.default_api_timeout
+        )
+        self.max_retries: int = (
+            max_retries
+            if max_retries is not None
+            else self.config.default_api_max_retry
+        )
         self.backoff_factor: float = backoff_factor
-        self.delay: float = delay
+        self.delay: float = (
+            delay if delay is not None else self.config.default_api_delay
+        )
+        self.url_max_character_length: int = (
+            url_max_character_length
+            if url_max_character_length is not None
+            else self.config.default_api_url_max_character_length
+        )
         self.client: httpx.Client = httpx.Client(
             timeout=httpx.Timeout(self.timeout), follow_redirects=True
         )
@@ -83,8 +103,9 @@ class HTTPClientWrapper:
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
         max_retries: int | None = None,
-    ) -> httpx.Response:
-        """Perform a retried GET request with status verification.
+    ) -> tuple[httpx.Response | None, int]:
+        """Perform a retried GET request with status verification. Returns response
+        and predicted url character length.
         Fatal errors (like 401, 403, 404) raise immediately.
         """
         target_url = str(url)
@@ -110,10 +131,33 @@ class HTTPClientWrapper:
             reraise=True,
         )
 
-        def _execute_request() -> httpx.Response:
-            resp = self.client.get(
-                target_url, params=query_params, headers=request_headers
+        # Get and check request length
+        request = httpx.Request(
+            method="GET", url=target_url, params=query_params, headers=request_headers
+        )
+        predicted_url_length = len(str(request.url))
+        if (
+            self.url_max_character_length
+            and predicted_url_length > self.url_max_character_length
+        ):
+            logger.warning(
+                "Request not sent: url length above max length (%d > %d "
+                "characters): %s",
+                predicted_url_length,
+                self.url_max_character_length,
+                str(request.url),
+                extra={
+                    "status": "WARNING",
+                    "event": "http_client_url_too_long",
+                    "predicted_url_length": predicted_url_length,
+                    "max_url_length": self.url_max_character_length,
+                    "url": str(request.url),
+                },
             )
+            return (None, predicted_url_length)
+
+        def _execute_request() -> httpx.Response:
+            resp = self.client.send(request)
             resp.raise_for_status()
             return resp
 
@@ -121,15 +165,15 @@ class HTTPClientWrapper:
             response = retrier(_execute_request)
             logger.debug(
                 "Successfully fetched URL: %s",
-                target_url,
+                str(request.url),
                 extra={
                     "status": "OK",
                     "event": "http_request_success",
-                    "url": target_url,
+                    "url": str(request.url),
                     "status_code": response.status_code,
                 },
             )
-            return response
+            return (response, predicted_url_length)
 
         except httpx.HTTPStatusError as e:
             logger.error(

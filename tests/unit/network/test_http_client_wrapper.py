@@ -10,7 +10,7 @@ from manuscript_reference_lister.network.http_client_wrapper import HTTPClientWr
 
 @pytest.fixture
 def wrapper() -> Generator[HTTPClientWrapper, None, None]:
-    """Provide an HTTPClientWrapper instance configured with low backoffs for deterministic tests."""
+    """Provide HTTPClientWrapper with low backoffs for deterministic tests."""
     client_wrapper = HTTPClientWrapper(
         email="test@example.com", max_retries=3, backoff_factor=0.01, delay=0.0
     )
@@ -23,11 +23,12 @@ def test_get_success(wrapper: HTTPClientWrapper) -> None:
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
 
-    with patch.object(wrapper.client, "send", return_value=mock_response) as mock_get:
-        response = wrapper.get("https://api.test.com")
+    with patch.object(wrapper.client, "send", return_value=mock_response) as mock_send:
+        response, length = wrapper.get("https://api.test.com")
 
         assert response == mock_response
-        assert mock_get.call_count == 1
+        assert mock_send.call_count == 1
+        assert length > 0
 
 
 @pytest.mark.parametrize(
@@ -65,15 +66,15 @@ def test_get_retry_on_transient_failures(
     mock_response_ok.status_code = 200
 
     with (
-        patch.object(wrapper.client, "get") as mock_get,
+        patch.object(wrapper.client, "send") as mock_send,
         patch("tenacity.nap.time.sleep") as mock_tenacity_sleep,
     ):
-        mock_get.side_effect = [*errors_to_simulate, mock_response_ok]
+        mock_send.side_effect = [*errors_to_simulate, mock_response_ok]
 
-        response = wrapper.get("https://api.test.com")
+        response, _ = wrapper.get("https://api.test.com")
 
         assert response == mock_response_ok
-        assert mock_get.call_count == len(errors_to_simulate) + 1
+        assert mock_send.call_count == len(errors_to_simulate) + 1
         assert mock_tenacity_sleep.call_count == len(errors_to_simulate)
 
 
@@ -82,15 +83,15 @@ def test_get_max_retries_reached(wrapper: HTTPClientWrapper) -> None:
     request_obj = httpx.Request("GET", "https://api.test.com")
 
     with (
-        patch.object(wrapper.client, "get") as mock_get,
+        patch.object(wrapper.client, "send") as mock_send,
         patch("tenacity.nap.time.sleep"),
     ):
-        mock_get.side_effect = httpx.ConnectError("Down", request=request_obj)
+        mock_send.side_effect = httpx.ConnectError("Down", request=request_obj)
 
         with pytest.raises(httpx.ConnectError):
             wrapper.get("https://api.test.com")
 
-        assert mock_get.call_count == 3
+        assert mock_send.call_count == 3
 
 
 @pytest.mark.parametrize("fatal_status_code", [400, 401, 403, 404])
@@ -105,13 +106,13 @@ def test_get_fatal_http_errors_raise_immediately(
     )
 
     with (
-        patch.object(wrapper.client, "get", side_effect=error_fatal) as mock_get,
+        patch.object(wrapper.client, "send", side_effect=error_fatal) as mock_send,
         patch("tenacity.nap.time.sleep") as mock_tenacity_sleep,
     ):
         with pytest.raises(httpx.HTTPStatusError):
             wrapper.get("https://api.test.com")
 
-        assert mock_get.call_count == 1
+        assert mock_send.call_count == 1
         assert mock_tenacity_sleep.call_count == 0
 
 
@@ -120,15 +121,15 @@ def test_get_max_retries_override(wrapper: HTTPClientWrapper) -> None:
     request_obj = httpx.Request("GET", "https://api.test.com")
 
     with (
-        patch.object(wrapper.client, "get") as mock_get,
+        patch.object(wrapper.client, "send") as mock_send,
         patch("tenacity.nap.time.sleep"),
     ):
-        mock_get.side_effect = httpx.ConnectError("Down", request=request_obj)
+        mock_send.side_effect = httpx.ConnectError("Down", request=request_obj)
 
         with pytest.raises(httpx.ConnectError):
             wrapper.get("https://api.test.com", max_retries=1)
 
-        assert mock_get.call_count == 1
+        assert mock_send.call_count == 1
 
 
 def test_get_with_custom_headers(wrapper: HTTPClientWrapper) -> None:
@@ -136,15 +137,14 @@ def test_get_with_custom_headers(wrapper: HTTPClientWrapper) -> None:
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
 
-    with patch.object(wrapper.client, "get", return_value=mock_response) as mock_get:
+    with patch.object(wrapper.client, "send", return_value=mock_response) as mock_send:
         custom_headers = {"Accept": "text/x-bibliography"}
         wrapper.get("https://api.test.com", headers=custom_headers)
 
-        mock_get.assert_called_once_with(
-            "https://api.test.com",
-            params={"mailto": "test@example.com"},
-            headers=custom_headers,
-        )
+        mock_send.assert_called_once()
+        called_request = mock_send.call_args[0][0]
+        assert called_request.headers["Accept"] == "text/x-bibliography"
+        assert "mailto=test%40example.com" in str(called_request.url)
 
 
 def test_get_follows_redirects(wrapper: HTTPClientWrapper) -> None:
@@ -164,33 +164,98 @@ def test_get_follows_redirects(wrapper: HTTPClientWrapper) -> None:
     )
     response_200.history.append(response_302)
 
-    with patch.object(wrapper.client, "get", return_value=response_200) as mock_get:
-        response = wrapper.get("https://doi.org/10.1038/sample")
+    with patch.object(wrapper.client, "send", return_value=response_200) as mock_send:
+        response, _ = wrapper.get("https://doi.org/10.1038/sample")
 
         assert response.status_code == 200
         assert response.text == "Ceci est la référence finale"
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
-        mock_get.assert_called_once()
+        mock_send.assert_called_once()
 
 
-def test_get_accepts_and_converts_pydantic_http_url(wrapper: HTTPClientWrapper) -> None:
-    """Verify the get handler converts Pydantic HttpUrl parameters to standard string representations."""
+def test_get_accepts_and_converts_pydantic_http_url(
+    wrapper: HTTPClientWrapper,
+) -> None:
+    """Verify get handler converts Pydantic HttpUrl to standard string representations."""
     url_raw = "https://api.crossref.org/styles"
     pydantic_url = TypeAdapter(networks.HttpUrl).validate_python(url_raw)
 
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
 
-    with patch.object(
-        wrapper.client, "get", return_value=mock_response
-    ) as mock_httpx_get:
-        response = wrapper.get(url=pydantic_url)
+    with patch.object(wrapper.client, "send", return_value=mock_response) as mock_send:
+        response, _ = wrapper.get(url=pydantic_url)
 
         assert response.status_code == 200
 
-        called_args, _ = mock_httpx_get.call_args
-        actual_url_passed = called_args[0]
+        mock_send.assert_called_once()
+        called_request = mock_send.call_args[0][0]
+        assert str(called_request.url).startswith(url_raw)
 
-        assert isinstance(actual_url_passed, str)
-        assert actual_url_passed == url_raw
+
+def test_get_max_url_length_exceeded(
+    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify that exceeding the URL limit prevents the request and logs a warning."""
+    wrapper.url_max_character_length = 10
+
+    response, length = wrapper.get("https://api.test.com/some/very/long/path")
+
+    assert response is None
+    assert length > 10
+    assert any("Request not sent" in record.message for record in caplog.records)
+
+
+def test_get_retry_on_transient_failures_logging(
+    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify that retries on transient errors log warning messages."""
+    mock_response_ok = MagicMock(spec=httpx.Response)
+    mock_response_ok.status_code = 200
+
+    error = httpx.ReadTimeout(
+        "Timeout", request=httpx.Request("GET", "https://api.test.com")
+    )
+
+    with (
+        patch.object(wrapper.client, "send") as mock_send,
+        patch("tenacity.nap.time.sleep"),
+    ):
+        mock_send.side_effect = [error, mock_response_ok]
+
+        wrapper.get("https://api.test.com")
+
+        assert any("Transient error encountered" in r.message for r in caplog.records)
+
+
+def test_get_fatal_http_errors_logging(
+    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify that fatal HTTP status errors log error messages."""
+    mock_response = httpx.Response(404)
+    request_obj = httpx.Request("GET", "https://api.test.com")
+    error_fatal = httpx.HTTPStatusError(
+        "Not Found", request=request_obj, response=mock_response
+    )
+
+    with patch.object(wrapper.client, "send", side_effect=error_fatal):
+        with pytest.raises(httpx.HTTPStatusError):
+            wrapper.get("https://api.test.com")
+
+        assert any(
+            "Fatal or unresolved HTTP Error" in r.message for r in caplog.records
+        )
+
+
+def test_get_unexpected_errors_logging(
+    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify that unexpected exceptions log errors with traceback info."""
+    with patch.object(wrapper.client, "send", side_effect=RuntimeError("Crash")):
+        with pytest.raises(RuntimeError):
+            wrapper.get("https://api.test.com")
+
+        assert any(
+            "Unexpected or unrecoverable error" in r.message for r in caplog.records
+        )

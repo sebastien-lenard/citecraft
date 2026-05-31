@@ -25,36 +25,60 @@ class AppConfig(BaseSettings):
         json_inner_max_depth=2,  # Force to parse complex strings from .env
     )
 
-    # --- Directory Paths ---
+    # -------------------------------------------- #
+    # USER'S CONFIGURATION                         #
+    # -------------------------------------------- #
+
+    # --- User's Directory Paths ---
     local_repo_dir_path: Path = Field(default=Path("repo"), alias="LOCAL_REPO_DIR_PATH")
     output_dir_path: Path = Field(default=Path("output"), alias="OUTPUT_DIR_PATH")
+    # Warning: log_dir_path is handled in logging_config.py.
+
+    # --- User's API Polite Pool email ---
+    user_email: EmailStr
+
+    # --- User's OpenAlex API Key ---
+    openalex_api_key: str
+
+    # -------------------------------------------- #
+    # OTHER VARIABLES                              #
+    # -------------------------------------------- #
+
+    # --- Default API calls ---
+
+    default_api_key: str | None = None
+    default_api_delay: float = 0.5
+    default_api_timeout: float = 20
+    default_api_max_retry: int = 10
+    default_api_url_max_character_length: int = 2048
 
     # --- Crossref API ---
-    crossref_api_delay: float = 0.5
-    crossref_api_email: EmailStr
     crossref_api_journals_url: HttpsUrlStr
     # Contains oject_name placeholder for issn
     crossref_api_journals_issn_url: UrlWithObjectName
     crossref_api_styles_url: HttpsUrlStr
     crossref_api_works_url: HttpsUrlStr
     crossref_api_works_get_limit: int = 20
-    crossref_api_timeout: float = 20.0
-    crossref_api_max_retry: int = 10
+
+    crossref_api_key: str | None = None
+    crossref_api_delay: float = default_api_delay
+    crossref_api_timeout: float = default_api_timeout
+    crossref_api_max_retry: int = default_api_max_retry
+    crossref_api_url_max_character_length: int = default_api_url_max_character_length
 
     # --- DOI Service ---
-    doi_api_delay: float = 0.4
     doi_api_url: UrlWithObjectName  # Contains oject_name placeholder for doi
-    doi_api_timeout: float = 10.0
-    doi_api_max_retry: int = 10
+
+    # Default API configuration used for DOI Service
 
     # --- OpenAlex API ---
     openalex_api_works_url: HttpsUrlStr
-    openalex_api_key: str
-    openalex_api_delay: float = 0.5
-    openalex_api_works_url: HttpsUrlStr
-    openalex_api_works_get_limit: int = 200
-    openalex_api_timeout: float = 20.0
-    openalex_api_max_retry: int = 10
+    openalex_api_works_get_limit: int = 100
+
+    openalex_api_delay: float = default_api_delay
+    openalex_api_timeout: float = default_api_timeout
+    openalex_api_max_retry: int = default_api_max_retry
+    openalex_api_url_max_character_length: int = default_api_url_max_character_length
 
     # --- Style Repositories ---
     style_repo_url: UrlWithObjectName  # Contains oject_name placeholder for style
