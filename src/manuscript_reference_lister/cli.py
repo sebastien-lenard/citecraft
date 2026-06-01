@@ -29,6 +29,23 @@ def cli(ctx: click.Context) -> None:
 @cli.command()
 @click.pass_context
 @click.option(
+    "-a",
+    "--api",
+    default="OpenAlex",
+    show_default=True,
+    help=(
+        "Favored REST API for work DOI matching. Choice of `Crossref` or `OpenAlex`."
+    ),
+)
+@click.option(
+    "--clear-cache",
+    is_flag=True,
+    help=(
+        "Safely archive local JSON cache repository files (journals and works) by"
+        " renaming them."
+    ),
+)
+@click.option(
     "-f",
     "--input-file",
     "--input_file",
@@ -44,25 +61,12 @@ def cli(ctx: click.Context) -> None:
     help=("Exact journal title aimed for publication (e.g. Geomorphology)."),
 )
 @click.option(
-    "-t", "--text", type=str, default=None, help="Text to parse (can also be piped)"
-)
-@click.option(
     "-o",
     "--output-file",
     "output_file",
     type=str,
     default=None,
     help="Filepath for the output Bibliography CSV",
-)
-@click.option(
-    "-s",
-    "--style",
-    default=None,
-    show_default=True,
-    help=(
-        "Style name recognized by https://citation.doi.org/ (e.g., apa, "
-        "copernicus-publications)."
-    ),
 )
 @click.option(
     "--skip-journal-update",
@@ -75,27 +79,33 @@ def cli(ctx: click.Context) -> None:
     help="Skip fetching and updating work records from remote API.",
 )
 @click.option(
-    "-v", "--verbose", count=True, help="Increase verbosity (-v (INFO), -vv (DEBUG))"
+    "-s",
+    "--style",
+    default=None,
+    show_default=True,
+    help=(
+        "Style name recognized by https://citation.doi.org/ (e.g., apa, "
+        "copernicus-publications)."
+    ),
 )
 @click.option(
-    "--clear-cache",
-    is_flag=True,
-    help=(
-        "Safely archive local JSON cache repository files (journals and works) by"
-        " renaming them."
-    ),
+    "-t", "--text", type=str, default=None, help="Text to parse (can also be piped)"
+)
+@click.option(
+    "-v", "--verbose", count=True, help="Increase verbosity (-v (INFO), -vv (DEBUG))"
 )
 def main(
     ctx: click.Context,
+    api: str,
+    clear_cache: bool,
     input_file: str | None,
-    text: str | None,
-    output_file: str | None,
-    style: str | None,
     journal_title: str | None,
+    output_file: str | None,
+    text: str | None,
     skip_journal_update: bool,
     skip_work_update: bool,
+    style: str | None,
     verbose: int,
-    clear_cache: bool,
 ) -> None:
     """\b
     CLI entry point. Run core manuscript extraction pipeline with Click command
@@ -231,8 +241,10 @@ def main(
 
         with progress_context as ctx_manager:
             # Under verbose mode, ctx_manager.update is a safe no-op.
-            # Under standard mode, it safely routes updates and protects stderr via its inner lock.
+            # Under standard mode, it safely routes updates and protects stderr via its
+            # inner lock.
             anomalies, export_metadata = run(
+                api=api,
                 input_file_path=input_file,
                 input_text=text,
                 output_filepath=output_file,
@@ -320,7 +332,10 @@ def main(
                 click.secho("📝 CSV Preview:", bold=True, fg="cyan")
 
                 col1_w, col2_w, col3_w = 25, 32, 60
-                header = f"{'Citation':<{col1_w}} | {'Status':<{col2_w}} | {'Reference Preview':<{col3_w}}"
+                header = (
+                    f"{'Citation':<{col1_w}} | {'Status':<{col2_w}} | "
+                    f"{'Reference Preview':<{col3_w}}"
+                )
 
                 click.secho(header, fg="cyan", bold=True)
                 click.secho("-" * len(header), fg="cyan")
@@ -354,18 +369,23 @@ def main(
 
                 if export_metadata.missing_count > 0:
                     click.echo(
-                        "  • For citations marked as 'Missing DOI/Reference': Please search for their DOIs\n"
-                        "    manually on the Crossref website (https://search.crossref.org) and update your records."
+                        "  • For citations marked as 'Missing DOI/Reference': "
+                        "Please search for their DOIs\n"
+                        "    manually on the Crossref website "
+                        "(https://search.crossref.org) and update your records."
                     )
 
                 if export_metadata.duplicate_count > 0:
                     click.echo(
-                        "  • For citations with multiple matches: Review the generated CSV file and delete\n"
-                        "    the irrelevant reference rows, leaving only the correct one for each citation."
+                        "  • For citations with multiple matches: Review the "
+                        "generated CSV file and delete\n"
+                        "    the irrelevant reference rows, leaving only the "
+                        "correct one for each citation."
                     )
 
                 click.echo(
-                    "  • Once the CSV file is cleaned and reviewed, you can directly copy and paste\n"
+                    "  • Once the CSV file is cleaned and reviewed, you can directly"
+                    "copy and paste\n"
                     "    the finalized reference list into your manuscript."
                 )
                 click.echo("")

@@ -1,88 +1,15 @@
-## Manuscript Reference Lister
-A lightweight Python tool designed for scientists to generate formatted reference lists directly from a .docx manuscript. By matching citations against a provided list of target journals, it automates the DOI lookup and citation formatting process using the Crossref API and DOI.org.
+# Manuscript Reference Lister
+
+A lightweight Python tool designed for scientists to generate and format a bibliography to a target journal style from in-text citations and cited journals in a `.docx` manuscript. By matching citations of published works against a user-provided list of cited journals, it automates lookups of DOIs associated with the citations and formatted bibliography generation using remote APIs (OpenAlex or Crossref) and a local citation engine.
+
 
 ## 🚀 The Concept
-Unlike complex reference managers, this tool focuses on simplicity:
 
-   1. The Manuscript: A .docx file containing your text and citations (e.g., Lenard et al., 2020).
-   2. The Journal List: A section at the end of your document under the heading Journals, with one exact journal title per line.
-   3. The Result: The tool identifies the citations, matches them to the journals to resolve DOIs, and retrieves metadata via the Crossref "Polite Pool."
+Unlike complex reference managers, this tool focuses on a streamlined, manuscript-centric workflow:
 
+1. **The Manuscript:** A `.docx` file containing your text and APA-style in-text citations.
 
-## 🛠 Installation
-This project uses uv for package and project management.
-## 1. Install uv
-Windows
-```
-powershell -c "irm https://astral.sh | iex"
-```
-macOS & Linux
-```
-curl -LsSf https://astral.sh | sh
-```
-## 2. Setup the Project
-
-Clone the repository:
-```
-git clone https://github.com/sebastien-lenard/manuscript-reference-lister
-```
-Sync the environment
-```
-cd manuscript-reference-lister
-uv sync
-```
-## ⚙️ Configuration
-The application uses environment variables for path management and API settings.
-1. Copy the template file:
-
-* Windows: ```copy .env.example .env```
-* macOS & Linux: ```cp .env.example .env```
-
-2. Edit the .env file:
-
-* Paths: Update WORK_DIR_PATH and OUTPUT_DIR_PATH.
-* Crossref API: Set CROSSREF_API_EMAIL to your valid email to use the "Polite Pool" for better reliability.
-* OpenAlex API: Set OPENALEX_API_KEY to a key to request at https://openalex.org/settings/api-key
-
-## 📖 Usage
-Run the tool using the uv run prefix.
-
-# Process a manuscript file and specify the output path
-For a specific style:
-```uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -s "copernicus-publications"```
-
-For a submission journal (autodetection of style):
-```uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -j "Geomorphology"```
-
-# Control log verbosity (-v for INFO, -vv for DEBUG):
-```uv run references-lister -f "C:\Documents\manuscript.docx" -v```
-
-# Clear cache (local repository)
-Clear cache and process a manuscript:
-```uv run references-lister -f "C:\Documents\manuscript.docx" --clear-cache```
-
-Clear cache (maintenance only)
-```uv run references-lister --clear-cache```
-
-The tool will display a confirmation message.
-
-
-# Pipe source directly
-```echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run references-lister```
-
-**CLI arguments:**
-* `-f` : Path to the `.docx` manuscript to parse.
-* `-o` : Path to the output CSV file. Contains the parsed citations, Crossref/DOI lookup status, and formatted references. *(Default: `OUTPUT_DIR_PATH / "manuscript_references.csv"` if omitted)*.
-* `-s` : Style identifier recognized by [citation.doi.org](https://citation.doi.org/). *(Default: `apa` if omitted)*.
-* `-j` : Targeted journal title for submission, e.g. "Geomorphology". Title should be exact. The journal style overrides the style above.
-* `--skip-journal-update` : Skips the remote Crossref API lookup for journal metadata and ISSNs. New journal titles are still registered locally, but without fetching remote metadata. Useful to bypass API latency when no new journals have been added to the manuscript.
-* `--skip-work-update` : Skips the remote Crossref API lookup for work DOIs. Existing local records are processed normally, but no network calls are made to fetch missing DOIs. Useful to speed up re-runs when no new citations have been added to the manuscript.
-
-**Input**
-
-A manuscript with in-text citations of works following the APA style: format author last name 1 et al., year; author last name 1 and/et author last name 2, year; author last name 1, year. A suffix (e.g. a or b) works. The tool cannot parse other in-text citation styles, such as bracketed numbers (IEEE), superscript numbers (Chicago history), author last name page number (MLA).
-
-The manuscript should have a section Journals at its end, which lists the journal titles on which the work lookup will be carried out. The tool currently cannot find a work published in a journal not in this section. For instance:
+2. **The Publication Journal List:** A designated section at the end of your `.docx` manuscript under the heading `Journals`. It must list one exact cited journal title per line (e.g., *Nature Geoscience*), for instance:
 ```
 
 Journals
@@ -90,143 +17,311 @@ Nature Geoscience
 Geomorphology
 
 ```
+The tool extracts the cited journal titles, resolves them to their ISSNs, and uses these ISSNs as a strict search filter for published work lookup. **Note:** The tool cannot discover or resolve a work if its cited journal is omitted from this section.
 
-Alternatively, a raw text with similar characteristics can be provided to the tool.
+3. **The Result: a bibliography formatted to a target journal style:** The tool extracts the in-text citations and the cited journal titles, resolves the DOIs associated with citations using API calls filtered by the ISSNs and the first author names contained in the citations, and builds a clean bibliography formatted to the style of a target journal.
 
-**Output**
+---
 
-At the end of the execution, the console can display warnings for journals without ISSN. Several cases may occur: Journal title not found in the remote API, title found without ISSN, title found with an ISSN but without published work associated to this ISSN. The lookup for DOIs is carried out only on journal titles that have at least one ISSN with published work.
+## 🛠 Installation & Setup
 
-The console also displays a preview of the CSV output, with instances of the three possible lookup status:
-* `OK` : A unique DOI has been found for the citation and reference can be copy-pasted to the manuscript as such.
-* `Warning: Multiple matches` or `Ambiguous matches` : Several DOIs have been found for the citation. The user is invited to manually select the correct one and delete the other ones before copy-paste to the manuscript.
-* `Warning: Missing metadata` : No DOI has been found for the citation. The user is invited to manually look for the reference using [www.crossref.org](www.crossref.org) or [scholar.google.com](scholar.google.com).
+This project uses `uv` for package and project management.
 
+### 1. Install uv
 
-## Output & Interpretation
+* **Windows (PowerShell):**
+```powershell
+powershell -c "irm https://astral.sh | iex"
 
-### Console Warnings
-
-At the end of the execution, the console displays warnings for journals that could not be fully resolved. This happens in three specific cases:
-
-1. **Journal title not found** in the Crossref registry.
-2. **Journal found without an ISSN**.
-3. **Journal found with an ISSN, but with zero published works** associated with it.
-
-> 🔍 **Core Logic:** The tool only attempts DOI lookups for journals that have both a valid ISSN and at least one registered publication.
-
-### CSV Preview & Status Codes
-
-The console also prints a preview of the generated CSV file. Each citation receives one of three status codes in the output:
-
-* `OK`
-* **Meaning:** A unique DOI was successfully found.
-* **Action:** The formatted reference is ready to be copied directly into your manuscript.
+```
 
 
-* `Warning: Multiple matches` (or `Ambiguous matches`)
-* **Meaning:** Crossref returned multiple potential DOIs for this citation (due to common surnames or shared publication years).
-* **Action:** Review the rows manually, keep the correct reference, and delete the incorrect duplicates.
+* **macOS & Linux:**
+```bash
+curl -LsSf https://astral.sh | sh
+
+```
 
 
-* `Warning: Missing metadata`
-* **Meaning:** No matching DOI could be found.
-* **Action:** Manually search for the reference using [www.crossref.org](https://www.crossref.org) or [scholar.google.com](https://scholar.google.com).
+
+### 2. Setup the Project
+
+Clone the repository and sync the virtual environment:
+
+```bash
+git clone https://github.com/sebastien-lenard/manuscript-reference-lister
+cd manuscript-reference-lister
+uv sync
+
+```
+
+---
+
+## ⚙️ Configuration
+
+The application relies on environment variables for file paths and API credentials.
+
+1. Copy the environment template file:
+* **Windows:** `copy .env.example .env`
+* **macOS & Linux:** `cp .env.example .env`
 
 
-## Tests
-# Run tests
-```uv run pytest```
+2. Edit the `.env` file with your settings:
+* `WORK_DIR_PATH`: Local directory for processing and cache of cited journal and cited work metadata.
+* `OUTPUT_DIR_PATH`: Default local directory for results (bibliography output CSV file).
+* `LOG_DIR_PATH`: Local directory for log files.
+* `JOURNAL_UPDATE_DAYS`: Integer setting the cited journal metadata cache expiration window (Default: `30`).
+* `USER_EMAIL`: Your email address, required to access the API "Polite Pool."
+* `OPENALEX_API_KEY`: Your personal OpenAlex API key (request one at [openalex.org/settings/api-key](https://openalex.org/settings/api-key)).
 
-# Run specific test suites
-Unit tests only:
-```uv run pytest -m "not integration and not e2e"```
-Integration (included Crossref API and DOI negotiation service) tests only:
-```uv run pytest -m integration```
-End to end tests only:
-```uv run pytest -m e2e```
 
-## 💡 Additional tips
 
-### 💡 Finding the Correct Style Name (`-s`)
+---
 
-The tool formats references using the CSL style identifiers recognized by [citation.doi.org](https://citation.doi.org/).
+## 📖 Usage
 
-For some major journals, the identifier is simply the lowercase title with spaces replaced by hyphens (e.g., `earth-surface-processes-and-landforms`). However, many journals do not have a unique style and instead inherit a parent format (e.g., Copernicus journals use `copernicus-publications`, AGU journals such as Geophysical Research Letters use `american-geophysical-union`).
+Run the tool using the `uv run` prefix.
 
-If you give the journal title as an option, the tool automates this lookup using the official CSL repository [CSL Styles GitHub Repository](https://github.com/citation-style-language/styles).
+### Processing a Manuscript
 
-### 💡 Journal lookup
+The tool accepts text data via two input modes: passing a local path to a `.docx` file using the `-f` flag, or piping raw text directly into standard input (`stdin`). Whichever mode is used, the input text must always conclude with the `Journals` section block.
 
-This tool resolves ISSNs using a curated journal list in the manuscript.To ensure metadata accuracy, the tool only supports exact matches (ignoring differences in case and punctuation). This strict matching prevents errors caused by the Crossref API, which can return hundreds of irrelevant results for generic titles like "Science."
+* **Auto-detect style based on a submission journal:**
+```bash
+uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -j "Geomorphology"
 
-### 💡 Work lookup
+```
 
-This tool resolves DOIs by filtering Crossref API results against the journal's ISSNs.
-To maximize performance, the tool caches its results using the following rules:
 
-* Permanence: Once a citation is checked against a specific set of ISSNs, the tool records the result. It will not check those same ISSNs again in future runs, whether the initial lookup succeeded or failed.
-* Updates: If you add a new journal title to your manuscript, the tool will automatically attempt a DOI lookup for that new journal on the next run.
-* Forced Reloads: To force a complete rerun across all ISSNs, you must clear the system cache using the --clear-cache flag. We advise against doing this for standard runs.
+* **Force a specific CSL style identifier:**
+```bash
+uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -s "copernicus-publications"
+
+```
+
+
+* **Piping Raw Text Directly:**
+```bash
+echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run references-lister
+
+```
+
+
+
+### Advanced Controls
+
+* **Bypassing Remote API Updates (Speed Runs):**
+```bash
+uv run references-lister -f "C:\Documents\manuscript.docx" --skip-journal-update --skip-work-update
+
+```
+
+
+* **Cache Management:**
+```bash
+uv run references-lister --clear-cache
+
+```
+
+
+* **Log Verbosity:**
+```bash
+uv run references-lister -f "C:\Documents\manuscript.docx" -v   # For INFO logs
+uv run references-lister -f "C:\Documents\manuscript.docx" -vv  # For DEBUG logs
+
+```
+
+
+
+### CLI Arguments Summary
+
+* `-f` : Path to the `.docx` manuscript file.
+* `-o` : Path to the output CSV file. *(Default: `OUTPUT_DIR_PATH / "manuscript_references.csv"` if omitted)*
+* `-j` : Target journal title for submission (e.g., "Geomorphology"). Title matching is exact, ignoring case and punctuation variations. When passed, this option triggers an automated lookup against the official CSL repository to find the matching target journal style xml file, overriding any value provided via `-s`.
+* `-s` : Style identifier recognized by [citation.doi.org](https://citation.doi.org/). If omitted, and no target journal title is passed via `-j`, this defaults to `apa`.
+* `-a` : Favored REST API for work DOI matching. Choice of `Crossref` or `OpenAlex`. *(Default: `OpenAlex`)*
+* `--skip-journal-update` : Skips remote API lookups for cited journal metadata and ISSNs. New cited journal titles from the manuscript are registered locally but without fetching remote metadata. Useful to bypass API latency when no new cited journals have been added to the manuscript cited journal list.
+* `--skip-work-update` : Skips remote API lookups for missing work DOIs. Existing local records are processed normally, but no network calls are made to fetch missing work DOIs and metadata.
+* `--clear-cache` : Deletes all locally cached cited journal and work data. Use only if the tool presents unexpected behavior.
+
+---
+
+## 🔄 Technical Architecture & Data Pipeline
+
+The application relies on a unified internal rendering pipeline to ensure consistent bibliographic output, regardless of the selected upstream remote metadata engine.
+
+```
+[Manuscript Input (.docx or stdin)] 
+               │
+               ▼
+         [Regex Parser] ──► (Extracted In-text Citations & Manuscript Cited Journal Titles)
+               │
+               ▼
+  [Data Pipeline Routing]
+   ├── Target Journal for Submission (-j)  ──► [CSL Styles GitHub Repo Lookup] ──► [Target Style Definition File]
+   ├── Manuscript Cited Journals List    ──► [Crossref /journals API]        ──► [Validated ISSN Filters]
+   └── In-Text Citation Matches        ──► [Selected API /works Endpoint]  ──► [Unified Translator Class]
+                                                                                      │
+                                                                                      ▼
+                                                                                [citeproc-py]
+                                                                                      │
+                                                                                      ▼
+                                                                          [Final Bibliography CSV Output formatted to Target Journal Style]
+
+```
+
+### 1. In-Text Citation Extraction
+
+The extraction engine scans the manuscript content or standard input using multiple sequential regular expressions. It extracts APA-formatted citations supporting suffixes (e.g., *a* or *b* works) under two valid syntax patterns:
+
+* **Parenthetical Citations:** `(Lenard et al., 2020; Gus, 2014; Guns and Vanacker, 2014)`
+* **Narrative Citations:** `As Bernard et al. (2021) wrote...`
+
+> ⚠️ **Parsing Scope:** The tool cannot parse alternative formatting frameworks, such as bracketed numbers (IEEE), superscript numbers (Chicago history), or author/page combinations (MLA).
+
+> ⚠️ **Publication years:** Citations of works published before 1600 or after 2099 raise a fatal error (`MIN_PUBLICATION_YEAR` and `MAX_PUBLICATION_YEAR` configuration in `.env` file).
+
+### 2. Isolated Remote Processes
+
+The application maintains three separated metadata workflows:
+
+* **Process A: CSL Target Journal Style Definition Retrieval (Submission Context)**
+When you specify a submission journal via `-j`, the tool maps the journal title to its corresponding style identifier recognized by [citation.doi.org](https://citation.doi.org/). It automates this mapping by querying the official [CSL Styles GitHub Repository](https://github.com/citation-style-language/styles). For some major journals, the identifier is simply the lowercase title with spaces replaced by hyphens (e.g., `earth-surface-processes-and-landforms`). For others, it maps the title to its inherited parent format (e.g., mapping AGU journals to `american-geophysical-union`, or Copernicus journals to `copernicus-publications`).
+* **Process B: Manuscript Cited Journal Metadata Lookup**
+The tool extracts the cited journal titles listed in the manuscript’s trailing `Journals` section and queries the Crossref `/journals` endpoint. This step resolves those titles to their official ISSNs and verifies their publication status.
+* **Process C: Work DOI Lookup**
+Using the first author(s)'s surname and the publication year extracted from the in-text citation, the tool queries the remote API `/works` endpoint selected via the `-a` argument to resolve the correct DOI.
+* **Process D: Work Metadata Fetching**
+For Crossref, the tool fetches work metadata at the same time as Process C. For OpenAlex, the tool is currently unable to process their metadata using the local `citeproc-py` bibliographic rendering engine; therefore, the tool fetches Crossref metadata calling the DOI Negotiation Service [doi.org](https://doi.org) after Process C.
+
+### 3. Upstream API Pipeline Variations
+
+The choice of backend API shifts how network requests and filters are structured:
+
+| Operational Feature | Crossref (`-a Crossref`) | OpenAlex (`-a OpenAlex`, Default) |
+| --- | --- | --- |
+| **Primary Information Source** | Publishers directly. | Crossref aggregated with diverse external data sources. |
+| **ISSN Filter Architecture** | Supports only one ISSN filter per network call. Requires $N$ separate API calls for $N$ ISSNs, increasing execution latency. | Supports filtering by an array of multiple ISSNs (e.g., ISSNa OR ISSNb) in a single request. Reduces total API calls, yielding a faster execution loop. |
+| **Native API Author Filtering** | Lacks isolated author-filtering fields. Surnames cannot be locked down and must be passed as broad text keywords. | Supports direct, native filtering fields by author name. |
+| **Metadata Output Payload** | Loose, publisher-dependent CSL-JSON format. | Structured OpenAlex-specific JSON format. Comprehensive bibliographic info is widely available for journal articles. |
+| **API Name Field Layout** | Distinctly discriminates between explicit `given` and `family` name fields. | Combines names into a single `full name` string field; it does not distinguish given names from family names natively. |
+| **Post-API Call Filtering Engine** | Executes a strict, precise **full match** evaluation against the author's family name on the returned items. | Executes a **partial match** evaluation on the returned strings. Because OpenAlex indexes full-name strings, a search for an author with the family name "Jerome" will capture instances where "Jerome" appears as a given name. Irrelevant matches must be cleaned manually in the final CSV. |
+
+### 4. The Unified Translation Layer
+
+Once raw metadata items are returned, they pass through a dedicated **Translator Class**. This layer normalizes the structurally divergent JSON payloads into uniform standard CSL-JSON, injects missing required attributes (such as generating the missing `id` field from the DOI for Crossref records), and routes the uniform CSL-JSON directly into the local `citeproc-py` rendering engine to compile the plain-text bibliography.
+
+---
+
+## 💾 Caching & Operational Limitations
+
+### Cited Journal Metadata Cache & Loop Exception
+
+Cited journal records are cached based on the expiration timeline defined by `JOURNAL_UPDATE_DAYS` in your `.env` file.
+
+* **Permanence Rule:** Valid resolved cited journals will not be re-queried remotely until the cache window expires.
+* **The Incomplete State Loop:** If a cited journal title in the registry contains incomplete metadata—such as a missing ISSN, or a recorded ISSN that has zero associated publication history—the tool flags it as an incomplete state. This state triggers a forced remote refresh on **every subsequent run** regardless of cache age. This update mechanism operates strictly at the coarse **journal title level**, not the individual ISSN level. If a cited journal possesses multiple ISSNs and only one lacks metadata, the tool forces a full remote API reload for all records sharing that input title. To stop the tool from repeatedly querying the API for these unresolvable titles during a session, use the `--skip-journal-update` flag.
+
+### Work Metadata Cache
+
+Once an in-text citation has been evaluated against the resolved ISSN filters, the outcome (success or failure) is written permanently to the local work cache repository. Successfully evaluated in-text citations are never re-checked on subsequent runs, unless the system cache is cleared globally via `--clear-cache`. Failed evaluated citations are re-checked on subsequent runs in any case. To stop the tool from repeatedly querying the API for these unresolvable citations during a session, use the `--skip-work-update` flag.
+
+
+### Rigid Cited Journal Title Matching in Cited Journal Queries to APIs
+
+While the tool implements string normalization to strip case and handle basic punctuation discrepancies (e.g., matching *"Proceedings of the Royal Society A: Mathematical, Physical and Engineering Sciences"* against its unpunctuated registry entry), cited journal titles with slight morphological variations (e.g., *Natural Hazards and Earth System Sciences* vs. the registered *Natural Hazards and Earth System Science*) completely fail to resolve to an ISSN and are excluded.
+
+### Strict ISSN Filter Enforcement in Cited Work Queries to APIs
+
+To exclude thousands of irrelevant work DOI results returned by an API based only on first author names, the tool applies absolute ISSN filters to all work queries. This introduces specific constraints:
+
+* **Missing Registry ISSNs:** Some preprint repositories (such as *EGUsphere*) do not have an ISSN, causing citation lookups to fail.
+
+* **Historical Cited Journal ISSN Shifts and Consolidation:** Certain cited journals share a complex indexing history where multiple distinct sub-publications were grouped under a single parent ISSN before receiving independent identifiers.
+
+* *Example (AGU):* *Journal of Geophysical Research: Solid Earth* was historically consolidated under the ISSN of *Journal of Geophysical Research: Atmospheres* for metadata records spanning until 2012–2013. Consequently, for any citation dated prior to 2014, Crossref may only recognize the historical parent ISSN. To successfully resolve these entries, the user must include both titles (*Journal of Geophysical Research: Atmospheres* and *Journal of Geophysical Research: Solid Earth*) in the manuscript's journal list.
+* *Other instances:* Similar historical tracking and splitting discrepancies affect journals such as *Comptes Rendus Geoscience* and *Journal of Earth System Science*, requiring identical multi-title listing for older papers.
+
+* **Types of Works Supported:** Because the tool restricts all work metadata queries using strict ISSN filters, it primarily supports journal articles and works directly indexed under a validated ISSN. It cannot parse or resolve independent book chapters, monographs, or standalone tracking records unless they belong to an indexed book series (e.g., *Geological Society of London Special Publications*).
+
+### Upstream HTML Pollution & Spacing of Work Titles and Metadata
+
+Crossref and OpenAlex databases occasionally contain work titles embedded with raw line breaks (`\n`) and HTML formatting tags (e.g., `<sup>`, `<i>`), as originally submitted by publishers to Crossref. The tool cleans these strings using global regular expressions to strip tags and collapse consecutive whitespaces down to a single standard space character.
+
+* **Side-Effect Impact:** Because scientific work titles utilize unpredictable structural conventions across disciplines (chemistry isotopes, gene sequences, mathematical formulas), the global space-collapsing rule can occasionally insert an unintended space adjacent to removed tags. For example, a raw entry structured as `<sup>\n 10\n </sup>Be` will render in the plain-text CSV output as `10 Be` instead of `10Be`. This is a downstream data tracking limitation; it cannot be resolved with structural parsers like BeautifulSoup because the formatting irregularities exist natively within the provider databases. Output text is written strictly in plain text; no subscript, superscript, or LaTeX formatting is preserved.
+
+---
+
+## 📊 Output Interpretation & Diagnostics
+
+### Logs
+
+Execution logs are handled simultaneously across two targets. Coarse-grained logs are output directly to the console depending on the runtime verbosity flags (defaulting to the warning level). Concurrently, a structured JSON log tracking all background execution records (debug level) is systematically saved to your local storage path at `LOG_DIR_PATH / "app.json.log"`.
+
+### Coarse-Grained Progress Bar ETA
+
+In default execution mode (without `-v` or `-vv`), the application displays a progress bar tracking high-level execution phases (e.g., transitions between parsing, cited journal ISSN and metadata resolution, and cited work DOI and metadata fetching). Because the progress bar tracks these major processing milestones rather than individual, fine-grained network requests, the Estimated Time of Arrival (ETA) updates in blocks. It should be treated as a rough phase indicator rather than a precise second-by-second countdown.
+
+### Unresolved or Partly Resolved Cited Journals Table & Status Codes
+
+At the end of execution, the console displays a table summarizing the status of cited journal titles that could not be fully resolved. This summary appears immediately above the CSV preview block. Cited journals in this table may have the following status:
+
+1. **`Journal title not found`:** Exact cited journal title matching failed in the API. Either the spelling of the cited journal title is incorrect or the journal title is not registered in the API database.
+2. **`Journal title found without ISSN`:** The API does not have an ISSN recorded for the cited journal title.
+3. **`Journal title found with at least one ISSN without works`:** The API did not find published works for at least one of the ISSNs resolved for the cited journal title.
+
+Cases (1) and (2) lead to the failure of the DOI lookup of any cited work published in these cited journal titles. DOI lookups for cited journals in case (3) do not always lead to DOI lookup failure if the cited journal has at least one ISSN resolved.
+
+### Cited Work Bibliography CSV Preview Table & Status Codes
+
+The console prints a final terminal layout featuring a preview of the bibliography results, showcasing one or two sample instances of each encountered lookup status. The complete set of bibliographic results with resolved and unresolved citations is written directly to your saved local output CSV file.
+
+Each in-text citation is tagged with one of three definitive status codes in the final output document:
+
+* **`OK`**
+* *Meaning:* A unique, unambiguous DOI was resolved.
+* *User Action:* The work reference is properly formatted and ready to be copied directly into your manuscript.
+
+
+* **`Warning: Multiple matches`** (or `Ambiguous matches`)
+* *Meaning:* The citation can be associated to multiple potential DOIs. **Note:** The possible causes are diverse: (1) inclusion of cited journals covering multiple fields in the cited journal list (e.g. `Nature`); (2) common author names (e.g. Zhang, Smith, Singh); (3) confusion between family and given names; (4) the author was first author in several publications for the year of the in-text citation.
+* *User Action:* Review the generated CSV rows manually, choose the valid reference, and remove irrelevant rows before copying.
+
+
+* **`Warning: Missing metadata`**
+* *Meaning:* The remote API could not verify or match a specific DOI for the in-text citation. **Note:** The possible causes are diverse: (1) the first author(s) name(s) is misspelled or does not include a particle (e.g. Duchesne instead of Du Chesne); (2) the citation cites a given name instead of a family name (e.g. for `Nature` journal: Peng et al., 2001 instead of Zhang et al., 2001); (3) the author in the citation is not first author; (4) the work was not published in any journal of the cited journal list at the end of the manuscript provided to the application or the journal ISSN was not resolved (see above section); (5) the year in the citation is not the correct year; (6) the work was not submitted to the API database (e.g. conference abstract, preprint); (7) the work was not published in a journal or similar types of publication, as it happens for monographs, reports, book chapters (e.g. `Gilbert, G. K. (1877). Land sculpture. In Report on the geology of the Henry Mountains (pp. 99–150). Government Printing Office.`).
+* *User Action:* First, check if the problem is not one of the ones described in the note. If no obvious resolution, skip automation for this record. Manually search and extract the reference using [www.crossref.org](https://www.crossref.org), [OpenAlex.org](https://openalex.org), or [scholar.google.com](https://scholar.google.com).
+
+
+
+---
+
+## 🧪 Tests
+
+Execute the test suites via `uv` using the configured `pytest` markers:
+
+```bash
+# Run the entire test suite
+uv run pytest
+
+# Run unit tests only (bypasses network overhead)
+uv run pytest -m "not integration and not e2e"
+
+# Run integration tests only (verifies Crossref and OpenAlex connections)
+uv run pytest -m integration
+
+# Run end-to-end manuscript processing tests
+uv run pytest -m e2e
+
+```
+
+---
 
 ## 🐛 Known Bugs
 
-None reported. Feel free to open an issue if you encounter unexpected behavior.
+None reported. Users are more than welcome to open an issue if they encounter unexpected behavior.
 
-## ⚠️ Limitations with moderate impact
-
-## 📝 Limitations with minor impact
-
-### 📝 Coarse-Grained Cache Updates for Incomplete Journals
-
-The tool maintains a local JSON database (`records`) to cache journal metadata across executions, minimizing redundant API requests to Crossref. This cache expires based on the `JOURNAL_UPDATE_DAYS` environment variable. 
-
-However, if a journal title is flagged with incomplete metadata during a run, the tool triggers a remote Crossref refresh even if the cache has not expired. Incomplete metadata occurs under two conditions:
-* **Missing ISSN:** The registry has no ISSN mapped to the title (`Found without ISSN`).
-* **Missing Works:** An ISSN exists but has no registered publication years or historical records (`Found without work`).
-
-**The Limitation:** 
-The update mechanism operates at the **journal title level**, not the individual ISSN level. If a journal possesses multiple ISSNs (such as an old print ISSN and a modern e-ISSN) and *only one* of these records lacks metadata, the tool will force a full Crossref API reload for **all** journal records sharing that input title. While this ensures data completeness, it leads to redundant API queries for the valid ISSNs of that same journal.
-
-### 📝 Coarse-Grained Progress Bar ETA
-In default mode (without `-v` or `-vv`), the application displays a progress bar tracking high-level execution phases (e.g., transitions between parsing, journal metadata resolution, and work metadata fetching).
-
-**Note on ETA accuracy:** Because the progress bar tracks these major processing milestones rather than individual, fine-grained network requests, the Estimated Time of Arrival (ETA) updates in blocks. It should be treated as a rough phase indicator rather than a precise second-by-second countdown.
-
-
-## 🔌 External Dependencies & Limitations
-
-### 1. System Interactions
-
-The tool relies on two external web services to automate reference generation:
-
-* **Crossref REST API:** Used in two distinct phases. First, it queries the `/journals` endpoint to resolve exact journal titles into standard ISSNs. Second, it queries the `/works` endpoint using author and year metadata combined with these ISSNs to isolate the specific publication.
-* **DOI Citation Negotiation Service (`doi.org`):** Once a unique DOI is successfully retrieved from Crossref, this service is queried with specific HTTP headers (`Accept: application/vnd.citationstyles.csl+json` or other style-specific strings) to fetch all metadata associated with the DOI. The tool locally constructs the fully formatted bibliographic reference using these metadata.
-
-### 2. API Limitations & Operational Impact
-
-Due to structural behaviors in the Crossref index, automated matching can fail or produce false positives. The primary challenges include:
-
-* **Weak Author Weighting in Queries:** The `/works` endpoint does not support strict, isolated filtering by author name (e.g., no `filter=author:Lenard`). Author names are treated as general keywords. Because the tool only possesses an author-year pair from the in-text citation—and lacks the article title—a broad keyword search for common surnames returns hundreds of irrelevant records.
-
-* **Journal Metadata Gaps:** To mitigate the volume of irrelevant results, the tool restricts queries using ISSN filters. However, Crossref’s journal database depends heavily on publisher compliance, which remains inconsistent:
-   * *Missing ISSNs:* Some prominent journals or preprint repositories (such as *EGUsphere*) do not have their ISSN properly mapped or indexed within the Crossref registry.
-   * *Rigid Title Matching:* While the tool implements string normalization to handle punctuation discrepancies (e.g., matching *"Proceedings of the Royal Society A: Mathematical, Physical and Engineering Sciences"* against its unpunctuated registry entry), titles with slight morphological variations (e.g., *Natural Hazards and Earth System Sciences* vs. the registered *Natural Hazards and Earth System Science*) fail to resolve.
-
-* **Historical ISSN Shifts and Consolidation:** Certain journals share a complex indexing history where multiple distinct sub-publications were grouped under a single parent ISSN before receiving their own independent identifiers.
-   * *Example (AGU):* *Journal of Geophysical Research: Solid Earth* was historically consolidated under the ISSN of *Journal of Geophysical Research: Atmospheres* for metadata records spanning until 2012–2013. Consequently, for any citation dated prior to 2014, Crossref may only recognize the historical parent ISSN. To successfully resolve these entries, the user must include both titles (*Journal of Geophysical Research: Atmospheres* and *Journal of Geophysical Research: Solid Earth*) in the manuscript's journal list.
-   * *Other instances:* Similar historical tracking and splitting discrepancies affect journals such as *Comptes Rendus Geoscience* and *Journal of Earth System Science*, requiring identical multi-title listing for older papers.
-
-* **HTML Pollution and Whitespace Normalization:** Metadata returned by the Crossref API occasionally includes embedded HTML tags (such as `<i>`, `<b>`, or `<sup>`). The tool automatically sanitizes these strings by unescaping HTML entities and removing styling tags, while explicitly preserving structural `<sup>` and `<sub>` tags in the local work repository (`LOCAL_REPO_DIR_PATH / work_records.json`), but removing them in the final CSV output. 
-  To handle chaotic spacing and raw line breaks (`\n`) embedded within these API records, the tool collapses all consecutive whitespaces into a single standard space character—matching how Crossref renders references on its own website.
-  * *Operational Impact:* While this ensures reliable text processing, it can occasionally inject unintended spaces around superscripts or subscripts in mathematical expressions or chemical formulas (e.g., rendering as `CO <sub>2</sub>` instead of `CO<sub>2</sub>` in the local work repository and `CO 2` instead of `CO2` in the final output). Note that this side effect only occurs on API records that contain raw line breaks within or adjacent to the HTML tags.
-
-### 3. Consequences for the User
-
-When a journal title fails to resolve to an ISSN, or when an author keyword search yields inconclusive metadata, the tool cannot safely guarantee the precision of the DOI. To prevent the injection of silent errors into the bibliography, the tool skips these ambiguous entries.
-
-> ⚠️ **Manual Intervention Required:** In these specific scenarios, users must manually search the Crossref interface or the journal's website to retrieve the correct DOI and complete the reference.
-
+---
 
 ## 📅 Roadmap
 

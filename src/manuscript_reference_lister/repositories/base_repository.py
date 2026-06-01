@@ -28,14 +28,15 @@ class BaseRepository[T: BaseSchema]:
         local_filename: str,
         model_class: type[T],
         config: AppConfig | None = None,
+        api: str = "crossref",
         registry: HTTPClientRegistry | None = None,
     ) -> None:
         self.config: AppConfig = config or get_config()
         registry = registry or get_http_client_registry()
-        self.http_client_wrapper = registry.get_client("crossref")
+        self.http_client_wrapper = registry.get_client(api)
         self.headers: dict[str, str] = {
             "User-Agent": f"ManuscriptRefLister/1.0 (mailto:"
-            f"{self.config.crossref_api_email})"
+            f"{self.http_client_wrapper.email})"
         }
         self.local_filename: str = local_filename
         self._load_failed: bool = False

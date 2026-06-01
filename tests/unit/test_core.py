@@ -13,14 +13,13 @@ from manuscript_reference_lister.utils import AppConfig
 
 @pytest.fixture
 def configured_core_config(test_config: AppConfig) -> AppConfig:
-    """Configure the isolated global test configuration specifically for core execution
-    boundaries."""
+    """Configure isolated global test configuration specifically for core."""
     test_config = test_config.model_copy(
         update={
             "crossref_api_journals_issn_url": (
                 "https://mock-crossref/journals/{object_name}"
             ),
-            "crossref_api_email": "test@example.com",
+            "user_email": "test@example.com",
             "crossref_api_journals_url": "https://mock-crossref/journals",
             "crossref_api_styles_url": "https://mock-crossref/styles",
             "crossref_api_works_url": "https://mock-crossref/works",
@@ -33,15 +32,19 @@ def configured_core_config(test_config: AppConfig) -> AppConfig:
 
 @pytest.fixture
 def mock_pipeline_dependencies() -> Generator[dict[str, Any], None, None]:
-    """Insulate pipeline execution from real input/output, repository layers, and API
-    clients."""
+    """Insulate pipeline execution from real input/output and repository layers."""
     with (
         patch("manuscript_reference_lister.core.DataLoader") as mock_loader,
         patch("manuscript_reference_lister.core.StyleRepository") as mock_style_repo,
         patch(
             "manuscript_reference_lister.core.JournalRepository"
         ) as mock_journal_repo,
-        patch("manuscript_reference_lister.core.WorkRepository") as mock_work_repo,
+        patch(
+            "manuscript_reference_lister.core.OpenAlexWorkRepository"
+        ) as mock_openalex_repo,
+        patch(
+            "manuscript_reference_lister.core.CrossrefWorkRepository"
+        ) as mock_crossref_repo,
         patch("manuscript_reference_lister.core.ReferenceService"),
         patch(
             "manuscript_reference_lister.core.BibliographyService"
@@ -59,15 +62,16 @@ def mock_pipeline_dependencies() -> Generator[dict[str, Any], None, None]:
         yield {
             "loader": mock_loader,
             "journal": mock_journal_repo,
-            "work": mock_work_repo,
+            "work": mock_openalex_repo,
+            "openalex": mock_openalex_repo,
+            "crossref": mock_crossref_repo,
         }
 
 
 def test_run_pipeline_progress_callback_sequences(
     configured_core_config: AppConfig, mock_pipeline_dependencies: dict[str, Any]
 ) -> None:
-    """Verify that the core pipeline calls progress callbacks sequentially with accurate
-    index states."""
+    """Verify that core pipeline calls progress callbacks sequentially."""
     tracked_steps: list[ProgressStep] = []
 
     def sample_callback(step: ProgressStep) -> None:
@@ -97,8 +101,7 @@ def test_run_pipeline_progress_callback_sequences(
 def test_run_pipeline_with_journal_title_style_lookup(
     configured_core_config: AppConfig, mock_pipeline_dependencies: dict[str, Any]
 ) -> None:
-    """Verify that specifying a journal title triggers style lookup inside the
-    StyleRepository."""
+    """Verify that specifying a journal title triggers style lookup."""
     with patch("manuscript_reference_lister.core.StyleRepository") as mock_style_repo:
         mock_style_inst = mock_style_repo.return_value
         mock_style_inst.favored_style_is_valid = True
@@ -171,8 +174,7 @@ def test_run_pipeline_bypass_controls(
     expect_work_update: bool,
     expected_logs: list[str],
 ) -> None:
-    """Verify bypass flags prevent specific repository updates and log warning
-    descriptions."""
+    """Verify bypass flags prevent specific repository updates."""
     mock_journal_inst = mock_pipeline_dependencies["journal"].return_value
     mock_work_inst = mock_pipeline_dependencies["work"].return_value
 

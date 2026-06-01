@@ -52,6 +52,7 @@ def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
         assert result.exit_code == 0
         assert "Done." in result.output
         mock_run.assert_called_once_with(
+            api="OpenAlex",
             input_file_path="manuscript.docx",
             input_text="",
             output_filepath=None,
@@ -80,6 +81,7 @@ def test_cli_journal_title_option_propagates(
 
         assert result.exit_code == 0
         mock_run.assert_called_once_with(
+            api="OpenAlex",
             input_file_path="manuscript.docx",
             input_text="",
             output_filepath=None,
@@ -143,7 +145,7 @@ def test_cli_exception_handling_paths(
 
         result = runner.invoke(
             cli,
-            ["main", "-f", "corrupted.docx"] + verbose_args,
+            ["main", "-f", "corrupted.docx", *verbose_args],
             obj={"config": test_config},
         )
 
@@ -181,6 +183,7 @@ def test_cli_piped_input_default_style(
         assert result.exit_code == 0
         assert "Done." in result.output
         mock_run.assert_called_once_with(
+            api="OpenAlex",
             input_file_path=None,
             input_text=piped_text,
             output_filepath=None,
@@ -217,6 +220,7 @@ def test_cli_custom_style_and_output_options(
 
         assert result.exit_code == 0
         mock_run.assert_called_once_with(
+            api="OpenAlex",
             input_file_path="doc.docx",
             input_text="",
             output_filepath="custom_output.csv",
@@ -251,6 +255,7 @@ def test_cli_skip_update_flags_propagate(
 
         assert result.exit_code == 0
         mock_run.assert_called_once_with(
+            api="OpenAlex",
             input_file_path="doc.docx",
             input_text="",
             output_filepath=None,

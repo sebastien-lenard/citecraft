@@ -8,17 +8,17 @@ def test_work_metadata_instantiation_defaults() -> None:
     work = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
-        input_ISSN="1752-0894",
+        input_ISSNs=["1752-0894"],
     )
 
-    assert work.input_ISSN == "1752-0894"
+    assert work.input_ISSNs == ["1752-0894"]
     assert work.DOI is None
     assert work.raw_reference is None
     assert work.reference is None
     assert work.style is None
     assert work.type is None
-    assert work.csl_metadata is None
-    assert work.alex_metadata is None
+    assert work.crossref_metadata is None
+    assert work.openalex_metadata is None
 
 
 def test_work_metadata_identity_key_with_none_doi() -> None:
@@ -26,7 +26,7 @@ def test_work_metadata_identity_key_with_none_doi() -> None:
     work = WorkMetadata(
         input_first_authors_txt="Smith",
         input_year_and_suffix="2022",
-        input_ISSN="1234-5678",
+        input_ISSNs=["1234-5678"],
         DOI=None,
     )
 
@@ -39,7 +39,7 @@ def test_work_metadata_identity_key_with_none_input_issn_and_doi() -> None:
     work = WorkMetadata(
         input_first_authors_txt="Smith",
         input_year_and_suffix="2022",
-        input_ISSN=None,
+        input_ISSNs=None,
         DOI=None,
     )
 
@@ -52,14 +52,14 @@ def test_work_metadata_identity_key_with_actual_doi() -> None:
     work_a = WorkMetadata(
         input_first_authors_txt="Guns and Vanacker",
         input_year_and_suffix="2021",
-        input_ISSN="0016-7606",
+        input_ISSNs=["0016-7606"],
         DOI="10.1130/g49244.1",
     )
 
     work_b = WorkMetadata(
         input_first_authors_txt="Guns and Vanacker",
         input_year_and_suffix="2021",
-        input_ISSN="0016-7606",
+        input_ISSNs=["0016-7606"],
         DOI="10.1130/DIFFERENT_DOI",
     )
 
@@ -73,7 +73,7 @@ def test_work_metadata_to_dict_includes_none() -> None:
     work = WorkMetadata(
         input_first_authors_txt="Test",
         input_year_and_suffix="2024",
-        input_ISSN="0000-0000",
+        input_ISSNs=["0000-0000"],
         DOI=None,
     )
 

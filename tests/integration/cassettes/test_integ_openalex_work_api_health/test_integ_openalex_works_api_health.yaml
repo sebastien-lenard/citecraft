@@ -1,0 +1,728 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Host:
+      - api.openalex.org
+      User-Agent:
+      - ManuscriptRefLister/1.0 (mailto:sebastien.lenard@gmail.com)
+    method: GET
+    uri: https://api.openalex.org/works?filter=publication_year%3A2020%2Cprimary_location.source.issn%3A1752-0894%2Craw_author_name.search%3A%22Lenard%22&api_key=8Rd4D7AsYCGSTnYy6Piyll&per_page=5&mailto=sebastien.lenard%40gmail.com
+  response:
+    body:
+      string: '{"meta": {"count": 1, "db_response_time_ms": 139, "page": 1, "per_page":
+        5, "groups_count": null, "cost_usd": 0.001}, "results": [{"id": "https://openalex.org/W3032085902",
+        "doi": "https://doi.org/10.1038/s41561-020-0585-2", "title": "Steady erosion
+        rates in the Himalayas through late Cenozoic climatic changes", "display_name":
+        "Steady erosion rates in the Himalayas through late Cenozoic climatic changes",
+        "relevance_score": 87.403206, "publication_year": 2020, "publication_date":
+        "2020-06-01", "ids": {"openalex": "https://openalex.org/W3032085902", "doi":
+        "https://doi.org/10.1038/s41561-020-0585-2", "mag": "3032085902"}, "language":
+        "en", "primary_location": {"id": "doi:10.1038/s41561-020-0585-2", "is_oa":
+        false, "landing_page_url": "https://doi.org/10.1038/s41561-020-0585-2", "pdf_url":
+        null, "source": {"id": "https://openalex.org/S48977010", "display_name": "Nature
+        Geoscience", "issn_l": "1752-0894", "issn": ["1752-0894", "1752-0908"], "is_oa":
+        false, "is_in_doaj": false, "is_core": true, "host_organization": "https://openalex.org/P4310319908",
+        "host_organization_name": "Nature Portfolio", "host_organization_lineage":
+        ["https://openalex.org/P4310319908", "https://openalex.org/P4310319965"],
+        "host_organization_lineage_names": ["Nature Portfolio", "Springer Nature"],
+        "type": "journal"}, "license": null, "license_id": null, "version": "publishedVersion",
+        "is_accepted": true, "is_published": true, "raw_source_name": "Nature Geoscience",
+        "raw_type": "journal-article"}, "type": "article", "indexed_in": ["crossref"],
+        "open_access": {"is_oa": true, "oa_status": "green", "oa_url": "https://hal.science/hal-03096681",
+        "any_repository_has_fulltext": true}, "authorships": [{"author_position":
+        "first", "author": {"id": "https://openalex.org/A5086548111", "display_name":
+        "S.J.P. Lenard", "orcid": "https://orcid.org/0000-0003-3358-7197"}, "institutions":
+        [{"id": "https://openalex.org/I1294671590", "display_name": "Centre National
+        de la Recherche Scientifique", "ror": "https://ror.org/02feahw73", "country_code":
+        "FR", "type": "government", "lineage": ["https://openalex.org/I1294671590"]},
+        {"id": "https://openalex.org/I4210102569", "display_name": "Centre de Recherches
+        P\u00e9trographiques et G\u00e9ochimiques", "ror": "https://ror.org/011nqat45",
+        "country_code": "FR", "type": "facility", "lineage": ["https://openalex.org/I1294671590",
+        "https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I4210102569",
+        "https://openalex.org/I4210148025", "https://openalex.org/I4387156182", "https://openalex.org/I90183372",
+        "https://openalex.org/I90183372"]}, {"id": "https://openalex.org/I90183372",
+        "display_name": "Universit\u00e9 de Lorraine", "ror": "https://ror.org/04vfs2w97",
+        "country_code": "FR", "type": "education", "lineage": ["https://openalex.org/I90183372"]}],
+        "countries": ["FR"], "is_corresponding": true, "raw_author_name": "Sebastien
+        J. P. Lenard", "raw_affiliation_strings": ["Universit\u00e9 de Lorraine, CNRS,
+        CRPG, Nancy, France", "CRPG - Centre de Recherches P\u00e9trographiques et
+        G\u00e9ochimiques (CNRS / Universit\u00e9 de Lorraine, 15 rue Notre-Dame des
+        Pauvres, 54500 Vandoeuvre-les-Nancy - France)"], "raw_orcid": "https://orcid.org/0000-0003-3358-7197",
+        "affiliations": [{"raw_affiliation_string": "Universit\u00e9 de Lorraine,
+        CNRS, CRPG, Nancy, France", "institution_ids": ["https://openalex.org/I90183372",
+        "https://openalex.org/I1294671590", "https://openalex.org/I4210102569"]},
+        {"raw_affiliation_string": "CRPG - Centre de Recherches P\u00e9trographiques
+        et G\u00e9ochimiques (CNRS / Universit\u00e9 de Lorraine, 15 rue Notre-Dame
+        des Pauvres, 54500 Vandoeuvre-les-Nancy - France)", "institution_ids": ["https://openalex.org/I4210102569",
+        "https://openalex.org/I90183372", "https://openalex.org/I1294671590"]}]},
+        {"author_position": "middle", "author": {"id": "https://openalex.org/A5026509706",
+        "display_name": "J\u00e9r\u00f4me Lav\u00e9", "orcid": "https://orcid.org/0000-0001-8358-2402"},
+        "institutions": [{"id": "https://openalex.org/I1294671590", "display_name":
+        "Centre National de la Recherche Scientifique", "ror": "https://ror.org/02feahw73",
+        "country_code": "FR", "type": "government", "lineage": ["https://openalex.org/I1294671590"]},
+        {"id": "https://openalex.org/I4210102569", "display_name": "Centre de Recherches
+        P\u00e9trographiques et G\u00e9ochimiques", "ror": "https://ror.org/011nqat45",
+        "country_code": "FR", "type": "facility", "lineage": ["https://openalex.org/I1294671590",
+        "https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I4210102569",
+        "https://openalex.org/I4210148025", "https://openalex.org/I4387156182", "https://openalex.org/I90183372",
+        "https://openalex.org/I90183372"]}, {"id": "https://openalex.org/I90183372",
+        "display_name": "Universit\u00e9 de Lorraine", "ror": "https://ror.org/04vfs2w97",
+        "country_code": "FR", "type": "education", "lineage": ["https://openalex.org/I90183372"]}],
+        "countries": ["FR"], "is_corresponding": false, "raw_author_name": "J\u00e9r\u00f4me
+        Lav\u00e9", "raw_affiliation_strings": ["Universit\u00e9 de Lorraine, CNRS,
+        CRPG, Nancy, France", "CRPG - Centre de Recherches P\u00e9trographiques et
+        G\u00e9ochimiques (CNRS / Universit\u00e9 de Lorraine, 15 rue Notre-Dame des
+        Pauvres, 54500 Vandoeuvre-les-Nancy - France)"], "raw_orcid": null, "affiliations":
+        [{"raw_affiliation_string": "Universit\u00e9 de Lorraine, CNRS, CRPG, Nancy,
+        France", "institution_ids": ["https://openalex.org/I90183372", "https://openalex.org/I1294671590",
+        "https://openalex.org/I4210102569"]}, {"raw_affiliation_string": "CRPG - Centre
+        de Recherches P\u00e9trographiques et G\u00e9ochimiques (CNRS / Universit\u00e9
+        de Lorraine, 15 rue Notre-Dame des Pauvres, 54500 Vandoeuvre-les-Nancy - France)",
+        "institution_ids": ["https://openalex.org/I4210102569", "https://openalex.org/I90183372",
+        "https://openalex.org/I1294671590"]}]}, {"author_position": "middle", "author":
+        {"id": "https://openalex.org/A5034326743", "display_name": "Christian France\u2010Lanord",
+        "orcid": "https://orcid.org/0000-0002-4873-5546"}, "institutions": [{"id":
+        "https://openalex.org/I1294671590", "display_name": "Centre National de la
+        Recherche Scientifique", "ror": "https://ror.org/02feahw73", "country_code":
+        "FR", "type": "government", "lineage": ["https://openalex.org/I1294671590"]},
+        {"id": "https://openalex.org/I4210102569", "display_name": "Centre de Recherches
+        P\u00e9trographiques et G\u00e9ochimiques", "ror": "https://ror.org/011nqat45",
+        "country_code": "FR", "type": "facility", "lineage": ["https://openalex.org/I1294671590",
+        "https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I4210102569",
+        "https://openalex.org/I4210148025", "https://openalex.org/I4387156182", "https://openalex.org/I90183372",
+        "https://openalex.org/I90183372"]}, {"id": "https://openalex.org/I90183372",
+        "display_name": "Universit\u00e9 de Lorraine", "ror": "https://ror.org/04vfs2w97",
+        "country_code": "FR", "type": "education", "lineage": ["https://openalex.org/I90183372"]}],
+        "countries": ["FR"], "is_corresponding": false, "raw_author_name": "Christian
+        France-Lanord", "raw_affiliation_strings": ["Universit\u00e9 de Lorraine,
+        CNRS, CRPG, Nancy, France", "CRPG - Centre de Recherches P\u00e9trographiques
+        et G\u00e9ochimiques (CNRS / Universit\u00e9 de Lorraine, 15 rue Notre-Dame
+        des Pauvres, 54500 Vandoeuvre-les-Nancy - France)"], "raw_orcid": "https://orcid.org/0000-0002-4873-5546",
+        "affiliations": [{"raw_affiliation_string": "Universit\u00e9 de Lorraine,
+        CNRS, CRPG, Nancy, France", "institution_ids": ["https://openalex.org/I90183372",
+        "https://openalex.org/I1294671590", "https://openalex.org/I4210102569"]},
+        {"raw_affiliation_string": "CRPG - Centre de Recherches P\u00e9trographiques
+        et G\u00e9ochimiques (CNRS / Universit\u00e9 de Lorraine, 15 rue Notre-Dame
+        des Pauvres, 54500 Vandoeuvre-les-Nancy - France)", "institution_ids": ["https://openalex.org/I4210102569",
+        "https://openalex.org/I90183372", "https://openalex.org/I1294671590"]}]},
+        {"author_position": "middle", "author": {"id": "https://openalex.org/A5110745807",
+        "display_name": "Georges Auma\u00eetre", "orcid": null}, "institutions": [{"id":
+        "https://openalex.org/I1294671590", "display_name": "Centre National de la
+        Recherche Scientifique", "ror": "https://ror.org/02feahw73", "country_code":
+        "FR", "type": "government", "lineage": ["https://openalex.org/I1294671590"]},
+        {"id": "https://openalex.org/I4210104942", "display_name": "Centre de Recherche
+        et d\u2019Enseignement de G\u00e9osciences de l\u2019Environnement", "ror":
+        "https://ror.org/01pa4h393", "country_code": "FR", "type": "facility", "lineage":
+        ["https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I1294671590",
+        "https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I1327553481",
+        "https://openalex.org/I1327553481", "https://openalex.org/I154202486", "https://openalex.org/I154202486",
+        "https://openalex.org/I187986737", "https://openalex.org/I21491767", "https://openalex.org/I21491767",
+        "https://openalex.org/I2746051580", "https://openalex.org/I2799535048", "https://openalex.org/I2799535048",
+        "https://openalex.org/I2802818602", "https://openalex.org/I2802818602", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210088668", "https://openalex.org/I4210088668", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210090127", "https://openalex.org/I4210090127", "https://openalex.org/I4210093025",
+        "https://openalex.org/I4210104942", "https://openalex.org/I4210113730", "https://openalex.org/I4210113730",
+        "https://openalex.org/I4210131494", "https://openalex.org/I4210131494", "https://openalex.org/I4210148025",
+        "https://openalex.org/I4210166444", "https://openalex.org/I4210166444", "https://openalex.org/I4405257220",
+        "https://openalex.org/I4405257220"]}, {"id": "https://openalex.org/I4210166444",
+        "display_name": "Institut de Recherche pour le D\u00e9veloppement", "ror":
+        "https://ror.org/05q3vnk25", "country_code": "FR", "type": "government", "lineage":
+        ["https://openalex.org/I1294671590", "https://openalex.org/I1327553481", "https://openalex.org/I154202486",
+        "https://openalex.org/I2799535048", "https://openalex.org/I2802818602", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210090127", "https://openalex.org/I4210113730", "https://openalex.org/I4210131494",
+        "https://openalex.org/I4210166444", "https://openalex.org/I4405257220"]}],
+        "countries": ["FR"], "is_corresponding": false, "raw_author_name": "Georges
+        Auma\u00eetre", "raw_affiliation_strings": ["Universit\u00e9 Aix-Marseille,
+        CNRS-IRD-Coll\u00e8ge de France, UM 34 CEREGE, Technop\u00f4le de l\u2019Environnement
+        Arbois-M\u00e9diterran\u00e9e, Aix-en-Provence, France", "CEREGE - Centre
+        Europ\u00e9en de Recherche et d''Enseignement des G\u00e9osciences de l''Environnement
+        (Europ\u00f4le M\u00e9diterran\u00e9en de l''Arbois - Avenue Louis Philibert
+        - BP 80 - 13545 Aix-en-Provence cedex 4 - France)"], "raw_orcid": null, "affiliations":
+        [{"raw_affiliation_string": "Universit\u00e9 Aix-Marseille, CNRS-IRD-Coll\u00e8ge
+        de France, UM 34 CEREGE, Technop\u00f4le de l\u2019Environnement Arbois-M\u00e9diterran\u00e9e,
+        Aix-en-Provence, France", "institution_ids": ["https://openalex.org/I4210104942",
+        "https://openalex.org/I4210166444", "https://openalex.org/I1294671590"]},
+        {"raw_affiliation_string": "CEREGE - Centre Europ\u00e9en de Recherche et
+        d''Enseignement des G\u00e9osciences de l''Environnement (Europ\u00f4le M\u00e9diterran\u00e9en
+        de l''Arbois - Avenue Louis Philibert - BP 80 - 13545 Aix-en-Provence cedex
+        4 - France)", "institution_ids": ["https://openalex.org/I4210104942"]}]},
+        {"author_position": "middle", "author": {"id": "https://openalex.org/A5079810843",
+        "display_name": "Didier Bourl\u00e8s", "orcid": "https://orcid.org/0000-0001-5991-6126"},
+        "institutions": [{"id": "https://openalex.org/I1294671590", "display_name":
+        "Centre National de la Recherche Scientifique", "ror": "https://ror.org/02feahw73",
+        "country_code": "FR", "type": "government", "lineage": ["https://openalex.org/I1294671590"]},
+        {"id": "https://openalex.org/I4210104942", "display_name": "Centre de Recherche
+        et d\u2019Enseignement de G\u00e9osciences de l\u2019Environnement", "ror":
+        "https://ror.org/01pa4h393", "country_code": "FR", "type": "facility", "lineage":
+        ["https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I1294671590",
+        "https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I1327553481",
+        "https://openalex.org/I1327553481", "https://openalex.org/I154202486", "https://openalex.org/I154202486",
+        "https://openalex.org/I187986737", "https://openalex.org/I21491767", "https://openalex.org/I21491767",
+        "https://openalex.org/I2746051580", "https://openalex.org/I2799535048", "https://openalex.org/I2799535048",
+        "https://openalex.org/I2802818602", "https://openalex.org/I2802818602", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210088668", "https://openalex.org/I4210088668", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210090127", "https://openalex.org/I4210090127", "https://openalex.org/I4210093025",
+        "https://openalex.org/I4210104942", "https://openalex.org/I4210113730", "https://openalex.org/I4210113730",
+        "https://openalex.org/I4210131494", "https://openalex.org/I4210131494", "https://openalex.org/I4210148025",
+        "https://openalex.org/I4210166444", "https://openalex.org/I4210166444", "https://openalex.org/I4405257220",
+        "https://openalex.org/I4405257220"]}, {"id": "https://openalex.org/I4210166444",
+        "display_name": "Institut de Recherche pour le D\u00e9veloppement", "ror":
+        "https://ror.org/05q3vnk25", "country_code": "FR", "type": "government", "lineage":
+        ["https://openalex.org/I1294671590", "https://openalex.org/I1327553481", "https://openalex.org/I154202486",
+        "https://openalex.org/I2799535048", "https://openalex.org/I2802818602", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210090127", "https://openalex.org/I4210113730", "https://openalex.org/I4210131494",
+        "https://openalex.org/I4210166444", "https://openalex.org/I4405257220"]}],
+        "countries": ["FR"], "is_corresponding": false, "raw_author_name": "Didier
+        L. Bourl\u00e8s", "raw_affiliation_strings": ["Universit\u00e9 Aix-Marseille,
+        CNRS-IRD-Coll\u00e8ge de France, UM 34 CEREGE, Technop\u00f4le de l\u2019Environnement
+        Arbois-M\u00e9diterran\u00e9e, Aix-en-Provence, France", "CEREGE - Centre
+        Europ\u00e9en de Recherche et d''Enseignement des G\u00e9osciences de l''Environnement
+        (Europ\u00f4le M\u00e9diterran\u00e9en de l''Arbois - Avenue Louis Philibert
+        - BP 80 - 13545 Aix-en-Provence cedex 4 - France)"], "raw_orcid": null, "affiliations":
+        [{"raw_affiliation_string": "Universit\u00e9 Aix-Marseille, CNRS-IRD-Coll\u00e8ge
+        de France, UM 34 CEREGE, Technop\u00f4le de l\u2019Environnement Arbois-M\u00e9diterran\u00e9e,
+        Aix-en-Provence, France", "institution_ids": ["https://openalex.org/I4210104942",
+        "https://openalex.org/I4210166444", "https://openalex.org/I1294671590"]},
+        {"raw_affiliation_string": "CEREGE - Centre Europ\u00e9en de Recherche et
+        d''Enseignement des G\u00e9osciences de l''Environnement (Europ\u00f4le M\u00e9diterran\u00e9en
+        de l''Arbois - Avenue Louis Philibert - BP 80 - 13545 Aix-en-Provence cedex
+        4 - France)", "institution_ids": ["https://openalex.org/I4210104942"]}]},
+        {"author_position": "last", "author": {"id": "https://openalex.org/A5036805935",
+        "display_name": "Karim Keddadouche", "orcid": null}, "institutions": [{"id":
+        "https://openalex.org/I1294671590", "display_name": "Centre National de la
+        Recherche Scientifique", "ror": "https://ror.org/02feahw73", "country_code":
+        "FR", "type": "government", "lineage": ["https://openalex.org/I1294671590"]},
+        {"id": "https://openalex.org/I4210104942", "display_name": "Centre de Recherche
+        et d\u2019Enseignement de G\u00e9osciences de l\u2019Environnement", "ror":
+        "https://ror.org/01pa4h393", "country_code": "FR", "type": "facility", "lineage":
+        ["https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I1294671590",
+        "https://openalex.org/I1294671590", "https://openalex.org/I1294671590", "https://openalex.org/I1327553481",
+        "https://openalex.org/I1327553481", "https://openalex.org/I154202486", "https://openalex.org/I154202486",
+        "https://openalex.org/I187986737", "https://openalex.org/I21491767", "https://openalex.org/I21491767",
+        "https://openalex.org/I2746051580", "https://openalex.org/I2799535048", "https://openalex.org/I2799535048",
+        "https://openalex.org/I2802818602", "https://openalex.org/I2802818602", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210088668", "https://openalex.org/I4210088668", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210090127", "https://openalex.org/I4210090127", "https://openalex.org/I4210093025",
+        "https://openalex.org/I4210104942", "https://openalex.org/I4210113730", "https://openalex.org/I4210113730",
+        "https://openalex.org/I4210131494", "https://openalex.org/I4210131494", "https://openalex.org/I4210148025",
+        "https://openalex.org/I4210166444", "https://openalex.org/I4210166444", "https://openalex.org/I4405257220",
+        "https://openalex.org/I4405257220"]}, {"id": "https://openalex.org/I4210166444",
+        "display_name": "Institut de Recherche pour le D\u00e9veloppement", "ror":
+        "https://ror.org/05q3vnk25", "country_code": "FR", "type": "government", "lineage":
+        ["https://openalex.org/I1294671590", "https://openalex.org/I1327553481", "https://openalex.org/I154202486",
+        "https://openalex.org/I2799535048", "https://openalex.org/I2802818602", "https://openalex.org/I4210088668",
+        "https://openalex.org/I4210090127", "https://openalex.org/I4210113730", "https://openalex.org/I4210131494",
+        "https://openalex.org/I4210166444", "https://openalex.org/I4405257220"]}],
+        "countries": ["FR"], "is_corresponding": false, "raw_author_name": "Karim
+        Keddadouche", "raw_affiliation_strings": ["Universit\u00e9 Aix-Marseille,
+        CNRS-IRD-Coll\u00e8ge de France, UM 34 CEREGE, Technop\u00f4le de l\u2019Environnement
+        Arbois-M\u00e9diterran\u00e9e, Aix-en-Provence, France", "CEREGE - Centre
+        Europ\u00e9en de Recherche et d''Enseignement des G\u00e9osciences de l''Environnement
+        (Europ\u00f4le M\u00e9diterran\u00e9en de l''Arbois - Avenue Louis Philibert
+        - BP 80 - 13545 Aix-en-Provence cedex 4 - France)"], "raw_orcid": null, "affiliations":
+        [{"raw_affiliation_string": "Universit\u00e9 Aix-Marseille, CNRS-IRD-Coll\u00e8ge
+        de France, UM 34 CEREGE, Technop\u00f4le de l\u2019Environnement Arbois-M\u00e9diterran\u00e9e,
+        Aix-en-Provence, France", "institution_ids": ["https://openalex.org/I4210104942",
+        "https://openalex.org/I4210166444", "https://openalex.org/I1294671590"]},
+        {"raw_affiliation_string": "CEREGE - Centre Europ\u00e9en de Recherche et
+        d''Enseignement des G\u00e9osciences de l''Environnement (Europ\u00f4le M\u00e9diterran\u00e9en
+        de l''Arbois - Avenue Louis Philibert - BP 80 - 13545 Aix-en-Provence cedex
+        4 - France)", "institution_ids": ["https://openalex.org/I4210104942"]}]}],
+        "institutions": [], "countries_distinct_count": 1, "institutions_distinct_count":
+        6, "corresponding_author_ids": ["https://openalex.org/A5086548111"], "corresponding_institution_ids":
+        ["https://openalex.org/I1294671590", "https://openalex.org/I4210102569", "https://openalex.org/I90183372"],
+        "apc_list": {"value": 9750, "currency": "EUR", "value_usd": 11690}, "apc_paid":
+        null, "fwci": 7.7447, "has_fulltext": false, "cited_by_count": 101, "citation_normalized_percentile":
+        {"value": 0.98106295, "is_in_top_1_percent": false, "is_in_top_10_percent":
+        true}, "cited_by_percentile_year": {"min": 96, "max": 100}, "biblio": {"volume":
+        "13", "issue": "6", "first_page": "448", "last_page": "452"}, "is_retracted":
+        false, "is_paratext": false, "is_xpac": false, "primary_topic": {"id": "https://openalex.org/T10017",
+        "display_name": "Geology and Paleoclimatology Research", "score": 0.9998999834060669,
+        "subfield": {"id": "https://openalex.org/subfields/1902", "display_name":
+        "Atmospheric Science"}, "field": {"id": "https://openalex.org/fields/19",
+        "display_name": "Earth and Planetary Sciences"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}, "topics": [{"id": "https://openalex.org/T10017",
+        "display_name": "Geology and Paleoclimatology Research", "score": 0.9998999834060669,
+        "subfield": {"id": "https://openalex.org/subfields/1902", "display_name":
+        "Atmospheric Science"}, "field": {"id": "https://openalex.org/fields/19",
+        "display_name": "Earth and Planetary Sciences"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}, {"id": "https://openalex.org/T10965",
+        "display_name": "Geological formations and processes", "score": 0.9969000220298767,
+        "subfield": {"id": "https://openalex.org/subfields/1904", "display_name":
+        "Earth-Surface Processes"}, "field": {"id": "https://openalex.org/fields/19",
+        "display_name": "Earth and Planetary Sciences"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}, {"id": "https://openalex.org/T10110",
+        "display_name": "earthquake and tectonic studies", "score": 0.9948999881744385,
+        "subfield": {"id": "https://openalex.org/subfields/1908", "display_name":
+        "Geophysics"}, "field": {"id": "https://openalex.org/fields/19", "display_name":
+        "Earth and Planetary Sciences"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}], "keywords": [{"id": "https://openalex.org/keywords/erosion",
+        "display_name": "Erosion", "score": 0.7836554050445557}, {"id": "https://openalex.org/keywords/geology",
+        "display_name": "Geology", "score": 0.69597989320755}, {"id": "https://openalex.org/keywords/bay",
+        "display_name": "Bay", "score": 0.6436513662338257}, {"id": "https://openalex.org/keywords/provenance",
+        "display_name": "Provenance", "score": 0.6427108645439148}, {"id": "https://openalex.org/keywords/sediment",
+        "display_name": "Sediment", "score": 0.6387643814086914}, {"id": "https://openalex.org/keywords/cosmogenic-nuclide",
+        "display_name": "Cosmogenic nuclide", "score": 0.6186539530754089}, {"id":
+        "https://openalex.org/keywords/cenozoic", "display_name": "Cenozoic", "score":
+        0.5687856674194336}, {"id": "https://openalex.org/keywords/bengal", "display_name":
+        "BENGAL", "score": 0.5134673714637756}, {"id": "https://openalex.org/keywords/oceanography",
+        "display_name": "Oceanography", "score": 0.4833252429962158}, {"id": "https://openalex.org/keywords/northern-hemisphere",
+        "display_name": "Northern Hemisphere", "score": 0.4364888072013855}, {"id":
+        "https://openalex.org/keywords/physical-geography", "display_name": "Physical
+        geography", "score": 0.360062837600708}, {"id": "https://openalex.org/keywords/structural-basin",
+        "display_name": "Structural basin", "score": 0.3340376317501068}, {"id": "https://openalex.org/keywords/earth-science",
+        "display_name": "Earth science", "score": 0.32779648900032043}, {"id": "https://openalex.org/keywords/geochemistry",
+        "display_name": "Geochemistry", "score": 0.21498996019363403}, {"id": "https://openalex.org/keywords/climatology",
+        "display_name": "Climatology", "score": 0.21023142337799072}, {"id": "https://openalex.org/keywords/paleontology",
+        "display_name": "Paleontology", "score": 0.20742270350456238}, {"id": "https://openalex.org/keywords/geography",
+        "display_name": "Geography", "score": 0.08647158741950989}, {"id": "https://openalex.org/keywords/cosmic-ray",
+        "display_name": "Cosmic ray", "score": 0.08400747179985046}], "concepts":
+        [{"id": "https://openalex.org/C123157820", "wikidata": "https://www.wikidata.org/wiki/Q80026",
+        "display_name": "Erosion", "level": 2, "score": 0.7836554050445557}, {"id":
+        "https://openalex.org/C127313418", "wikidata": "https://www.wikidata.org/wiki/Q1069",
+        "display_name": "Geology", "level": 0, "score": 0.69597989320755}, {"id":
+        "https://openalex.org/C115880899", "wikidata": "https://www.wikidata.org/wiki/Q1124247",
+        "display_name": "Bay", "level": 2, "score": 0.6436513662338257}, {"id": "https://openalex.org/C2780049196",
+        "wikidata": "https://www.wikidata.org/wiki/Q23582628", "display_name": "Provenance",
+        "level": 2, "score": 0.6427108645439148}, {"id": "https://openalex.org/C2816523",
+        "wikidata": "https://www.wikidata.org/wiki/Q180184", "display_name": "Sediment",
+        "level": 2, "score": 0.6387643814086914}, {"id": "https://openalex.org/C101140149",
+        "wikidata": "https://www.wikidata.org/wiki/Q5174319", "display_name": "Cosmogenic
+        nuclide", "level": 3, "score": 0.6186539530754089}, {"id": "https://openalex.org/C73707237",
+        "wikidata": "https://www.wikidata.org/wiki/Q102416", "display_name": "Cenozoic",
+        "level": 3, "score": 0.5687856674194336}, {"id": "https://openalex.org/C2780789209",
+        "wikidata": "https://www.wikidata.org/wiki/Q4835435", "display_name": "BENGAL",
+        "level": 3, "score": 0.5134673714637756}, {"id": "https://openalex.org/C111368507",
+        "wikidata": "https://www.wikidata.org/wiki/Q43518", "display_name": "Oceanography",
+        "level": 1, "score": 0.4833252429962158}, {"id": "https://openalex.org/C2778835443",
+        "wikidata": "https://www.wikidata.org/wiki/Q39061", "display_name": "Northern
+        Hemisphere", "level": 2, "score": 0.4364888072013855}, {"id": "https://openalex.org/C100970517",
+        "wikidata": "https://www.wikidata.org/wiki/Q52107", "display_name": "Physical
+        geography", "level": 1, "score": 0.360062837600708}, {"id": "https://openalex.org/C109007969",
+        "wikidata": "https://www.wikidata.org/wiki/Q749565", "display_name": "Structural
+        basin", "level": 2, "score": 0.3340376317501068}, {"id": "https://openalex.org/C1965285",
+        "wikidata": "https://www.wikidata.org/wiki/Q8008", "display_name": "Earth
+        science", "level": 1, "score": 0.32779648900032043}, {"id": "https://openalex.org/C17409809",
+        "wikidata": "https://www.wikidata.org/wiki/Q161764", "display_name": "Geochemistry",
+        "level": 1, "score": 0.21498996019363403}, {"id": "https://openalex.org/C49204034",
+        "wikidata": "https://www.wikidata.org/wiki/Q52139", "display_name": "Climatology",
+        "level": 1, "score": 0.21023142337799072}, {"id": "https://openalex.org/C151730666",
+        "wikidata": "https://www.wikidata.org/wiki/Q7205", "display_name": "Paleontology",
+        "level": 1, "score": 0.20742270350456238}, {"id": "https://openalex.org/C205649164",
+        "wikidata": "https://www.wikidata.org/wiki/Q1071", "display_name": "Geography",
+        "level": 0, "score": 0.08647158741950989}, {"id": "https://openalex.org/C111309251",
+        "wikidata": "https://www.wikidata.org/wiki/Q11547", "display_name": "Cosmic
+        ray", "level": 2, "score": 0.08400747179985046}, {"id": "https://openalex.org/C44870925",
+        "wikidata": "https://www.wikidata.org/wiki/Q37547", "display_name": "Astrophysics",
+        "level": 1, "score": 0.0}, {"id": "https://openalex.org/C121332964", "wikidata":
+        "https://www.wikidata.org/wiki/Q413", "display_name": "Physics", "level":
+        0, "score": 0.0}], "mesh": [], "locations_count": 3, "locations": [{"id":
+        "doi:10.1038/s41561-020-0585-2", "is_oa": false, "landing_page_url": "https://doi.org/10.1038/s41561-020-0585-2",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S48977010", "display_name":
+        "Nature Geoscience", "issn_l": "1752-0894", "issn": ["1752-0894", "1752-0908"],
+        "is_oa": false, "is_in_doaj": false, "is_core": true, "host_organization":
+        "https://openalex.org/P4310319908", "host_organization_name": "Nature Portfolio",
+        "host_organization_lineage": ["https://openalex.org/P4310319908", "https://openalex.org/P4310319965"],
+        "host_organization_lineage_names": ["Nature Portfolio", "Springer Nature"],
+        "type": "journal"}, "license": null, "license_id": null, "version": "publishedVersion",
+        "is_accepted": true, "is_published": true, "raw_source_name": "Nature Geoscience",
+        "raw_type": "journal-article"}, {"id": "pmh:oai:HAL:hal-02930699v1", "is_oa":
+        false, "landing_page_url": "https://hal.archives-ouvertes.fr/hal-02930699",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S4306402512", "display_name":
+        "HAL (Le Centre pour la Communication Scientifique Directe)", "issn_l": null,
+        "issn": null, "is_oa": false, "is_in_doaj": false, "is_core": false, "host_organization":
+        "https://openalex.org/I1294671590", "host_organization_name": "Centre National
+        de la Recherche Scientifique", "host_organization_lineage": ["https://openalex.org/I1294671590"],
+        "host_organization_lineage_names": [], "type": "repository"}, "license": null,
+        "license_id": null, "version": "submittedVersion", "is_accepted": false, "is_published":
+        false, "raw_source_name": "ISSN: 1752-0894", "raw_type": "info:eu-repo/semantics/article"},
+        {"id": "pmh:oai:HAL:hal-03096681v1", "is_oa": true, "landing_page_url": "https://hal.science/hal-03096681",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S4306402512", "display_name":
+        "HAL (Le Centre pour la Communication Scientifique Directe)", "issn_l": null,
+        "issn": null, "is_oa": false, "is_in_doaj": false, "is_core": false, "host_organization":
+        "https://openalex.org/I1294671590", "host_organization_name": "Centre National
+        de la Recherche Scientifique", "host_organization_lineage": ["https://openalex.org/I1294671590"],
+        "host_organization_lineage_names": [], "type": "repository"}, "license": "other-oa",
+        "license_id": "https://openalex.org/licenses/other-oa", "version": "submittedVersion",
+        "is_accepted": false, "is_published": false, "raw_source_name": "https://rdcu.be/b4ysG",
+        "raw_type": "Journal articles"}], "best_oa_location": {"id": "pmh:oai:HAL:hal-03096681v1",
+        "is_oa": true, "landing_page_url": "https://hal.science/hal-03096681", "pdf_url":
+        null, "source": {"id": "https://openalex.org/S4306402512", "display_name":
+        "HAL (Le Centre pour la Communication Scientifique Directe)", "issn_l": null,
+        "issn": null, "is_oa": false, "is_in_doaj": false, "is_core": false, "host_organization":
+        "https://openalex.org/I1294671590", "host_organization_name": "Centre National
+        de la Recherche Scientifique", "host_organization_lineage": ["https://openalex.org/I1294671590"],
+        "host_organization_lineage_names": [], "type": "repository"}, "license": "other-oa",
+        "license_id": "https://openalex.org/licenses/other-oa", "version": "submittedVersion",
+        "is_accepted": false, "is_published": false, "raw_source_name": "https://rdcu.be/b4ysG",
+        "raw_type": "Journal articles"}, "sustainable_development_goals": [{"score":
+        0.6800000071525574, "display_name": "Life below water", "id": "https://metadata.un.org/sdg/14"}],
+        "awards": [], "funders": [], "has_content": {"pdf": false, "grobid_xml": false},
+        "content_urls": null, "referenced_works_count": 84, "referenced_works": ["https://openalex.org/W819654993",
+        "https://openalex.org/W1271608019", "https://openalex.org/W1489089526", "https://openalex.org/W1512208174",
+        "https://openalex.org/W1532026954", "https://openalex.org/W1606193387", "https://openalex.org/W1851003657",
+        "https://openalex.org/W1969414340", "https://openalex.org/W1970023392", "https://openalex.org/W1972038383",
+        "https://openalex.org/W1972230154", "https://openalex.org/W1976438862", "https://openalex.org/W1976894260",
+        "https://openalex.org/W1990397580", "https://openalex.org/W1993516320", "https://openalex.org/W1995806863",
+        "https://openalex.org/W1996055672", "https://openalex.org/W1996569500", "https://openalex.org/W2002158982",
+        "https://openalex.org/W2002473398", "https://openalex.org/W2002793283", "https://openalex.org/W2009425598",
+        "https://openalex.org/W2011148182", "https://openalex.org/W2015679211", "https://openalex.org/W2016055802",
+        "https://openalex.org/W2016503290", "https://openalex.org/W2017041819", "https://openalex.org/W2018362787",
+        "https://openalex.org/W2019854791", "https://openalex.org/W2022442372", "https://openalex.org/W2026220107",
+        "https://openalex.org/W2026934445", "https://openalex.org/W2033136921", "https://openalex.org/W2033736722",
+        "https://openalex.org/W2035485436", "https://openalex.org/W2038265449", "https://openalex.org/W2038421043",
+        "https://openalex.org/W2040040580", "https://openalex.org/W2045775785", "https://openalex.org/W2054279842",
+        "https://openalex.org/W2059465040", "https://openalex.org/W2059490906", "https://openalex.org/W2063155650",
+        "https://openalex.org/W2073519519", "https://openalex.org/W2075529014", "https://openalex.org/W2075614354",
+        "https://openalex.org/W2081315541", "https://openalex.org/W2087509591", "https://openalex.org/W2092805274",
+        "https://openalex.org/W2095016078", "https://openalex.org/W2114727579", "https://openalex.org/W2118339026",
+        "https://openalex.org/W2124588256", "https://openalex.org/W2140972267", "https://openalex.org/W2148876559",
+        "https://openalex.org/W2161583272", "https://openalex.org/W2163717500", "https://openalex.org/W2179313592",
+        "https://openalex.org/W2473286641", "https://openalex.org/W2476775448", "https://openalex.org/W2482597709",
+        "https://openalex.org/W2501595497", "https://openalex.org/W2512334010", "https://openalex.org/W2518748111",
+        "https://openalex.org/W2523100726", "https://openalex.org/W2536570964", "https://openalex.org/W2557841026",
+        "https://openalex.org/W2560729083", "https://openalex.org/W2589134558", "https://openalex.org/W2604732352",
+        "https://openalex.org/W2754828531", "https://openalex.org/W2765396713", "https://openalex.org/W2774534054",
+        "https://openalex.org/W2788422104", "https://openalex.org/W2800540847", "https://openalex.org/W2810250204",
+        "https://openalex.org/W2850058168", "https://openalex.org/W2887337155", "https://openalex.org/W2893386024",
+        "https://openalex.org/W2945030110", "https://openalex.org/W2989982005", "https://openalex.org/W3001258796",
+        "https://openalex.org/W3014729396", "https://openalex.org/W3026793394"], "related_works":
+        ["https://openalex.org/W641847721", "https://openalex.org/W4214875904", "https://openalex.org/W2354627941",
+        "https://openalex.org/W1977597637", "https://openalex.org/W4379804269", "https://openalex.org/W2347483153",
+        "https://openalex.org/W2353379336", "https://openalex.org/W2379683085", "https://openalex.org/W2160395101",
+        "https://openalex.org/W2363868702"], "abstract_inverted_index": null, "counts_by_year":
+        [{"year": 2026, "cited_by_count": 5}, {"year": 2025, "cited_by_count": 15},
+        {"year": 2024, "cited_by_count": 15}, {"year": 2023, "cited_by_count": 19},
+        {"year": 2022, "cited_by_count": 25}, {"year": 2021, "cited_by_count": 19},
+        {"year": 2020, "cited_by_count": 3}], "updated_date": "2025-11-06T03:46:38.306776",
+        "created_date": "2025-10-10T00:00:00"}], "group_by": []}'
+    headers:
+      Access-Control-Allow-Headers:
+      - Accept, Accept-Language, Accept-Encoding, Authorization, Content-Type
+      Access-Control-Allow-Methods:
+      - GET, HEAD, POST, OPTIONS
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - a05186ad9da19bc6-YVR
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '34341'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 01 Jun 2026 22:06:33 GMT
+      Nel:
+      - '{"report_to":"heroku-nel","response_headers":["Via"],"max_age":3600,"success_fraction":0.01,"failure_fraction":0.1}'
+      Report-To:
+      - '{"group":"heroku-nel","endpoints":[{"url":"https://nel.heroku.com/reports?s=VCQWtohjBb1D%2FOe1aDCBy%2BsPdVD%2FFYMsLK9%2FpPOeoMU%3D\u0026sid=e11707d5-02a7-43ef-b45e-2cf4d2036f7d\u0026ts=1780351592"}],"max_age":3600}'
+      Reporting-Endpoints:
+      - heroku-nel="https://nel.heroku.com/reports?s=VCQWtohjBb1D%2FOe1aDCBy%2BsPdVD%2FFYMsLK9%2FpPOeoMU%3D&sid=e11707d5-02a7-43ef-b45e-2cf4d2036f7d&ts=1780351592"
+      Server:
+      - cloudflare
+      Via:
+      - 1.1 heroku-router
+      X-RateLimit-Cost-USD:
+      - '0.001'
+      X-RateLimit-Credits-Used:
+      - '10'
+      X-RateLimit-Limit:
+      - '10000'
+      X-RateLimit-Limit-USD:
+      - '1'
+      X-RateLimit-Onetime-Remaining:
+      - '0'
+      X-RateLimit-Prepaid-Remaining-USD:
+      - '0'
+      X-RateLimit-Remaining:
+      - '9849'
+      X-RateLimit-Remaining-USD:
+      - '0.9849'
+      X-RateLimit-Reset:
+      - '6807'
+      access-control-expose-headers:
+      - Cache-Control, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Onetime-Remaining,
+        X-RateLimit-Credits-Used, X-RateLimit-Credits-Required, X-RateLimit-Reset,
+        X-RateLimit-Limit-USD, X-RateLimit-Remaining-USD, X-RateLimit-Prepaid-Remaining-USD,
+        X-RateLimit-Cost-USD, X-RateLimit-Cost-Required-USD, Retry-After
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Host:
+      - api.openalex.org
+      User-Agent:
+      - ManuscriptRefLister/1.0 (mailto:sebastien.lenard@gmail.com)
+    method: GET
+    uri: https://api.openalex.org/works?filter=publication_year%3A2014%2Cprimary_location.source.issn%3A2213-3054%2Craw_author_name.search%3A%22Guns%22%2Craw_author_name.search%3A%22Vanacker%22&api_key=8Rd4D7AsYCGSTnYy6Piyll&per_page=1&mailto=sebastien.lenard%40gmail.com
+  response:
+    body:
+      string: '{"meta": {"count": 1, "db_response_time_ms": 102, "page": 1, "per_page":
+        1, "groups_count": null, "cost_usd": 0.001}, "results": [{"id": "https://openalex.org/W2026129763",
+        "doi": "https://doi.org/10.1016/j.ancene.2014.08.001", "title": "Shifts in
+        landslide frequency\u2013area distribution after forest conversion in the
+        tropical Andes", "display_name": "Shifts in landslide frequency\u2013area
+        distribution after forest conversion in the tropical Andes", "relevance_score":
+        305.83002, "publication_year": 2014, "publication_date": "2014-06-01", "ids":
+        {"openalex": "https://openalex.org/W2026129763", "doi": "https://doi.org/10.1016/j.ancene.2014.08.001",
+        "mag": "2026129763"}, "language": "en", "primary_location": {"id": "doi:10.1016/j.ancene.2014.08.001",
+        "is_oa": false, "landing_page_url": "https://doi.org/10.1016/j.ancene.2014.08.001",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S2898452301", "display_name":
+        "Anthropocene", "issn_l": "2213-3054", "issn": ["2213-3054"], "is_oa": false,
+        "is_in_doaj": false, "is_core": true, "host_organization": "https://openalex.org/P4310320990",
+        "host_organization_name": "Elsevier BV", "host_organization_lineage": ["https://openalex.org/P4310320990"],
+        "host_organization_lineage_names": ["Elsevier BV"], "type": "journal"}, "license":
+        null, "license_id": null, "version": "publishedVersion", "is_accepted": true,
+        "is_published": true, "raw_source_name": "Anthropocene", "raw_type": "journal-article"},
+        "type": "article", "indexed_in": ["crossref"], "open_access": {"is_oa": true,
+        "oa_status": "green", "oa_url": "https://research.wur.nl/en/publications/shifts-in-landslide-frequency-area-distribution-after-forest-conv",
+        "any_repository_has_fulltext": true}, "authorships": [{"author_position":
+        "first", "author": {"id": "https://openalex.org/A5043467807", "display_name":
+        "Marie Guns", "orcid": "https://orcid.org/0000-0002-2680-5531"}, "institutions":
+        [{"id": "https://openalex.org/I17653759", "display_name": "Fund for Scientific
+        Research", "ror": "https://ror.org/03q83t159", "country_code": "BE", "type":
+        "nonprofit", "lineage": ["https://openalex.org/I17653759"]}, {"id": "https://openalex.org/I95674353",
+        "display_name": "UCLouvain", "ror": "https://ror.org/02495e989", "country_code":
+        "BE", "type": "education", "lineage": ["https://openalex.org/I95674353"]}],
+        "countries": ["BE"], "is_corresponding": true, "raw_author_name": "Marie Guns",
+        "raw_affiliation_strings": ["Fund for Scientific Research \u2013 FNRS, Rue
+        d\u2019Egmont 5, 1000 Brussels, Belgium", "Universit\u00e9 catholique de Louvain,
+        Earth and Life Institute, Georges Lema\u00eetre Centre for Earth and Climate
+        Research, Place Louis Pasteur 3 bo\u00eete L4.03.08, 1348 Louvain-la-Neuve,
+        Belgium", "Fund for Scientific Research \u2013 FNRS, Rue d''Egmont 5, 1000
+        Brussels, Belgium"], "affiliations": [{"raw_affiliation_string": "Fund for
+        Scientific Research \u2013 FNRS, Rue d\u2019Egmont 5, 1000 Brussels, Belgium",
+        "institution_ids": ["https://openalex.org/I17653759"]}, {"raw_affiliation_string":
+        "Universit\u00e9 catholique de Louvain, Earth and Life Institute, Georges
+        Lema\u00eetre Centre for Earth and Climate Research, Place Louis Pasteur 3
+        bo\u00eete L4.03.08, 1348 Louvain-la-Neuve, Belgium", "institution_ids": ["https://openalex.org/I95674353"]},
+        {"raw_affiliation_string": "Fund for Scientific Research \u2013 FNRS, Rue
+        d''Egmont 5, 1000 Brussels, Belgium", "institution_ids": ["https://openalex.org/I17653759"]}]},
+        {"author_position": "last", "author": {"id": "https://openalex.org/A5066419886",
+        "display_name": "Veerle Vanacker", "orcid": "https://orcid.org/0000-0002-8237-3446"},
+        "institutions": [{"id": "https://openalex.org/I95674353", "display_name":
+        "UCLouvain", "ror": "https://ror.org/02495e989", "country_code": "BE", "type":
+        "education", "lineage": ["https://openalex.org/I95674353"]}], "countries":
+        ["BE"], "is_corresponding": false, "raw_author_name": "Veerle Vanacker", "raw_affiliation_strings":
+        ["Universit\u00e9 catholique de Louvain, Earth and Life Institute, Georges
+        Lema\u00eetre Centre for Earth and Climate Research, Place Louis Pasteur 3
+        bo\u00eete L4.03.08, 1348 Louvain-la-Neuve, Belgium"], "affiliations": [{"raw_affiliation_string":
+        "Universit\u00e9 catholique de Louvain, Earth and Life Institute, Georges
+        Lema\u00eetre Centre for Earth and Climate Research, Place Louis Pasteur 3
+        bo\u00eete L4.03.08, 1348 Louvain-la-Neuve, Belgium", "institution_ids": ["https://openalex.org/I95674353"]}]}],
+        "institutions": [], "countries_distinct_count": 1, "institutions_distinct_count":
+        2, "corresponding_author_ids": ["https://openalex.org/A5043467807"], "corresponding_institution_ids":
+        ["https://openalex.org/I17653759", "https://openalex.org/I95674353"], "apc_list":
+        {"value": 3130, "currency": "USD", "value_usd": 3130}, "apc_paid": null, "fwci":
+        20.8413, "has_fulltext": false, "cited_by_count": 81, "citation_normalized_percentile":
+        {"value": 0.98889495, "is_in_top_1_percent": false, "is_in_top_10_percent":
+        true}, "cited_by_percentile_year": {"min": 94, "max": 100}, "biblio": {"volume":
+        "6", "issue": null, "first_page": "75", "last_page": "85"}, "is_retracted":
+        false, "is_paratext": false, "is_xpac": false, "primary_topic": {"id": "https://openalex.org/T10535",
+        "display_name": "Landslides and related hazards", "score": 1.0, "subfield":
+        {"id": "https://openalex.org/subfields/2308", "display_name": "Management,
+        Monitoring, Policy and Law"}, "field": {"id": "https://openalex.org/fields/23",
+        "display_name": "Environmental Science"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}, "topics": [{"id": "https://openalex.org/T10535",
+        "display_name": "Landslides and related hazards", "score": 1.0, "subfield":
+        {"id": "https://openalex.org/subfields/2308", "display_name": "Management,
+        Monitoring, Policy and Law"}, "field": {"id": "https://openalex.org/fields/23",
+        "display_name": "Environmental Science"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}, {"id": "https://openalex.org/T10644",
+        "display_name": "Cryospheric studies and observations", "score": 0.995199978351593,
+        "subfield": {"id": "https://openalex.org/subfields/1902", "display_name":
+        "Atmospheric Science"}, "field": {"id": "https://openalex.org/fields/19",
+        "display_name": "Earth and Planetary Sciences"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}, {"id": "https://openalex.org/T12729",
+        "display_name": "Tree Root and Stability Studies", "score": 0.9944999814033508,
+        "subfield": {"id": "https://openalex.org/subfields/2210", "display_name":
+        "Mechanical Engineering"}, "field": {"id": "https://openalex.org/fields/22",
+        "display_name": "Engineering"}, "domain": {"id": "https://openalex.org/domains/3",
+        "display_name": "Physical Sciences"}}], "keywords": [{"id": "https://openalex.org/keywords/landslide",
+        "display_name": "Landslide", "score": 0.9842820763587952}, {"id": "https://openalex.org/keywords/denudation",
+        "display_name": "Denudation", "score": 0.8030685186386108}, {"id": "https://openalex.org/keywords/deforestation",
+        "display_name": "Deforestation (computer science)", "score": 0.7192673087120056},
+        {"id": "https://openalex.org/keywords/landslide-classification", "display_name":
+        "Landslide classification", "score": 0.6044411063194275}, {"id": "https://openalex.org/keywords/land-cover",
+        "display_name": "Land cover", "score": 0.5702371597290039}, {"id": "https://openalex.org/keywords/geology",
+        "display_name": "Geology", "score": 0.5325486063957214}, {"id": "https://openalex.org/keywords/disturbance",
+        "display_name": "Disturbance (geology)", "score": 0.5044182538986206}, {"id":
+        "https://openalex.org/keywords/physical-geography", "display_name": "Physical
+        geography", "score": 0.4763220250606537}, {"id": "https://openalex.org/keywords/land-use",
+        "display_name": "Land use", "score": 0.45216691493988037}, {"id": "https://openalex.org/keywords/hydrology",
+        "display_name": "Hydrology (agriculture)", "score": 0.3999292850494385}, {"id":
+        "https://openalex.org/keywords/geomorphology", "display_name": "Geomorphology",
+        "score": 0.2590523958206177}, {"id": "https://openalex.org/keywords/geography",
+        "display_name": "Geography", "score": 0.2507365942001343}, {"id": "https://openalex.org/keywords/ecology",
+        "display_name": "Ecology", "score": 0.23402690887451172}, {"id": "https://openalex.org/keywords/seismology",
+        "display_name": "Seismology", "score": 0.09551838040351868}, {"id": "https://openalex.org/keywords/geotechnical-engineering",
+        "display_name": "Geotechnical engineering", "score": 0.06033134460449219}],
+        "concepts": [{"id": "https://openalex.org/C186295008", "wikidata": "https://www.wikidata.org/wiki/Q167903",
+        "display_name": "Landslide", "level": 2, "score": 0.9842820763587952}, {"id":
+        "https://openalex.org/C87432785", "wikidata": "https://www.wikidata.org/wiki/Q745430",
+        "display_name": "Denudation", "level": 3, "score": 0.8030685186386108}, {"id":
+        "https://openalex.org/C2777399953", "wikidata": "https://www.wikidata.org/wiki/Q2155658",
+        "display_name": "Deforestation (computer science)", "level": 2, "score": 0.7192673087120056},
+        {"id": "https://openalex.org/C65865001", "wikidata": "https://www.wikidata.org/wiki/Q6485192",
+        "display_name": "Landslide classification", "level": 3, "score": 0.6044411063194275},
+        {"id": "https://openalex.org/C2780648208", "wikidata": "https://www.wikidata.org/wiki/Q3001793",
+        "display_name": "Land cover", "level": 3, "score": 0.5702371597290039}, {"id":
+        "https://openalex.org/C127313418", "wikidata": "https://www.wikidata.org/wiki/Q1069",
+        "display_name": "Geology", "level": 0, "score": 0.5325486063957214}, {"id":
+        "https://openalex.org/C2777601987", "wikidata": "https://www.wikidata.org/wiki/Q5283581",
+        "display_name": "Disturbance (geology)", "level": 2, "score": 0.5044182538986206},
+        {"id": "https://openalex.org/C100970517", "wikidata": "https://www.wikidata.org/wiki/Q52107",
+        "display_name": "Physical geography", "level": 1, "score": 0.4763220250606537},
+        {"id": "https://openalex.org/C4792198", "wikidata": "https://www.wikidata.org/wiki/Q1165944",
+        "display_name": "Land use", "level": 2, "score": 0.45216691493988037}, {"id":
+        "https://openalex.org/C76886044", "wikidata": "https://www.wikidata.org/wiki/Q2883300",
+        "display_name": "Hydrology (agriculture)", "level": 2, "score": 0.3999292850494385},
+        {"id": "https://openalex.org/C114793014", "wikidata": "https://www.wikidata.org/wiki/Q52109",
+        "display_name": "Geomorphology", "level": 1, "score": 0.2590523958206177},
+        {"id": "https://openalex.org/C205649164", "wikidata": "https://www.wikidata.org/wiki/Q1071",
+        "display_name": "Geography", "level": 0, "score": 0.2507365942001343}, {"id":
+        "https://openalex.org/C18903297", "wikidata": "https://www.wikidata.org/wiki/Q7150",
+        "display_name": "Ecology", "level": 1, "score": 0.23402690887451172}, {"id":
+        "https://openalex.org/C165205528", "wikidata": "https://www.wikidata.org/wiki/Q83371",
+        "display_name": "Seismology", "level": 1, "score": 0.09551838040351868}, {"id":
+        "https://openalex.org/C187320778", "wikidata": "https://www.wikidata.org/wiki/Q1349130",
+        "display_name": "Geotechnical engineering", "level": 1, "score": 0.06033134460449219},
+        {"id": "https://openalex.org/C41008148", "wikidata": "https://www.wikidata.org/wiki/Q21198",
+        "display_name": "Computer science", "level": 0, "score": 0.0}, {"id": "https://openalex.org/C77928131",
+        "wikidata": "https://www.wikidata.org/wiki/Q193343", "display_name": "Tectonics",
+        "level": 2, "score": 0.0}, {"id": "https://openalex.org/C199360897", "wikidata":
+        "https://www.wikidata.org/wiki/Q9143", "display_name": "Programming language",
+        "level": 1, "score": 0.0}, {"id": "https://openalex.org/C86803240", "wikidata":
+        "https://www.wikidata.org/wiki/Q420", "display_name": "Biology", "level":
+        0, "score": 0.0}], "mesh": [], "locations_count": 3, "locations": [{"id":
+        "doi:10.1016/j.ancene.2014.08.001", "is_oa": false, "landing_page_url": "https://doi.org/10.1016/j.ancene.2014.08.001",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S2898452301", "display_name":
+        "Anthropocene", "issn_l": "2213-3054", "issn": ["2213-3054"], "is_oa": false,
+        "is_in_doaj": false, "is_core": true, "host_organization": "https://openalex.org/P4310320990",
+        "host_organization_name": "Elsevier BV", "host_organization_lineage": ["https://openalex.org/P4310320990"],
+        "host_organization_lineage_names": ["Elsevier BV"], "type": "journal"}, "license":
+        null, "license_id": null, "version": "publishedVersion", "is_accepted": true,
+        "is_published": true, "raw_source_name": "Anthropocene", "raw_type": "journal-article"},
+        {"id": "pmh:oai:library.wur.nl:wurpubs/650177", "is_oa": true, "landing_page_url":
+        "https://research.wur.nl/en/publications/shifts-in-landslide-frequency-area-distribution-after-forest-conv",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S4210201231", "display_name":
+        "Socio-Environmental Systems Modeling", "issn_l": "2663-3027", "issn": ["2663-3027"],
+        "is_oa": true, "is_in_doaj": false, "is_core": true, "host_organization":
+        null, "host_organization_name": null, "host_organization_lineage": [], "host_organization_lineage_names":
+        [], "type": "journal"}, "license": null, "license_id": null, "version": "acceptedVersion",
+        "is_accepted": true, "is_published": false, "raw_source_name": "ISSN: 2213-3054",
+        "raw_type": "Article/Letter to editor"}, {"id": "pmh:oai:dial.uclouvain.be:boreal:153984",
+        "is_oa": false, "landing_page_url": "http://hdl.handle.net/2078.1/153984",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S4306401902", "display_name":
+        "Digital Access to Libraries (Universit\u00e9 catholique de Louvain (UCL),
+        l''Universit\u00e9 de Namur (UNamur) and the Universit\u00e9 Saint-Louis (USL-B))",
+        "issn_l": null, "issn": null, "is_oa": false, "is_in_doaj": false, "is_core":
+        false, "host_organization": "https://openalex.org/I95674353", "host_organization_name":
+        "UCLouvain", "host_organization_lineage": ["https://openalex.org/I95674353"],
+        "host_organization_lineage_names": [], "type": "repository"}, "license": null,
+        "license_id": null, "version": "submittedVersion", "is_accepted": false, "is_published":
+        false, "raw_source_name": "Anthropocene, Vol. 6, no.6, p. 75-85 (2014)", "raw_type":
+        "info:eu-repo/semantics/article"}], "best_oa_location": {"id": "pmh:oai:library.wur.nl:wurpubs/650177",
+        "is_oa": true, "landing_page_url": "https://research.wur.nl/en/publications/shifts-in-landslide-frequency-area-distribution-after-forest-conv",
+        "pdf_url": null, "source": {"id": "https://openalex.org/S4210201231", "display_name":
+        "Socio-Environmental Systems Modeling", "issn_l": "2663-3027", "issn": ["2663-3027"],
+        "is_oa": true, "is_in_doaj": false, "is_core": true, "host_organization":
+        null, "host_organization_name": null, "host_organization_lineage": [], "host_organization_lineage_names":
+        [], "type": "journal"}, "license": null, "license_id": null, "version": "acceptedVersion",
+        "is_accepted": true, "is_published": false, "raw_source_name": "ISSN: 2213-3054",
+        "raw_type": "Article/Letter to editor"}, "sustainable_development_goals":
+        [{"score": 0.75, "id": "https://metadata.un.org/sdg/15", "display_name": "Life
+        in Land"}], "awards": [], "funders": [{"id": "https://openalex.org/F4320321038",
+        "display_name": "Fonds National de la Recherche Luxembourg", "ror": "https://ror.org/039z13y21"}],
+        "has_content": {"pdf": false, "grobid_xml": false}, "content_urls": null,
+        "referenced_works_count": 48, "referenced_works": ["https://openalex.org/W67361741",
+        "https://openalex.org/W631904424", "https://openalex.org/W1481303583", "https://openalex.org/W1513894410",
+        "https://openalex.org/W1698786414", "https://openalex.org/W1988071601", "https://openalex.org/W1992583120",
+        "https://openalex.org/W1995159463", "https://openalex.org/W2002140130", "https://openalex.org/W2004000818",
+        "https://openalex.org/W2004841941", "https://openalex.org/W2005073772", "https://openalex.org/W2006140843",
+        "https://openalex.org/W2018627296", "https://openalex.org/W2019678679", "https://openalex.org/W2019679719",
+        "https://openalex.org/W2022411770", "https://openalex.org/W2030664888", "https://openalex.org/W2030870608",
+        "https://openalex.org/W2036881582", "https://openalex.org/W2051367231", "https://openalex.org/W2055161902",
+        "https://openalex.org/W2066015174", "https://openalex.org/W2069657746", "https://openalex.org/W2090200037",
+        "https://openalex.org/W2092093080", "https://openalex.org/W2092926079", "https://openalex.org/W2094575516",
+        "https://openalex.org/W2095057310", "https://openalex.org/W2096717450", "https://openalex.org/W2110155970",
+        "https://openalex.org/W2111443537", "https://openalex.org/W2118535899", "https://openalex.org/W2127958450",
+        "https://openalex.org/W2134702142", "https://openalex.org/W2138612078", "https://openalex.org/W2144041317",
+        "https://openalex.org/W2147357873", "https://openalex.org/W2154029090", "https://openalex.org/W2157154835",
+        "https://openalex.org/W2170929413", "https://openalex.org/W2187248718", "https://openalex.org/W2524544365",
+        "https://openalex.org/W2579321819", "https://openalex.org/W2738373998", "https://openalex.org/W6602755320",
+        "https://openalex.org/W6651385336", "https://openalex.org/W6741831531"], "related_works":
+        ["https://openalex.org/W1497337979", "https://openalex.org/W2136937653", "https://openalex.org/W2081942226",
+        "https://openalex.org/W70668483", "https://openalex.org/W1991724088", "https://openalex.org/W1982589833",
+        "https://openalex.org/W2387322546", "https://openalex.org/W2135585095", "https://openalex.org/W2623996266",
+        "https://openalex.org/W4251622601"], "abstract_inverted_index": null, "counts_by_year":
+        [{"year": 2026, "cited_by_count": 2}, {"year": 2025, "cited_by_count": 6},
+        {"year": 2024, "cited_by_count": 5}, {"year": 2023, "cited_by_count": 6},
+        {"year": 2022, "cited_by_count": 6}, {"year": 2021, "cited_by_count": 18},
+        {"year": 2020, "cited_by_count": 14}, {"year": 2019, "cited_by_count": 3},
+        {"year": 2018, "cited_by_count": 5}, {"year": 2017, "cited_by_count": 5},
+        {"year": 2016, "cited_by_count": 6}, {"year": 2015, "cited_by_count": 3},
+        {"year": 2014, "cited_by_count": 2}], "updated_date": "2026-04-09T08:11:56.329763",
+        "created_date": "2025-10-10T00:00:00"}], "group_by": []}'
+    headers:
+      Access-Control-Allow-Headers:
+      - Accept, Accept-Language, Accept-Encoding, Authorization, Content-Type
+      Access-Control-Allow-Methods:
+      - GET, HEAD, POST, OPTIONS
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-Ray:
+      - a05186b56e8b497b-YVR
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '18192'
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 01 Jun 2026 22:06:34 GMT
+      Nel:
+      - '{"report_to":"heroku-nel","response_headers":["Via"],"max_age":3600,"success_fraction":0.01,"failure_fraction":0.1}'
+      Report-To:
+      - '{"group":"heroku-nel","endpoints":[{"url":"https://nel.heroku.com/reports?s=ew5p1YBEoYYdXFqQGknbArGfrf4dwzJ7fHgtz0VtzmQ%3D\u0026sid=e11707d5-02a7-43ef-b45e-2cf4d2036f7d\u0026ts=1780351593"}],"max_age":3600}'
+      Reporting-Endpoints:
+      - heroku-nel="https://nel.heroku.com/reports?s=ew5p1YBEoYYdXFqQGknbArGfrf4dwzJ7fHgtz0VtzmQ%3D&sid=e11707d5-02a7-43ef-b45e-2cf4d2036f7d&ts=1780351593"
+      Server:
+      - cloudflare
+      Via:
+      - 1.1 heroku-router
+      X-RateLimit-Cost-USD:
+      - '0.001'
+      X-RateLimit-Credits-Used:
+      - '10'
+      X-RateLimit-Limit:
+      - '10000'
+      X-RateLimit-Limit-USD:
+      - '1'
+      X-RateLimit-Onetime-Remaining:
+      - '0'
+      X-RateLimit-Prepaid-Remaining-USD:
+      - '0'
+      X-RateLimit-Remaining:
+      - '9839'
+      X-RateLimit-Remaining-USD:
+      - '0.9839'
+      X-RateLimit-Reset:
+      - '6806'
+      access-control-expose-headers:
+      - Cache-Control, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Onetime-Remaining,
+        X-RateLimit-Credits-Used, X-RateLimit-Credits-Required, X-RateLimit-Reset,
+        X-RateLimit-Limit-USD, X-RateLimit-Remaining-USD, X-RateLimit-Prepaid-Remaining-USD,
+        X-RateLimit-Cost-USD, X-RateLimit-Cost-Required-USD, Retry-After
+    status:
+      code: 200
+      message: OK
+version: 1

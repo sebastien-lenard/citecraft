@@ -65,7 +65,6 @@ class CiteprocAdapter:
 
         except (TypeError, ValueError, KeyError, UnboundLocalError) as e:
             error_msg = str(e)
-            logger.debug("toto6")
             hint = ""
             if isinstance(e, UnboundLocalError):
                 hint = (

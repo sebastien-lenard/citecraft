@@ -1,0 +1,838 @@
+interactions:
+- request:
+    body: ''
+    headers:
+      Host:
+      - api.crossref.org
+      User-Agent:
+      - ManuscriptRefLister/1.0 (mailto:sebastien.lenard@gmail.com)
+    method: GET
+    uri: https://api.crossref.org/works?query=Lenard+et+al.+erosion&rows=5&filter=from-pub-date%3A2020%2Cuntil-pub-date%3A2020%2Cissn%3A1752-0894&mailto=sebastien.lenard%40gmail.com
+  response:
+    body:
+      string: '{"status":"ok","message-type":"work-list","message-version":"1.0.0","message":{"facets":{},"total-results":3,"items":[{"indexed":{"date-parts":[[2026,3,31]],"date-time":"2026-03-31T07:22:35Z","timestamp":1774941755128,"version":"3.50.1"},"reference-count":85,"publisher":"Springer
+        Science and Business Media LLC","issue":"6","license":[{"start":{"date-parts":[[2020,6,1]],"date-time":"2020-06-01T00:00:00Z","timestamp":1590969600000},"content-version":"tdm","delay-in-days":0,"URL":"https:\/\/www.springer.com\/tdm"},{"start":{"date-parts":[[2020,6,1]],"date-time":"2020-06-01T00:00:00Z","timestamp":1590969600000},"content-version":"vor","delay-in-days":0,"URL":"https:\/\/www.springer.com\/tdm"}],"content-domain":{"domain":["link.springer.com"],"crossmark-restriction":false},"short-container-title":["Nat.
+        Geosci."],"published-print":{"date-parts":[[2020,6]]},"DOI":"10.1038\/s41561-020-0585-2","type":"journal-article","created":{"date-parts":[[2020,6,1]],"date-time":"2020-06-01T16:03:55Z","timestamp":1591027435000},"page":"448-452","update-policy":"https:\/\/doi.org\/10.1007\/springer_crossmark_policy","source":"Crossref","is-referenced-by-count":79,"title":["Steady
+        erosion rates in the Himalayas through late Cenozoic climatic changes"],"prefix":"10.1038","volume":"13","author":[{"ORCID":"https:\/\/orcid.org\/0000-0003-3358-7197","authenticated-orcid":false,"given":"Sebastien
+        J. P.","family":"Lenard","sequence":"first","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J\u00e9r\u00f4me","family":"Lav\u00e9","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-4873-5546","authenticated-orcid":false,"given":"Christian","family":"France-Lanord","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Georges","family":"Auma\u00eetre","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Didier
+        L.","family":"Bourl\u00e8s","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Karim","family":"Keddadouche","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]}],"member":"297","published-online":{"date-parts":[[2020,6,1]]},"reference":[{"key":"585_CR1","doi-asserted-by":"publisher","first-page":"14933","DOI":"10.1029\/JB093iB12p14933","volume":"93","author":"WW
+        Hay","year":"1988","unstructured":"Hay, W. W., Sloan, J. L. & Wold, C. N.
+        Mass\/age distribution and composition of sediments on the ocean floor and
+        the global rate of sediment subduction. J. Geophys. Res. 93, 14933\u201314940
+        (1988).","journal-title":"J. Geophys. Res."},{"key":"585_CR2","doi-asserted-by":"publisher","first-page":"29","DOI":"10.1038\/346029a0","volume":"346","author":"P
+        Molnar","year":"1990","unstructured":"Molnar, P. & England, P. Late Cenozoic
+        uplift of mountain ranges and global climate change: chicken or egg? Nature
+        346, 29\u201334 (1990).","journal-title":"Nature"},{"key":"585_CR3","doi-asserted-by":"publisher","first-page":"891","DOI":"10.1038\/35069099","volume":"410","author":"PZ
+        Zhang","year":"2001","unstructured":"Zhang, P. Z., Molnar, P. & Downs, W.
+        R. Increased sedimentation rates and grain sizes 2\u20134\u2009Myr ago due
+        to the influence of climate change on erosion rates. Nature 410, 891\u2013897
+        (2001).","journal-title":"Nature"},{"key":"585_CR4","doi-asserted-by":"publisher","first-page":"67","DOI":"10.1146\/annurev.earth.32.091003.143456","volume":"32","author":"P
+        Molnar","year":"2004","unstructured":"Molnar, P. Late Cenozoic increase in
+        accumulation rates of terrestrial sediment: how might climate change have
+        affected erosion rates? Annu. Rev. Earth Planet. Sci. 32, 67\u201389 (2004).","journal-title":"Annu.
+        Rev. Earth Planet. Sci."},{"key":"585_CR5","doi-asserted-by":"publisher","first-page":"423","DOI":"10.1038\/nature12877","volume":"504","author":"F
+        Herman","year":"2013","unstructured":"Herman, F. et al. Worldwide acceleration
+        of mountain erosion under a cooling climate. Nature 504, 423\u2013426 (2013).","journal-title":"Nature"},{"key":"585_CR6","doi-asserted-by":"publisher","first-page":"206","DOI":"10.1038\/nature11786","volume":"493","author":"VK
+        Pedersen","year":"2013","unstructured":"Pedersen, V. K. & Egholm, D. L. Glaciations
+        in response to climate variations preconditioned by evolving topography. Nature
+        493, 206\u2013210 (2013).","journal-title":"Nature"},{"key":"585_CR7","doi-asserted-by":"publisher","first-page":"211","DOI":"10.1038\/nature09044","volume":"465","author":"JK
+        Willenbring","year":"2010","unstructured":"Willenbring, J. K. & von Blanckenburg,
+        F. Long-term stability of global erosion rates and weathering during late-Cenozoic
+        cooling. Nature 465, 211\u2013214 (2010).","journal-title":"Nature"},{"key":"585_CR8","first-page":"F00A06","volume":"114","author":"R
+        Schumer","year":"2009","unstructured":"Schumer, R. & Jerolmack, D. J. Real
+        and apparent changes in sediment deposition rates through time. J. Geophys.
+        Res. 114, F00A06 (2009).","journal-title":"J. Geophys. Res."},{"key":"585_CR9","doi-asserted-by":"publisher","first-page":"89","DOI":"10.1038\/s41586-018-0260-6","volume":"559","author":"TF
+        Schildgen","year":"2018","unstructured":"Schildgen, T. F., van der Beek, P.
+        A., Sinclair, H. D. & Thiede, R. C. Spatial correlation bias in late-Cenozoic
+        erosion histories derived from thermochronology. Nature 559, 89\u201393 (2018).","journal-title":"Nature"},{"key":"585_CR10","doi-asserted-by":"publisher","first-page":"193","DOI":"10.1016\/0012-821X(94)00249-X","volume":"129","author":"ET
+        Brown","year":"1995","unstructured":"Brown, E. T., Stallard, R. F., Larsen,
+        M. C., Raisbeck, G. M. & Yiou, F. Denudation rates determined from the accumulation
+        of in situ-produced 10Be in the Luquillo experimental forest, Puerto Rico.
+        Earth Planet. Sci. Lett. 129, 193\u2013202 (1995).","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"585_CR11","doi-asserted-by":"publisher","first-page":"825","DOI":"10.1130\/0016-7606(2001)113<0825:PPIOTG>2.0.CO;2","volume":"113","author":"DE
+        Granger","year":"2001","unstructured":"Granger, D. E., Fabel, D. & Palmer,
+        A. N. Pliocene\u2013Pleistocene incision of the Green River, Kentucky, determined
+        from radioactive decay of cosmogenic 26Al and 10Be in mammoth cave sediments.
+        Geol. Soc. Am. Bull. 113, 825\u2013836 (2001).","journal-title":"Geol. Soc.
+        Am. Bull."},{"key":"585_CR12","doi-asserted-by":"publisher","first-page":"307","DOI":"10.1016\/S0012-821X(02)00951-2","volume":"204","author":"M
+        Schaller","year":"2002","unstructured":"Schaller, M. et al. A 30 000\u2009yr
+        record of erosion rates from cosmogenic 10Be in Middle European river terraces.
+        Earth Planet. Sci. Lett. 204, 307\u2013320 (2002).","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"585_CR13","doi-asserted-by":"publisher","first-page":"256","DOI":"10.1038\/nature20147","volume":"540","author":"PR
+        Bierman","year":"2016","unstructured":"Bierman, P. R., Shakun, J. D., Corbett,
+        L. B., Zimmerman, S. R. & Rood, D. H. A persistent and dynamic East Greenland
+        Ice Sheet over the past 7.5 million years. Nature 540, 256\u2013260 (2016).","journal-title":"Nature"},{"key":"585_CR14","doi-asserted-by":"publisher","first-page":"479","DOI":"10.1130\/B31475.1","volume":"129","author":"N
+        Puchol","year":"2017","unstructured":"Puchol, N. et al. Limited impact of
+        Quaternary glaciations on denudation rates in Central Asia. Geol. Soc. Am.
+        Bull. 129, 479\u2013499 (2017).","journal-title":"Geol. Soc. Am. Bull."},{"key":"585_CR15","doi-asserted-by":"publisher","first-page":"101","DOI":"10.1016\/j.gloplacha.2006.07.018","volume":"56","author":"B
+        Raup","year":"2007","unstructured":"Raup, B. et al. The GLIMS geospatial glacier
+        database: a new tool for studying glacier change. Glob. Planet. Change 56,
+        101\u2013110 (2007).","journal-title":"Glob. Planet. Change"},{"key":"585_CR16","doi-asserted-by":"publisher","first-page":"79","DOI":"10.1016\/S1040-6182(02)00053-8","volume":"97\u201398","author":"Y
+        Shi","year":"2002","unstructured":"Shi, Y. Characteristics of late Quaternary
+        monsoonal glaciation on the Tibetan Plateau and in East Asia. Quat. Int. 97\u201398,
+        79\u201391 (2002).","journal-title":"Quat. Int."},{"key":"585_CR17","doi-asserted-by":"publisher","first-page":"719","DOI":"10.1126\/science.1203752","volume":"333","author":"Z
+        An","year":"2011","unstructured":"An, Z. et al. Glacial\u2013interglacial
+        Indian summer monsoon dynamics. Science 333, 719\u2013723 (2011).","journal-title":"Science"},{"key":"585_CR18","doi-asserted-by":"publisher","first-page":"1191","DOI":"10.1016\/S0264-8172(03)00035-7","volume":"19","author":"JR
+        Curray","year":"2003","unstructured":"Curray, J. R., Emmel, F. J. & Moore,
+        D. G. The Bengal Fan: morphology, geometry, stratigraphy, history and processes.
+        Mar. Pet. Geol. 19, 1191\u20131223 (2003).","journal-title":"Mar. Pet. Geol."},{"key":"585_CR19","doi-asserted-by":"crossref","unstructured":"Schwenk,
+        T. & Spiess, V. in External Controls on Deep-Water Depositional Systems (eds
+        Kneller, B. et al.) 107\u2013131 (SEPM, 2009).","DOI":"10.2110\/sepmsp.092.107"},{"key":"585_CR20","doi-asserted-by":"publisher","unstructured":"Clemens,
+        S. C. et al. Expedition 353 summary. In Proc. IODP Vol. 353, https:\/\/doi.org\/10.14379\/iodp.proc.353.101.2016
+        (IODP, 2016).","DOI":"10.14379\/iodp.proc.353.101.2016"},{"key":"585_CR21","doi-asserted-by":"publisher","unstructured":"France-Lanord,
+        C. et al. Expedition 354 summary. In Proc. IODP Vol. 354, https:\/\/doi.org\/10.14379\/iodp.proc.354.101.2016
+        (IODP, 2016).","DOI":"10.14379\/iodp.proc.354.101.2016"},{"key":"585_CR22","doi-asserted-by":"crossref","first-page":"e2019GC008702","DOI":"10.1029\/2019GC008702","volume":"21","author":"F
+        Bergmann","year":"2019","unstructured":"Bergmann, F., Schwenk, T., Spiess,
+        V. & France-Lanord, C. Middle to late Pleistocene architecture and stratigraphy
+        of the lower Bengal Fan\u2014integrating multichannel seismic data and IODP
+        Expedition 354 results. Geochem. Geophys. Geosyst. 21, e2019GC008702 (2019).","journal-title":"Geochem.
+        Geophys. Geosyst."},{"key":"585_CR23","doi-asserted-by":"publisher","first-page":"2269","DOI":"10.1016\/0016-7037(91)90103-C","volume":"55","author":"ET
+        Brown","year":"1991","unstructured":"Brown, E. T. et al. Examination of surface
+        exposure ages of Antarctic moraines using in situ produced 10Be and 26Al.
+        Geochim. Cosmochim. Acta 55, 2269\u20132283 (1991).","journal-title":"Geochim.
+        Cosmochim. Acta"},{"key":"585_CR24","doi-asserted-by":"publisher","first-page":"1954","DOI":"10.1016\/j.nimb.2010.02.107","volume":"268","author":"M
+        Arnold","year":"2010","unstructured":"Arnold, M. et al. The French accelerator
+        mass spectrometry facility ASTER: improved performance and developments. Nucl.
+        Instrum. Methods Phys. Res. B 268, 1954\u20131959 (2010).","journal-title":"Nucl.
+        Instrum. Methods Phys. Res. B"},{"key":"585_CR25","doi-asserted-by":"publisher","first-page":"335","DOI":"10.1016\/j.nimb.2015.06.012","volume":"361","author":"R
+        Braucher","year":"2015","unstructured":"Braucher, R. et al. Preparation of
+        ASTER in-house 10Be\/9Be standard solutions. Nucl. Instrum. Methods Phys.
+        Res. B 361, 335\u2013340 (2015).","journal-title":"Nucl. Instrum. Methods
+        Phys. Res. B"},{"key":"585_CR26","doi-asserted-by":"publisher","first-page":"159","DOI":"10.1016\/j.quascirev.2018.09.027","volume":"199","author":"ME
+        Weber","year":"2018","unstructured":"Weber, M. E. & Reilly, B. T. Hemipelagic
+        and turbiditic deposits constrain lower Bengal Fan depositional history through
+        Pleistocene climate, monsoon, and sea level transitions. Quat. Sci. Rev. 199,
+        159\u2013173 (2018).","journal-title":"Quat. Sci. Rev."},{"key":"585_CR27","doi-asserted-by":"publisher","first-page":"7973","DOI":"10.1038\/s41598-018-25819-5","volume":"8","author":"M
+        Blum","year":"2018","unstructured":"Blum, M. et al. Allogenic and autogenic
+        signals in the stratigraphic record of the deep-sea Bengal Fan. Sci. Rep.
+        8, 7973 (2018).","journal-title":"Sci. Rep."},{"key":"585_CR28","doi-asserted-by":"publisher","unstructured":"Lenard,
+        S. J. P, Cruz, J., France-Lanord, C., Lav\u00e9, J. & Reilly, B. T. Data report:
+        calcareous nannofossils and lithologic constraints on the age model of IODP
+        Site U1450, Expedition 354, Bengal Fan. In Proc. IODP Vol. 354, https:\/\/doi.org\/10.14379\/iodp.proc.354.203.2020
+        (IODP, 2020).","DOI":"10.14379\/iodp.proc.354.203.2020"},{"key":"585_CR29","doi-asserted-by":"crossref","unstructured":"Reilly,
+        B.T. et al., Mid to late Pleistocene evolution of the Bengal Fan: integrating
+        core and seismic observations for chronostratigraphic modeling of the IODP
+        Expedition 354 8\u00b0 North transect. Geochem. Geophys. Geosyst. 21, e2019GC008878
+        (2020).","DOI":"10.1029\/2019GC008878"},{"key":"585_CR30","doi-asserted-by":"publisher","first-page":"146","DOI":"10.1016\/j.epsl.2012.04.020","volume":"333\u2013334","author":"M
+        Lupker","year":"2012","unstructured":"Lupker, M. et al. 10Be-derived Himalayan
+        denudation rates and sediment budgets in the Ganga basin. Earth Planet. Sci.
+        Lett. 333\u2013334, 146\u2013156 (2012).","journal-title":"Earth Planet. Sci.
+        Lett."},{"key":"585_CR31","doi-asserted-by":"publisher","first-page":"429","DOI":"10.5194\/esurf-5-429-2017","volume":"5","author":"M
+        Lupker","year":"2017","unstructured":"Lupker, M. et al. 10Be systematics in
+        the Tsangpo\u2013Brahmaputra catchment: the cosmogenic nuclide legacy of the
+        eastern Himalayan syntaxis. Earth Surf. Dyn. 5, 429\u2013449 (2017).","journal-title":"Earth
+        Surf. Dyn."},{"key":"585_CR32","doi-asserted-by":"publisher","first-page":"89","DOI":"10.1016\/j.epsl.2017.08.013","volume":"478","author":"CJ
+        Hein","year":"2017","unstructured":"Hein, C. J. et al. Post-glacial climate
+        forcing of surface processes in the Ganges\u2013Brahmaputra river basin and
+        implications for carbon sequestration. Earth Planet. Sci. Lett. 478, 89\u2013101
+        (2017).","journal-title":"Earth Planet. Sci. Lett."},{"key":"585_CR33","doi-asserted-by":"publisher","first-page":"23","DOI":"10.1130\/0091-7613(2001)029<0023:HERITH>2.0.CO;2","volume":"29","author":"A
+        Galy","year":"2001","unstructured":"Galy, A. & France-Lanord, C. Higher erosion
+        rates in the Himalaya: geochemical constraints on riverine fluxes. Geology
+        29, 23\u201326 (2001).","journal-title":"Geology"},{"key":"585_CR34","first-page":"F03006","volume":"113","author":"SK
+        Singh","year":"2008","unstructured":"Singh, S. K., Rai, S. K. & Krishnaswami,
+        S. Sr and Nd isotopes in river sediments from the Ganga Basin: sediment provenance
+        and spatial variability in physical erosion. J. Geophys. Res. 113, F03006
+        (2008).","journal-title":"J. Geophys. Res."},{"key":"585_CR35","doi-asserted-by":"publisher","first-page":"645","DOI":"10.1016\/S0012-821X(02)00822-1","volume":"202","author":"SK
+        Singh","year":"2002","unstructured":"Singh, S. K. & France-Lanord, C. Tracing
+        the distribution of erosion in the Brahmaputra watershed from isotopic compositions
+        of stream sediments. Earth Planet. Sci. Lett. 202, 645\u2013662 (2002).","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"585_CR36","doi-asserted-by":"publisher","first-page":"F04018","DOI":"10.1029\/2009JF001480","volume":"115","author":"J
+        Lauer","year":"2010","unstructured":"Lauer, J. & Willenbring, J. Steady state
+        reach-scale theory for radioactive tracer concentration in a simple channel\/floodplain
+        system. Geophy. Res. 115, F04018 (2010).","journal-title":"Geophy. Res."},{"key":"585_CR37","doi-asserted-by":"publisher","first-page":"53","DOI":"10.1016\/j.gloplacha.2016.09.008","volume":"146","author":"LA
+        Contreras-Rosales","year":"2016","unstructured":"Contreras-Rosales, L. A.
+        et al. Origin and fate of sedimentary organic matter in the northern Bay of
+        Bengal during the last 18\u2009ka. Glob. Planet. Change 146, 53\u201366 (2016).","journal-title":"Glob.
+        Planet. Change"},{"key":"585_CR38","doi-asserted-by":"publisher","first-page":"116078","DOI":"10.1016\/j.epsl.2020.116078","volume":"534","author":"Huyghe","year":"2020","unstructured":"Huyghe
+        et al. Rapid exhumation since at least 13\u2009Ma in the Himalaya recorded
+        by detrital apatite fission-track dating of Bengal Fan (IODP Expedition 354)
+        and modern Himalayan river sediments. Earth Planet. Sci. Lett. 534, 116078
+        (2020).","journal-title":"Earth Planet. Sci. Lett."},{"key":"585_CR39","doi-asserted-by":"publisher","first-page":"107","DOI":"10.1016\/j.epsl.2006.09.031","volume":"252","author":"KW
+        Huntington","year":"2006","unstructured":"Huntington, K. W., Blythe, A. E.
+        & Hodges, K. V. Climate change and late Pliocene acceleration of erosion in
+        the Himalaya. Earth Planet. Sci. Lett. 252, 107\u2013118 (2006).","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"585_CR40","doi-asserted-by":"publisher","first-page":"43","DOI":"10.1016\/j.tecto.2017.10.026","volume":"722","author":"R
+        Yang","year":"2018","unstructured":"Yang, R., Herman, F., Fellin, M. G. &
+        Maden, C. Exhumation and topographic evolution of the Namche Barwa syntaxis,
+        eastern Himalaya. Tectonophysics 722, 43\u201352 (2018).","journal-title":"Tectonophysics"},{"key":"585_CR41","doi-asserted-by":"publisher","first-page":"127","DOI":"10.1086\/381654","volume":"112","author":"M
+        Schaller","year":"2004","unstructured":"Schaller, M. et al. Paleoerosion rates
+        from cosmogenic 10Be in a 1.3\u2009Ma terrace sequence: response of the River
+        Meuse to changes in climate and rock uplift. J. Geol. 112, 127\u2013144 (2004).","journal-title":"J.
+        Geol."},{"key":"585_CR42","doi-asserted-by":"publisher","first-page":"143","DOI":"10.1130\/G23094A","volume":"35","author":"P
+        Haeuselmann","year":"2007","unstructured":"Haeuselmann, P., Granger, D. E.,
+        Jeannin, P.-Y. & Lauritzen, S.-E. Abrupt glacial valley incision at 0.8\u2009Ma
+        dated from cave deposits in Switzerland. Geology 35, 143\u2013146 (2007).","journal-title":"Geology"},{"key":"585_CR43","doi-asserted-by":"publisher","first-page":"227","DOI":"10.1016\/S0037-0738(00)00041-5","volume":"133","author":"SL
+        Goodbred","year":"2000","unstructured":"Goodbred, S. L. & Kuehl, S. A. The
+        significance of large sediment supply, active tectonism, and eustasy on margin
+        sequence development: late Quaternary stratigraphy and evolution of the Ganges\u2013Brahmaputra
+        delta. Sediment. Geol. 133, 227\u2013248 (2000).","journal-title":"Sediment.
+        Geol."},{"key":"585_CR44","doi-asserted-by":"publisher","first-page":"53","DOI":"10.1111\/j.1365-3121.1997.tb00001.x","volume":"9","author":"J-P
+        Burg","year":"1997","unstructured":"Burg, J.-P. et al. Exhumation during crustal
+        folding in the Namche-Barwa syntaxis. Terra Nova 9, 53\u201356 (1997).","journal-title":"Terra
+        Nova"},{"key":"585_CR45","unstructured":"Zeitler, P. K. et al. in Toward an
+        Improved Understanding of Uplift Mechanisms and the Elevation History of the
+        Tibetan Plateau (eds Nie, J. et al.) 23\u201358 (GSA, 2014)."},{"key":"585_CR46","doi-asserted-by":"publisher","first-page":"1","DOI":"10.1016\/j.epsl.2015.10.017","volume":"433","author":"Y
+        Najman","year":"2016","unstructured":"Najman, Y., Bracciali, L., Parrish,
+        R. R., Chisty, E. & Copley, A. Evolving strain partitioning in the eastern
+        Himalaya: the growth of the Shillong Plateau. Earth Planet. Sci. Lett. 433,
+        1\u20139 (2016).","journal-title":"Earth Planet. Sci. Lett."},{"key":"585_CR47","doi-asserted-by":"publisher","first-page":"TC2010","DOI":"10.1029\/2008TC002276","volume":"28","author":"T
+        Maurin","year":"2009","unstructured":"Maurin, T. & Rangin, C. Structure and
+        kinematics of the Indo-Burmese Wedge: recent and fast growth of the outer
+        wedge. Tectonics 28, TC2010 (2009).","journal-title":"Tectonics"},{"key":"585_CR48","doi-asserted-by":"publisher","first-page":"279","DOI":"10.1130\/G39864.1","volume":"46","author":"G
+        Govin","year":"2018","unstructured":"Govin, G. et al. Timing and mechanism
+        of the rise of the Shillong Plateau in the Himalayan foreland. Geology 46,
+        279\u2013282 (2018).","journal-title":"Geology"},{"key":"585_CR49","doi-asserted-by":"publisher","first-page":"1097","DOI":"10.1130\/0091-7613(1991)019<1097:PGMATB>2.3.CO;2","volume":"19","author":"JR
+        Curray","year":"1991","unstructured":"Curray, J. R. Possible greenschist metamorphism
+        at the base of a 22-km sedimentary section, Bay of Bengal. Geology 19, 1097\u20131100
+        (1991).","journal-title":"Geology"},{"key":"585_CR50","doi-asserted-by":"publisher","first-page":"93","DOI":"10.1016\/j.tecto.2010.07.004","volume":"493","author":"M
+        Radhakrishna","year":"2010","unstructured":"Radhakrishna, M., Subrahmanyam,
+        C. & Damodharan, T. Thin oceanic crust below Bay of Bengal inferred from 3-D
+        gravity interpretation. Tectonophysics 493, 93\u2013105 (2010).","journal-title":"Tectonophysics"},{"key":"585_CR51","doi-asserted-by":"publisher","first-page":"187","DOI":"10.1016\/j.nimb.2009.09.020","volume":"268","author":"G
+        Korschinek","year":"2010","unstructured":"Korschinek, G. et al. A new value
+        for the half-life of 10Be by heavy-ion elastic recoil detection and liquid
+        scintillation counting. Nucl. Instrum. Methods Phys. Res. B 268, 187\u2013191
+        (2010).","journal-title":"Nucl. Instrum. Methods Phys. Res. B"},{"key":"585_CR52","doi-asserted-by":"publisher","first-page":"192","DOI":"10.1016\/j.nimb.2009.09.012","volume":"268","author":"J
+        Chmeleff","year":"2010","unstructured":"Chmeleff, J., von Blanckenburg, F.,
+        Kossert, K. & Jakob, D. Determination of the 10Be half-life by multicollector
+        ICP-MS and liquid scintillation counting. Nucl. Instrum. Methods Phys. Res.
+        B 268, 192\u2013199 (2010).","journal-title":"Nucl. Instrum. Methods Phys.
+        Res. B"},{"key":"585_CR53","doi-asserted-by":"publisher","first-page":"F04012","DOI":"10.1029\/2010JF001947","volume":"116","author":"M
+        Lupker","year":"2011","unstructured":"Lupker, M. et al. A Rouse-based method
+        to integrate the chemical composition of river sediments: application to the
+        Ganga basin. J. Geophys. Res. 116, F04012 (2011).","journal-title":"J. Geophys.
+        Res."},{"key":"585_CR54","doi-asserted-by":"publisher","first-page":"2349","DOI":"10.1002\/esp.4649","volume":"44","author":"J
+        Charreau","year":"2019","unstructured":"Charreau, J. et al. Basinga: A cell-by-cell
+        GIS toolbox for computing basin average scaling factors, cosmogenic production
+        rates and denudation rates. Earth Surf. Process. Landf. 44, 2349\u20132365
+        (2019).","journal-title":"Earth Surf. Process. Landf."},{"key":"585_CR55","doi-asserted-by":"publisher","first-page":"25","DOI":"10.1016\/j.quageo.2016.11.006","volume":"38","author":"LCP
+        Martin","year":"2017","unstructured":"Martin, L. C. P. et al. The CREp program
+        and the ICE-D production rate calibration database: a fully parameterizable
+        and updated online tool to compute cosmic-ray exposure ages. Quat. Geochronol.
+        38, 25\u201349 (2017).","journal-title":"Quat. Geochronol."},{"key":"585_CR56","doi-asserted-by":"publisher","first-page":"1","DOI":"10.1016\/j.epsl.2011.06.036","volume":"309","author":"R
+        Braucher","year":"2011","unstructured":"Braucher, R., Merchel, S., Borgomano,
+        J. & Bourl\u00e8s, D. L. Production of cosmogenic radionuclides at great depth:
+        a multi element approach. Earth Planet. Sci. Lett. 309, 1\u20139 (2011).","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"585_CR57","doi-asserted-by":"publisher","first-page":"424","DOI":"10.1016\/0012-821X(91)90220-C","volume":"104","author":"D
+        Lal","year":"1991","unstructured":"Lal, D. Cosmic ray labeling of erosion
+        surfaces: in situ nuclide production rates and erosion models. Earth Planet.
+        Sci. Lett. 104, 424\u2013439 (1991).","journal-title":"Earth Planet. Sci.
+        Lett."},{"key":"585_CR58","doi-asserted-by":"publisher","first-page":"23753","DOI":"10.1029\/2000JB900181","volume":"105","author":"JO
+        Stone","year":"2000","unstructured":"Stone, J. O. Air pressure and cosmogenic
+        isotope production. J. Geophys. Res. Solid Earth 105, 23753\u201323759 (2000).","journal-title":"J.
+        Geophys. Res. Solid Earth"},{"key":"585_CR59","doi-asserted-by":"publisher","first-page":"923","DOI":"10.5194\/esurf-6-923-2018","volume":"6","author":"RA
+        DiBiase","year":"2018","unstructured":"DiBiase, R. A. Increasing vertical
+        attenuation length of cosmogenic nuclide production on steep slopes negates
+        topographic shielding corrections for catchment erosion rates. Earth Surf.
+        Dyn. 6, 923\u2013931 (2018).","journal-title":"Earth Surf. Dyn."},{"key":"585_CR60","doi-asserted-by":"publisher","first-page":"39","DOI":"10.1016\/j.epsl.2017.11.047","volume":"483","author":"R
+        Rosenkranz","year":"2018","unstructured":"Rosenkranz, R., Schildgen, T., Wittmann,
+        H. & Spiegel, C. Coupling erosion and topographic development in the rainiest
+        place on Earth: reconstructing the Shillong Plateau uplift history with in-situ
+        cosmogenic 10Be. Earth Planet. Sci. Lett. 483, 39\u201351 (2018).","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"585_CR61","doi-asserted-by":"publisher","first-page":"1007","DOI":"10.1130\/0091-7613(2001)029<1007:POTTSA>2.0.CO;2","volume":"29","author":"P
+        Huyghe","year":"2001","unstructured":"Huyghe, P., Galy, A., Mugnier, J.-L.
+        & France-Lanord, C. Propagation of the thrust system and erosion in the Lesser
+        Himalaya: geochemical and sedimentological evidence. Geology 29, 1007\u20131010
+        (2001).","journal-title":"Geology"},{"key":"585_CR62","doi-asserted-by":"publisher","first-page":"507","DOI":"10.1016\/S0012-821X(01)00451-4","volume":"192","author":"DM
+        Robinson","year":"2001","unstructured":"Robinson, D. M., DeCelles, P. G.,
+        Patchett, P. J. & Garzione, C. N. The kinematic evolution of the Nepalese
+        Himalaya interpreted from Nd isotopes. Earth Planet. Sci. Lett. 192, 507\u2013521
+        (2001).","journal-title":"Earth Planet. Sci. Lett."},{"key":"585_CR63","doi-asserted-by":"publisher","first-page":"311","DOI":"10.1111\/j.1440-1738.2005.00500.x","volume":"14","author":"P
+        Huyghe","year":"2005","unstructured":"Huyghe, P., Mugnier, J. L., Gajurel,
+        A. P. & Delcaillau, B. Tectonic and climatic control of the changes in the
+        sedimentary record of the Karnali River section (Siwaliks of western Nepal).
+        Isl. Arc 14, 311\u2013327 (2005).","journal-title":"Isl. Arc"},{"key":"585_CR64","doi-asserted-by":"publisher","first-page":"523","DOI":"10.1130\/B30697.1","volume":"125","author":"F
+        Chirouze","year":"2013","unstructured":"Chirouze, F. et al. Tectonics, exhumation,
+        and drainage evolution of the eastern Himalaya since 13\u2009Ma from detrital
+        geochemistry and thermochronology, Kameng River section, Arunachal Pradesh.
+        Geol. Soc. Am. Bull. 125, 523\u2013538 (2013).","journal-title":"Geol. Soc.
+        Am. Bull."},{"key":"585_CR65","doi-asserted-by":"publisher","first-page":"350","DOI":"10.1016\/j.earscirev.2016.07.010","volume":"160","author":"L
+        Bracciali","year":"2016","unstructured":"Bracciali, L. et al. Plio-Pleistocene
+        exhumation of the eastern Himalayan syntaxis and its domal \u2018pop-up\u2019.
+        Earth-Sci. Rev. 160, 350\u2013385 (2016).","journal-title":"Earth-Sci. Rev."},{"key":"585_CR66","doi-asserted-by":"publisher","first-page":"799","DOI":"10.1130\/G34331.1","volume":"41","author":"A
+        G\u00e9belin","year":"2013","unstructured":"G\u00e9belin, A. et al. The Miocene
+        elevation of Mount Everest. Geology 41, 799\u2013802 (2013).","journal-title":"Geology"},{"key":"585_CR67","doi-asserted-by":"publisher","first-page":"339","DOI":"10.1130\/0091-7613(2000)28<339:HTOTTP>2.0.CO;2","volume":"28","author":"CN
+        Garzione","year":"2000","unstructured":"Garzione, C. N. et al. High times
+        on the Tibetan Plateau: paleoelevation of the Thakkhola Graben, Nepal. Geology
+        28, 339\u2013342 (2000).","journal-title":"Geology"},{"key":"585_CR68","doi-asserted-by":"publisher","first-page":"109","DOI":"10.1016\/0040-1951(96)00079-0","volume":"260","author":"A
+        Galy","year":"1996","unstructured":"Galy, A., France-Lanord, C. & Derry, L.
+        A. The late Oligocene-early Miocene Himalayan belt constraints deduced from
+        isotopic compositions of early Miocene turbidites in the Bengal Fan. Tectonophysics
+        260, 109\u2013118 (1996).","journal-title":"Tectonophysics"},{"key":"585_CR69","doi-asserted-by":"publisher","first-page":"200","DOI":"10.1016\/j.epsl.2017.02.009","volume":"464","author":"Y
+        Yang","year":"2017","unstructured":"Yang, Y. et al. Eolian dust forcing of
+        river chemistry on the northeastern Tibetan Plateau since 8\u2009Ma. Earth
+        Planet. Sci. Lett. 464, 200\u2013210 (2017).","journal-title":"Earth Planet.
+        Sci. Lett."},{"key":"585_CR70","doi-asserted-by":"publisher","first-page":"221","DOI":"10.1016\/0012-821X(84)90007-4","volume":"70","author":"SL
+        Goldstein","year":"1984","unstructured":"Goldstein, S. L., O\u2019nions, R.
+        K. & Hamilton, P. J. A Sm\u2013Nd isotopic study of atmospheric dusts and
+        particulates from major river systems. Earth Planet. Sci. Lett. 70, 221\u2013236
+        (1984).","journal-title":"Earth Planet. Sci. Lett."},{"key":"585_CR71","doi-asserted-by":"publisher","first-page":"187","DOI":"10.1111\/j.1751-908X.2001.tb00595.x","volume":"25","author":"J
+        Carignan","year":"2001","unstructured":"Carignan, J. et al. Routine analyses
+        of trace elements in geological samples using flow injection and low pressure
+        on-line liquid chromatography coupled to ICP-MS: a study of geochemical reference
+        materials BR, DR-N, UB-N, AN-G and GH. Geostand. Newslett. 25, 187\u2013198
+        (2001).","journal-title":"Geostand. Newslett."},{"key":"585_CR72","unstructured":"Morin,
+        G. L\u2019\u00e9rosion et l\u2019alt\u00e9ration et leur \u00e9volution depuis
+        le tardi-Pl\u00e9istoc\u00e8ne: Analyse des processus d\u2019\u00e9rosion
+        \u00e0 partir de s\u00e9diments de rivi\u00e8re actuels et pass\u00e9s au
+        N\u00e9pal Central. PhD thesis, Univ. Lorraine (2015)."},{"key":"585_CR73","doi-asserted-by":"crossref","unstructured":"Tarantola,
+        A. Inverse Problem Theory and Methods for Model Parameter Estimation (Society
+        of Industrial and Applied Mathematics, 2005).","DOI":"10.1137\/1.9780898717921"},{"key":"585_CR74","doi-asserted-by":"publisher","first-page":"1495","DOI":"10.1130\/B30965.1","volume":"126","author":"SL
+        Goodbred","year":"2014","unstructured":"Goodbred, S. L. et al. Piecing together
+        the Ganges\u2013Brahmaputra\u2013Meghna river delta: use of sediment provenance
+        to reconstruct the history and interaction of multiple fluvial systems during
+        Holocene delta evolution. Geol. Soc. Am. Bull. 126, 1495\u20131510 (2014).","journal-title":"Geol.
+        Soc. Am. Bull."},{"key":"585_CR75","unstructured":"Delft Hydraulics & Danish
+        Hydraulics Institute River Survey Project, Flood Action Plan 24 (Water Resource
+        Planning Organization, 1996)."},{"key":"585_CR76","doi-asserted-by":"publisher","first-page":"2341","DOI":"10.1029\/2017JF004460","volume":"123","author":"GP
+        Morin","year":"2018","unstructured":"Morin, G. P. et al. Annual sediment transport
+        dynamics in the Narayani Basin, Central Nepal: assessing the impacts of erosion
+        processes in the annual sediment budget. J. Geophys. Res. 123, 2341\u20132376
+        (2018).","journal-title":"J. Geophys. Res."},{"key":"585_CR77","unstructured":"Lenard,
+        S. J. P. The evolution of the Himalaya since the Late Miocene, as told by
+        the history of its erosion (Evolution de l\u2019Himalaya de la fin du Mioc\u00e8ne
+        \u00e0 nos jours \u00e0 partir de l\u2019Histoire de son \u00e9rosion). PhD
+        thesis, Univ. Lorraine (2019)."},{"key":"585_CR78","doi-asserted-by":"publisher","DOI":"10.1038\/srep33866","volume":"6","author":"G
+        Het\u00e9nyi","year":"2016","unstructured":"Het\u00e9nyi, G. et al. Segmentation
+        of the Himalayas as revealed by arc-parallel gravity anomalies. Sci. Rep.
+        6, 33866 (2016).","journal-title":"Sci. Rep."},{"key":"585_CR79","doi-asserted-by":"publisher","first-page":"259","DOI":"10.1111\/j.1945-5100.2000.tb01775.x","volume":"35","author":"I
+        Leya","year":"2000","unstructured":"Leya, I. et al. The production of cosmogenic
+        nuclides in stony meteoroids by galactic cosmic-ray particles. Meteorit. Planet.
+        Sci. 35, 259\u2013286 (2000).","journal-title":"Meteorit. Planet. Sci."},{"key":"585_CR80","doi-asserted-by":"publisher","first-page":"257","DOI":"10.1016\/j.epsl.2015.11.006","volume":"433","author":"N
+        Lifton","year":"2016","unstructured":"Lifton, N. Implications of two Holocene
+        time-dependent geomagnetic models for cosmogenic nuclide production rate scaling.
+        Earth Planet. Sci. Lett. 433, 257\u2013268 (2016).","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"585_CR81","doi-asserted-by":"publisher","first-page":"1849","DOI":"10.1016\/j.quascirev.2005.01.012","volume":"24","author":"R
+        Muscheler","year":"2005","unstructured":"Muscheler, R., Beer, J., Kubik, P.
+        W. & Synal, H.-A. Geomagnetic field intensity during the last 60,000 years
+        based on 10Be and 36Cl from the summit ice cores and 14C. Quat. Sci. Rev.
+        24, 1849\u20131860 (2005).","journal-title":"Quat. Sci. Rev."},{"key":"585_CR82","doi-asserted-by":"publisher","first-page":"802","DOI":"10.1038\/nature03674","volume":"435","author":"J-P
+        Valet","year":"2005","unstructured":"Valet, J.-P., Meynadier, L. & Guyodo,
+        Y. Geomagnetic dipole strength and reversal rate over the past two million
+        years. Nature 435, 802\u2013805 (2005).","journal-title":"Nature"},{"key":"585_CR83","doi-asserted-by":"publisher","first-page":"15","DOI":"10.1029\/2010EO020003","volume":"91","author":"AJ
+        Biggin","year":"2010","unstructured":"Biggin, A. J., McCormack, A. & Roberts,
+        A. Paleointensity database updated and upgraded. Eos 91, 15\u201316 (2010).","journal-title":"Eos"},{"key":"585_CR84","doi-asserted-by":"publisher","first-page":"17907","DOI":"10.1029\/JB094iB12p17907","volume":"94","author":"K
+        Nishiizumi","year":"1989","unstructured":"Nishiizumi, K. et al. Cosmic ray
+        production rates of 10Be and 26Al in quartz from glacially polished rocks.
+        J. Geophys. Res. Solid Earth 94, 17907\u201317915 (1989).","journal-title":"J.
+        Geophys. Res. Solid Earth"},{"key":"585_CR85","doi-asserted-by":"publisher","first-page":"243","DOI":"10.1016\/j.epsl.2013.01.038","volume":"365","author":"M
+        Lupker","year":"2013","unstructured":"Lupker, M. et al. Increasing chemical
+        weathering in the Himalayan system since the Last Glacial Maximum. Earth Planet.
+        Sci. Lett. 365, 243\u2013252 (2013).","journal-title":"Earth Planet. Sci.
+        Lett."}],"container-title":["Nature Geoscience"],"language":"en","link":[{"URL":"http:\/\/www.nature.com\/articles\/s41561-020-0585-2.pdf","content-type":"application\/pdf","content-version":"vor","intended-application":"text-mining"},{"URL":"http:\/\/www.nature.com\/articles\/s41561-020-0585-2","content-type":"text\/html","content-version":"vor","intended-application":"text-mining"},{"URL":"http:\/\/www.nature.com\/articles\/s41561-020-0585-2.pdf","content-type":"application\/pdf","content-version":"vor","intended-application":"similarity-checking"}],"deposited":{"date-parts":[[2023,10,1]],"date-time":"2023-10-01T20:04:14Z","timestamp":1696190654000},"score":17.308088,"resource":{"primary":{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0585-2"}},"issued":{"date-parts":[[2020,6]]},"references-count":85,"journal-issue":{"issue":"6","published-print":{"date-parts":[[2020,6]]}},"alternative-id":["585"],"URL":"https:\/\/doi.org\/10.1038\/s41561-020-0585-2","ISSN":["1752-0894","1752-0908"],"issn-type":[{"value":"1752-0894","type":"print"},{"value":"1752-0908","type":"electronic"}],"published":{"date-parts":[[2020,6]]},"assertion":[{"value":"26
+        September 2019","order":1,"name":"received","label":"Received","group":{"name":"ArticleHistory","label":"Article
+        History"}},{"value":"29 April 2020","order":2,"name":"accepted","label":"Accepted","group":{"name":"ArticleHistory","label":"Article
+        History"}},{"value":"1 June 2020","order":3,"name":"first_online","label":"First
+        Online","group":{"name":"ArticleHistory","label":"Article History"}},{"value":"The
+        authors declare no competing interests.","order":1,"name":"Ethics","group":{"name":"EthicsHeading","label":"Competing
+        interests"}}]},{"indexed":{"date-parts":[[2026,5,1]],"date-time":"2026-05-01T02:37:32Z","timestamp":1777603052057,"version":"3.51.4"},"reference-count":55,"publisher":"Springer
+        Science and Business Media LLC","issue":"10","license":[{"start":{"date-parts":[[2020,8,3]],"date-time":"2020-08-03T00:00:00Z","timestamp":1596412800000},"content-version":"tdm","delay-in-days":0,"URL":"https:\/\/www.springer.com\/tdm"},{"start":{"date-parts":[[2020,8,3]],"date-time":"2020-08-03T00:00:00Z","timestamp":1596412800000},"content-version":"vor","delay-in-days":0,"URL":"https:\/\/www.springer.com\/tdm"}],"funder":[{"DOI":"10.13039\/100000054","name":"U.S.
+        Department of Health & Human Services | NIH | National Cancer Institute","doi-asserted-by":"publisher","award":["R35CA197569"],"award-info":[{"award-number":["R35CA197569"]}],"id":[{"id":"10.13039\/100000054","id-type":"DOI","asserted-by":"publisher"}]},{"DOI":"10.13039\/100000054","name":"U.S.
+        Department of Health & Human Services | NIH | National Cancer Institute","doi-asserted-by":"publisher","award":["F99CA234945"],"award-info":[{"award-number":["F99CA234945"]}],"id":[{"id":"10.13039\/100000054","id-type":"DOI","asserted-by":"publisher"}]},{"DOI":"10.13039\/100000054","name":"U.S.
+        Department of Health & Human Services | NIH | National Cancer Institute","doi-asserted-by":"publisher","award":["NIH
+        K08HL128867"],"award-info":[{"award-number":["NIH K08HL128867"]}],"id":[{"id":"10.13039\/100000054","id-type":"DOI","asserted-by":"publisher"}]},{"DOI":"10.13039\/100000054","name":"U.S.
+        Department of Health & Human Services | NIH | National Cancer Institute","doi-asserted-by":"publisher","award":["NIH
+        R50CA211428"],"award-info":[{"award-number":["NIH R50CA211428"]}],"id":[{"id":"10.13039\/100000054","id-type":"DOI","asserted-by":"publisher"}]},{"DOI":"10.13039\/100000054","name":"U.S.
+        Department of Health & Human Services | NIH | National Cancer Institute","doi-asserted-by":"publisher","award":["K99CA234434"],"award-info":[{"award-number":["K99CA234434"]}],"id":[{"id":"10.13039\/100000054","id-type":"DOI","asserted-by":"publisher"}]}],"content-domain":{"domain":["link.springer.com"],"crossmark-restriction":false},"short-container-title":["Nat.
+        Geosci."],"published-print":{"date-parts":[[2020,10]]},"DOI":"10.1038\/s41561-020-0618-x","type":"journal-article","created":{"date-parts":[[2020,8,3]],"date-time":"2020-08-03T16:06:28Z","timestamp":1596470788000},"page":"663-668","update-policy":"https:\/\/doi.org\/10.1007\/springer_crossmark_policy","source":"Crossref","is-referenced-by-count":66,"title":["Valley
+        formation on early Mars by subglacial and fluvial erosion"],"prefix":"10.1038","volume":"13","author":[{"ORCID":"https:\/\/orcid.org\/0000-0001-8188-3527","authenticated-orcid":false,"given":"Anna","family":"Grau
+        Galofre","sequence":"first","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.
+        Mark","family":"Jellinek","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-1832-5925","authenticated-orcid":false,"given":"Gordon
+        R.","family":"Osinski","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]}],"member":"297","published-online":{"date-parts":[[2020,8,3]]},"reference":[{"key":"618_CR1","doi-asserted-by":"crossref","first-page":"7479","DOI":"10.1029\/95JE00260","volume":"100","author":"MH
+        Carr","year":"1995","unstructured":"Carr, M. H. The Martian drainage system
+        and the origin of valley networks and fretted channels. J. Geophys. Res. Planet.
+        100, 7479\u20137507 (1995).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR2","doi-asserted-by":"crossref","first-page":"23737","DOI":"10.1029\/2000JE001409","volume":"106","author":"RM
+        Williams","year":"2001","unstructured":"Williams, R. M. & Phillips, R. J.
+        Morphometric measurements of Martian valley networks from Mars Orbiter Laser
+        Altimeter (MOLA) data. J. Geophys. Research Planet. 106, 23737\u201323751
+        (2001).","journal-title":"J. Geophys. Research Planet."},{"key":"618_CR3","doi-asserted-by":"crossref","first-page":"241","DOI":"10.1016\/S0169-555X(00)00086-6","volume":"37","author":"VC
+        Gulick","year":"2001","unstructured":"Gulick, V. C. Origin of the valley networks
+        on Mars: a hydrological perspective. Geomorphology 37, 241\u2013268 (2001).","journal-title":"Geomorphology"},{"key":"618_CR4","doi-asserted-by":"crossref","first-page":"E090008","DOI":"10.1029\/2009JE003548","volume":"115","author":"BM
+        Hynek","year":"2010","unstructured":"Hynek, B. M., Beach, M. & Hoke, M. R.
+        Updated global map of Martian valley networks and implications for climate
+        and hydrologic processes. J. Geophys. Res. Planet. 115, E090008 (2010).","journal-title":"J.
+        Geophys. Res. Planet."},{"key":"618_CR5","doi-asserted-by":"crossref","first-page":"91","DOI":"10.1016\/0019-1035(81)90156-1","volume":"48","author":"MH
+        Carr","year":"1981","unstructured":"Carr, M. H. & Clow, G. D. Martian channels
+        and valleys: their characteristics, distribution, and age. Icarus 48, 91\u2013117
+        (1981).","journal-title":"Icarus"},{"key":"618_CR6","doi-asserted-by":"crossref","first-page":"203","DOI":"10.1130\/0016-7606(1985)96<203:SPATDO>2.0.CO;2","volume":"96","author":"JE
+        Laity","year":"1985","unstructured":"Laity, J. E. & Malin, M. C. Sapping processes
+        and the development of theater-headed valley networks on the Colorado Plateau.
+        Geol. Soc. Am. Bull. 96, 203\u2013217 (1985).","journal-title":"Geol. Soc.
+        Am. Bull."},{"key":"618_CR7","doi-asserted-by":"crossref","first-page":"3","DOI":"10.1130\/0091-7613(1992)020<0003:AGOM>2.3.CO;2","volume":"20","author":"JS
+        Kargel","year":"1992","unstructured":"Kargel, J. S. & Strom, R. G. Ancient
+        glaciation on Mars. Geology 20, 3\u20137 (1992).","journal-title":"Geology"},{"key":"618_CR8","unstructured":"Lee,
+        P. A Unique Mars\/early Mars analog on Earth: the Haughton impact structure
+        Devon Island, Canadian Arctic. In Conference on Early Mars: Geologic and Hydrologic
+        Evolution, Physical and Chemical Environments, and the Implications for Life
+        (eds Clifford, S. M., Treiman, A. H., Newsom, H. E. & Farmer, J. D.) 50 (LPI
+        Contribution no. 916, Lunar and Planetary Institute, 1997)."},{"key":"618_CR9","doi-asserted-by":"crossref","first-page":"5111","DOI":"10.1029\/2001JE001505","volume":"107","author":"RA
+        Craddock","year":"2002","unstructured":"Craddock, R. A. & Howard, A. D. The
+        case for rainfall on a warm, wet early Mars. J. Geophys. Res. Planet. 107,
+        5111 (2002).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR10","doi-asserted-by":"crossref","first-page":"E12S14","DOI":"10.1029\/2004JA010610","volume":"110","author":"AD
+        Howard","year":"2005","unstructured":"Howard, A. D., Moore, J. M. & Irwin,
+        R. P. An intense terminal epoch of widespread fluvial activity on early Mars:
+        1. Valley network incision and associated deposits. J. Geophys. Res. Planet.
+        110, E12S14 (2005).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR11","unstructured":"Baker,
+        V. R., Carr, M. H., Gulick, V. C., Williams, C. R. & Marley, M. S. in Mars
+        (eds Kieffer, H. H., Jakosky, B. M., Snyder, C. W. & Matthews, M. S.) 493\u2013522
+        (Univ. Arizona Press, 1992)."},{"key":"618_CR12","first-page":"E07002","volume":"111","author":"MP
+        Lamb","year":"2006","unstructured":"Lamb, M. P. et al. Can springs cut canyons
+        into rock? J. Geophys. Res. Planet. 111, E07002 (2006).","journal-title":"J.
+        Geophys. Res. Planet."},{"key":"618_CR13","doi-asserted-by":"crossref","first-page":"593","DOI":"10.1130\/0016-7606(1975)86<593:COM>2.0.CO;2","volume":"86","author":"RP
+        Sharp","year":"1975","unstructured":"Sharp, R. P. & Malin, M. C. Channels
+        on Mars. Geol. Soc. Am. Bull. 86, 593\u2013609 (1975).","journal-title":"Geol.
+        Soc. Am. Bull."},{"key":"618_CR14","doi-asserted-by":"crossref","first-page":"1","DOI":"10.1016\/j.icarus.2012.09.036","volume":"222","author":"R
+        Wordsworth","year":"2013","unstructured":"Wordsworth, R. et al. Global modelling
+        of the early Martian climate under a denser CO2 atmosphere: water cycle and
+        ice evolution. Icarus 222, 1\u201319 (2013).","journal-title":"Icarus"},{"key":"618_CR15","doi-asserted-by":"crossref","first-page":"82","DOI":"10.1016\/j.pss.2014.11.028","volume":"106","author":"JL
+        Fastook","year":"2015","unstructured":"Fastook, J. L. & Head, J. W. Glaciation
+        in the Late Noachian Icy Highlands: ice accumulation, distribution, flow rates,
+        basal melting, and top-down melting rates and patterns. Planet. Space Sci.
+        106, 82\u201398 (2015).","journal-title":"Planet. Space Sci."},{"key":"618_CR16","doi-asserted-by":"crossref","first-page":"1037","DOI":"10.1002\/2016JF003825","volume":"122","author":"A
+        Grau Galofre","year":"2017","unstructured":"Grau Galofre, A. & Jellinek, M.
+        A. The geometry and complexity of spatial patterns of terrestrial channel
+        networks: distinctive fingerprints of erosional regimes. J. Geophys. Res.
+        Earth Surf. 122, 1037\u20131059 (2017).","journal-title":"J. Geophys. Res.
+        Earth Surf."},{"key":"618_CR17","doi-asserted-by":"crossref","first-page":"1461","DOI":"10.5194\/tc-12-1461-2018","volume":"12","author":"A
+        Grau Galofre","year":"2018","unstructured":"Grau Galofre, A., Jellinek, A.
+        M., Osinski, G., Zanetti, M. & Kukko, A. Subglacial drainage patterns of Devon
+        Island, Canada: detailed comparison of river and subglacial channels. Cryosphere
+        12, 1461\u20131478 (2018).","journal-title":"Cryosphere"},{"key":"618_CR18","doi-asserted-by":"crossref","first-page":"205","DOI":"10.1017\/S002214300002219X","volume":"11","author":"R
+        Shreve","year":"1972","unstructured":"Shreve, R. Movement of water in glaciers.
+        J. Glaciol. 11, 205\u2013214 (1972).","journal-title":"J. Glaciol."},{"key":"618_CR19","doi-asserted-by":"crossref","first-page":"109","DOI":"10.1080\/04353676.1991.11880335","volume":"73","author":"DE
+        Sugden","year":"1991","unstructured":"Sugden, D. E., Denton, G. H. & Marchant,
+        D. R. Subglacial meltwater channel systems and ice sheet overriding, Asgard
+        Range, Antarctica. Geogr. Annal. A 73, 109\u2013121 (1991).","journal-title":"Geogr.
+        Annal. A"},{"key":"618_CR20","doi-asserted-by":"crossref","first-page":"637","DOI":"10.1002\/jqs.1083","volume":"22","author":"SL
+        Greenwood","year":"2007","unstructured":"Greenwood, S. L., Clark, C. D. &
+        Hughes, A. L. Formalising an inversion methodology for reconstructing ice-sheet
+        retreat patterns from meltwater channels: application to the British Ice Sheet.
+        J. Quatern. Sci. 22, 637\u2013645 (2007).","journal-title":"J. Quatern. Sci."},{"key":"618_CR21","doi-asserted-by":"crossref","first-page":"33","DOI":"10.1016\/j.earscirev.2012.02.002","volume":"113","author":"AE
+        Kehew","year":"2012","unstructured":"Kehew, A. E., Piotrowski, J. A. & J\u00f8rgensen,
+        F. Tunnel valleys: concepts and controversies\u2014a review. Earth Sci. Rev.
+        113, 33\u201358 (2012).","journal-title":"Earth Sci. Rev."},{"key":"618_CR22","doi-asserted-by":"crossref","first-page":"128","DOI":"10.1002\/2013JE004396","volume":"119","author":"DE
+        Hobley","year":"2014","unstructured":"Hobley, D. E., Howard, A. D. & Moore,
+        J. M. Fresh shallow valleys in the Martian midlatitudes as features formed
+        by meltwater flow beneath ice. J. Geophys. Res. Planet. 119, 128\u2013153
+        (2014).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR23","doi-asserted-by":"crossref","first-page":"63","DOI":"10.1038\/47005","volume":"402","author":"J
+        Kleman","year":"1999","unstructured":"Kleman, J. & H\u00e4ttestrand, C. Frozen-bed
+        Fennoscandian and Laurentide ice sheets during the Last Glacial Maximum. Nature
+        402, 63\u201366 (1999).","journal-title":"Nature"},{"key":"618_CR24","doi-asserted-by":"crossref","first-page":"393","DOI":"10.1016\/S0277-3791(98)00005-5","volume":"18","author":"A
+        Dyke","year":"1999","unstructured":"Dyke, A. Last Glacial Maximum and deglaciation
+        of Devon Island, Arctic Canada: support for an Innuitian Ice Sheet. Quatern.
+        Sci. Rev. 18, 393\u2013420 (1999).","journal-title":"Quatern. Sci. Rev."},{"key":"618_CR25","doi-asserted-by":"crossref","first-page":"127","DOI":"10.1016\/S0169-555X(01)00149-0","volume":"44","author":"C
+        H\u00e4ttestrand","year":"2002","unstructured":"H\u00e4ttestrand, C. & Stroeven,
+        A. P. A relict landscape in the centre of Fennoscandian glaciation: geomorphological
+        evidence of minimal Quaternary glacial erosion. Geomorphology 44, 127\u2013143
+        (2002).","journal-title":"Geomorphology"},{"key":"618_CR26","doi-asserted-by":"crossref","first-page":"689","DOI":"10.1016\/j.quascirev.2005.08.007","volume":"25","author":"J
+        England","year":"2006","unstructured":"England, J. et al. The Innuitian Ice
+        Sheet: configuration, dynamics and chronology. Quatern. Sci. Rev. 25, 689\u2013703
+        (2006).","journal-title":"Quatern. Sci. Rev."},{"key":"618_CR27","doi-asserted-by":"crossref","first-page":"335","DOI":"10.3189\/S0022143000029944","volume":"23","author":"J
+        Walder","year":"1979","unstructured":"Walder, J. & Hallet, B. Geometry of
+        former subglacial water channels and cavities. J. Glaciol. 23, 335\u2013346
+        (1979).","journal-title":"J. Glaciol."},{"key":"618_CR28","doi-asserted-by":"crossref","first-page":"589","DOI":"10.1038\/17551","volume":"397","author":"MC
+        Malin","year":"1999","unstructured":"Malin, M. C. & Carr, M. H. Groundwater
+        formation of Martian valleys. Nature 397, 589\u2013591 (1999).","journal-title":"Nature"},{"key":"618_CR29","doi-asserted-by":"crossref","first-page":"17661","DOI":"10.1029\/1999JB900120","volume":"104","author":"KX
+        Whipple","year":"1999","unstructured":"Whipple, K. X. & Tucker, G. E. Dynamics
+        of the stream-power river incision model: implications for height limits of
+        mountain ranges, landscape response timescales, and research needs. J. Geophys.
+        Res. Solid Earth 104, 17661\u201317674 (1999).","journal-title":"J. Geophys.
+        Res. Solid Earth"},{"key":"618_CR30","first-page":"F04005","volume":"112","author":"G
+        Parker","year":"2007","unstructured":"Parker, G., Wilcock, P. R., Paola, C.,
+        Dietrich, W. E. & Pitlick, J. Physical basis for quasi-universal relations
+        describing bankfull hydraulic geometry of single-thread gravel bed rivers.
+        J. Geophys. Res. Earth Surface 112, F04005 (2007).","journal-title":"J. Geophys.
+        Res. Earth Surface"},{"key":"618_CR31","first-page":"F04016","volume":"113","author":"JT
+        Perron","year":"2008","unstructured":"Perron, J. T., Dietrich, W. E. & Kirchner,
+        J. W. Controls on the spacing of first-order valleys. J. Geophys. Res. Earth
+        Surface 113, F04016 (2008).","journal-title":"J. Geophys. Res. Earth Surface"},{"key":"618_CR32","doi-asserted-by":"crossref","first-page":"1201","DOI":"10.1002\/2015JE004787","volume":"120","author":"RD
+        Wordsworth","year":"2015","unstructured":"Wordsworth, R. D., Kerber, L., Pierrehumbert,
+        R. T., Forget, F. & Head, J. W. Comparison of \u2018warm and wet\u2019 and
+        \u2018cold and icy\u2019 scenarios for early Mars in a 3-D climate model.
+        J. Geophys. Res. Planet. 120, 1201\u20131219 (2015).","journal-title":"J.
+        Geophys. Res. Planet."},{"key":"618_CR33","doi-asserted-by":"crossref","first-page":"803","DOI":"10.1038\/nature09618","volume":"468","author":"C
+        Schoof","year":"2010","unstructured":"Schoof, C. Ice-sheet acceleration driven
+        by melt supply variability. Nature 468, 803\u2013806 (2010).","journal-title":"Nature"},{"key":"618_CR34","doi-asserted-by":"crossref","first-page":"015017","DOI":"10.1088\/1748-9326\/8\/1\/015017","volume":"8","author":"AK
+        Rennermalm","year":"2013","unstructured":"Rennermalm, A. K. et al. Understanding
+        Greenland ice sheet hydrology using an integrated multi-scale approach. Environ.
+        Res. Lett. 8, 015017 (2013).","journal-title":"Environ. Res. Lett."},{"key":"618_CR35","doi-asserted-by":"crossref","first-page":"151","DOI":"10.2113\/gselements.2.3.151","volume":"2","author":"PR
+        Christensen","year":"2006","unstructured":"Christensen, P. R. Water at the
+        poles and in permafrost regions of Mars. Elements 2, 151\u2013155 (2006).","journal-title":"Elements"},{"key":"618_CR36","doi-asserted-by":"crossref","first-page":"726","DOI":"10.1002\/2014GL062464","volume":"42","author":"M
+        Carr","year":"2015","unstructured":"Carr, M. & Head, J. Martian surface\/near-surface
+        water inventory: sources, sinks, and changes with time. Geophys. Res. Lett.
+        42, 726\u2013732 (2015).","journal-title":"Geophys. Res. Lett."},{"key":"618_CR37","unstructured":"Cuffey,
+        K. M. & Paterson, W. S. B. The Physics of Glaciers (Academic, 2010)."},{"key":"618_CR38","doi-asserted-by":"crossref","first-page":"10973","DOI":"10.1029\/93JE00225","volume":"98","author":"SM
+        Clifford","year":"1993","unstructured":"Clifford, S. M. A model for the hydrologic
+        and climatic behavior of water on mars. J. Geophys. Res. Planet. 98, 10973\u201311016
+        (1993).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR39","doi-asserted-by":"crossref","first-page":"381","DOI":"10.1146\/annurev-earth-060115-012355","volume":"44","author":"RD
+        Wordsworth","year":"2016","unstructured":"Wordsworth, R. D. The climate of
+        early Mars. Ann. Rev. Earth Planet. Sci. 44, 381\u2013408 (2016).","journal-title":"Ann.
+        Rev. Earth Planet. Sci."},{"key":"618_CR40","doi-asserted-by":"crossref","first-page":"10249","DOI":"10.1029\/2018GL079767","volume":"45","author":"AM
+        Palumbo","year":"2018","unstructured":"Palumbo, A. M. & Head, J. W. Early
+        Mars climate history: characterizing a \u2018warm and wet\u2019 Martian climate
+        with a 3D global climate model and testing geological predictions. Geophys.
+        Res. Lett. 45, 10249\u201310258 (2018).","journal-title":"Geophys. Res. Lett."},{"key":"618_CR41","doi-asserted-by":"crossref","first-page":"379","DOI":"10.1016\/j.icarus.2018.07.017","volume":"317","author":"EN
+        Rosenberg","year":"2019","unstructured":"Rosenberg, E. N., Palumbo, A. M.,
+        Cassanelli, J. P., Head, J. W. & Weiss, D. K. The volume of water required
+        to carve the Martian valley networks: improved constraints using updated methods.
+        Icarus 317, 379\u2013387 (2019).","journal-title":"Icarus"},{"key":"618_CR42","doi-asserted-by":"crossref","first-page":"12275","DOI":"10.1029\/2000JE001359","volume":"106","author":"JW
+        Head","year":"2001","unstructured":"Head, J. W. & Pratt, S. Extensive Hesperian-aged
+        south polar ice sheet on Mars: evidence for massive melting and retreat, and
+        lateral flow and ponding of meltwater. J. Geophys. Res. Planet. 106, 12275\u201312299
+        (2001).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR43","doi-asserted-by":"crossref","first-page":"25","DOI":"10.1016\/j.icarus.2012.02.013","volume":"219","author":"JL
+        Fastook","year":"2012","unstructured":"Fastook, J. L., Head, J. W., Marchant,
+        D. R., Forget, F. & Madeleine, J.-B. Early Mars climate near the Noachian\u2013Hesperian
+        boundary: Independent evidence for cold conditions from basal melting of the
+        south polar ice sheet (Dorsa Argentea Formation) and implications for valley
+        network formation. Icarus 219, 25\u201340 (2012).","journal-title":"Icarus"},{"key":"618_CR44","doi-asserted-by":"crossref","first-page":"65","DOI":"10.1016\/j.icarus.2016.03.028","volume":"275","author":"FE
+        Butcher","year":"2016","unstructured":"Butcher, F. E., Conway, S. J. & Arnold,
+        N. S. Are the Dorsa Argentea on Mars eskers? Icarus 275, 65\u201384 (2016).","journal-title":"Icarus"},{"key":"618_CR45","doi-asserted-by":"crossref","first-page":"490","DOI":"10.1126\/science.aar7268","volume":"361","author":"R
+        Orosei","year":"2018","unstructured":"Orosei, R. et al. Radar evidence of
+        subglacial liquid water on Mars. Science 361, 490\u2013493 (2018).","journal-title":"Science"},{"key":"618_CR46","doi-asserted-by":"crossref","first-page":"E12S15","DOI":"10.1029\/2005JE002460","volume":"110","author":"RP
+        Irwin","year":"2005","unstructured":"Irwin, R. P., Howard, A. D., Craddock,
+        R. A. & Moore, J. M. An intense terminal epoch of widespread fluvial activity
+        on early Mars: 2. Increased runoff and paleolake development. J. Geophys.
+        Res. Planet. 110, E12S15 (2005).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR47","doi-asserted-by":"crossref","first-page":"E07006","DOI":"10.1029\/2007JE002986","volume":"113","author":"V
+        Ansan","year":"2008","unstructured":"Ansan, V., Mangold, N., Masson, P., Gailhardis,
+        E. & Neukum, G. Topography of valley networks on Mars from Mars Express High
+        Resolution Stereo Camera digital elevation models. J. Geophys. Res. Planet.
+        113, E07006 (2008).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR48","doi-asserted-by":"crossref","first-page":"366","DOI":"10.1006\/icar.2000.6428","volume":"146","author":"MH
+        Carr","year":"2000","unstructured":"Carr, M. H. & Malin, M. C. Meter-scale
+        characteristics of Martian channels and valleys. Icarus 146, 366\u2013386
+        (2000).","journal-title":"Icarus"},{"key":"618_CR49","doi-asserted-by":"crossref","first-page":"57","DOI":"10.1016\/S1040-6182(01)00092-1","volume":"90","author":"RB
+        Rains","year":"2002","unstructured":"Rains, R. B. et al. Subglacial tunnel
+        channels, Porcupine Hills, Southwest Alberta, Canada. Quatern. Int. 90, 57\u201365
+        (2002).","journal-title":"Quatern. Int."},{"key":"618_CR50","doi-asserted-by":"crossref","first-page":"175","DOI":"10.1144\/transed.18.2.175","volume":"18","author":"J
+        Sissons","year":"1961","unstructured":"Sissons, J. A subglacial drainage system
+        by the Tinto Hills, Lanarkshire. Trans. Edin. Geol. Soc. 18, 175\u2013193
+        (1961).","journal-title":"Trans. Edin. Geol. Soc."},{"key":"618_CR51","doi-asserted-by":"crossref","first-page":"895","DOI":"10.1126\/science.210.4472.895","volume":"210","author":"DC
+        Pieri","year":"1980","unstructured":"Pieri, D. C. Martian valleys\u2014morphology,
+        distribution, age, and origin. Science 210, 895\u2013897 (1980).","journal-title":"Science"},{"key":"618_CR52","doi-asserted-by":"crossref","first-page":"23689","DOI":"10.1029\/2000JE001364","volume":"106","author":"DE
+        Smith","year":"2001","unstructured":"Smith, D. E. et al. Mars Orbiter Laser
+        Altimeter: experiment summary after the first year of global mapping of Mars.
+        J. Geophys. Res. Planet. 106, 23689\u201323722 (2001).","journal-title":"J.
+        Geophys. Res. Planet."},{"key":"618_CR53","doi-asserted-by":"crossref","first-page":"275","DOI":"10.1130\/0016-7606(1945)56[275:EDOSAT]2.0.CO;2","volume":"56","author":"RE
+        Horton","year":"1945","unstructured":"Horton, R. E. Erosional development
+        of streams and their drainage basins; hydrophysical approach to quantitative
+        morphology. Geol. Soc. Am. Bull. 56, 275\u2013370 (1945).","journal-title":"Geol.
+        Soc. Am. Bull."},{"key":"618_CR54","doi-asserted-by":"crossref","first-page":"E12S12","DOI":"10.1029\/2005JE002448","volume":"110","author":"T
+        Stepinski","year":"2005","unstructured":"Stepinski, T. & Stepinski, A. Morphology
+        of drainage basins as an indicator of climate on early Mars. J. Geophys. Res.
+        Planet. 110, E12S12 (2005).","journal-title":"J. Geophys. Res. Planet."},{"key":"618_CR55","doi-asserted-by":"crossref","first-page":"604","DOI":"10.1016\/j.cageo.2005.09.004","volume":"32","author":"BD
+        Bue","year":"2006","unstructured":"Bue, B. D. & Stepinski, T. F. Automated
+        classification of landforms on Mars. Computat. Geosci. 32, 604\u2013614 (2006).","journal-title":"Computat.
+        Geosci."}],"container-title":["Nature Geoscience"],"language":"en","link":[{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0618-x.pdf","content-type":"application\/pdf","content-version":"vor","intended-application":"text-mining"},{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0618-x","content-type":"text\/html","content-version":"vor","intended-application":"text-mining"},{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0618-x.pdf","content-type":"application\/pdf","content-version":"vor","intended-application":"similarity-checking"}],"deposited":{"date-parts":[[2022,11,5]],"date-time":"2022-11-05T15:32:08Z","timestamp":1667662328000},"score":4.9090557,"resource":{"primary":{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0618-x"}},"issued":{"date-parts":[[2020,8,3]]},"references-count":55,"journal-issue":{"issue":"10","published-print":{"date-parts":[[2020,10]]}},"alternative-id":["618"],"URL":"https:\/\/doi.org\/10.1038\/s41561-020-0618-x","ISSN":["1752-0894","1752-0908"],"issn-type":[{"value":"1752-0894","type":"print"},{"value":"1752-0908","type":"electronic"}],"published":{"date-parts":[[2020,8,3]]},"assertion":[{"value":"14
+        November 2018","order":1,"name":"received","label":"Received","group":{"name":"ArticleHistory","label":"Article
+        History"}},{"value":"23 June 2020","order":2,"name":"accepted","label":"Accepted","group":{"name":"ArticleHistory","label":"Article
+        History"}},{"value":"3 August 2020","order":3,"name":"first_online","label":"First
+        Online","group":{"name":"ArticleHistory","label":"Article History"}},{"value":"The
+        authors declare no competing interests.","order":1,"name":"Ethics","group":{"name":"EthicsHeading","label":"Competing
+        interests"}}]},{"indexed":{"date-parts":[[2025,12,31]],"date-time":"2025-12-31T03:45:46Z","timestamp":1767152746108,"version":"build-2238731810"},"update-to":[{"DOI":"10.1038\/s41561-019-0330-x","type":"correction","label":"Correction","source":"publisher","updated":{"date-parts":[[2020,9,2]],"date-time":"2020-09-02T00:00:00Z","timestamp":1599004800000}}],"reference-count":0,"publisher":"Springer
+        Science and Business Media LLC","issue":"11","license":[{"start":{"date-parts":[[2020,9,2]],"date-time":"2020-09-02T00:00:00Z","timestamp":1599004800000},"content-version":"tdm","delay-in-days":0,"URL":"https:\/\/www.springer.com\/tdm"},{"start":{"date-parts":[[2020,9,2]],"date-time":"2020-09-02T00:00:00Z","timestamp":1599004800000},"content-version":"vor","delay-in-days":0,"URL":"https:\/\/www.springer.com\/tdm"}],"content-domain":{"domain":["link.springer.com"],"crossmark-restriction":false},"short-container-title":["Nat.
+        Geosci."],"published-print":{"date-parts":[[2020,11]]},"DOI":"10.1038\/s41561-020-0643-9","type":"journal-article","created":{"date-parts":[[2020,9,2]],"date-time":"2020-09-02T06:03:28Z","timestamp":1599026608000},"page":"764-764","update-policy":"https:\/\/doi.org\/10.1007\/springer_crossmark_policy","source":"Crossref","is-referenced-by-count":2,"title":["Author
+        Correction: Shape of (101955) Bennu indicative of a rubble pile with internal
+        stiffness"],"prefix":"10.1038","volume":"13","author":[{"ORCID":"https:\/\/orcid.org\/0000-0002-3578-7750","authenticated-orcid":false,"given":"O.
+        S.","family":"Barnouin","sequence":"first","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-3733-2530","authenticated-orcid":false,"given":"M.
+        G.","family":"Daly","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        E.","family":"Palmer","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        W.","family":"Gaskell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        R.","family":"Weirich","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        L.","family":"Johnson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        M.","family":"Al Asad","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        H.","family":"Roberts","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        E.","family":"Perry","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.
+        C. M.","family":"Susorney","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        T.","family":"Daly","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        B.","family":"Bierhaus","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-2163-7276","authenticated-orcid":false,"given":"J.
+        A.","family":"Seabrook","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        C.","family":"Espiritu","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-9753-7650","authenticated-orcid":false,"given":"A.
+        H.","family":"Nair","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Nguyen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.
+        A.","family":"Neumann","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        M.","family":"Ernst","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.
+        V.","family":"Boynton","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0001-8316-0680","authenticated-orcid":false,"given":"M.
+        C.","family":"Nolan","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        D.","family":"Adam","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        C.","family":"Moreau","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-0823-9804","authenticated-orcid":false,"given":"B.","family":"Rizk","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        Y.","family":"Drouet D\u2019Aubigny","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        R.","family":"Jawin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-0906-1761","authenticated-orcid":false,"given":"K.
+        J.","family":"Walsh","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-0884-1993","authenticated-orcid":false,"given":"P.","family":"Michel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0001-5475-9379","authenticated-orcid":false,"given":"S.
+        R.","family":"Schwartz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-1772-1934","authenticated-orcid":false,"given":"R.-L.","family":"Ballouz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0003-3456-427X","authenticated-orcid":false,"given":"E.
+        M.","family":"Mazarico","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0003-0558-3842","authenticated-orcid":false,"given":"D.
+        J.","family":"Scheeres","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        W.","family":"McMahon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.
+        F.","family":"Bottke","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Sugita","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Hirata","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Hirata","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-5820-2102","authenticated-orcid":false,"given":"S.-i.","family":"Watanabe","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0003-1633-2096","authenticated-orcid":false,"given":"K.
+        N.","family":"Burke","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"ORCID":"https:\/\/orcid.org\/0000-0002-5643-1956","authenticated-orcid":false,"given":"D.
+        N.","family":"DellaGiustina","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        A.","family":"Bennett","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        S.","family":"Lauretta","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"name":"The
+        OSIRIS-REx Team","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        E.","family":"Highsmith","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Small","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Vokrouhlick\u00fd","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.
+        E.","family":"Bowles","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Brown","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.
+        L.","family":"Donaldson Hanna","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Warren","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Brunet","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        A.","family":"Chicoine","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Desjardins","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Gaudreau","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Haltigin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Millington-Veloza","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Rubi","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Aponte","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Gorius","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Lunsford","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Allen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Grindlay","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Guevel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Hoak","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Hong","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        L.","family":"Schrader","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Bayron","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"O.","family":"Golubov","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"S\u00e1nchez","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Stromberg","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Hirabayashi","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        M.","family":"Hartzell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Oliver","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Rascon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Harch","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Joseph","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Squyres","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Richardson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        P.","family":"Emery","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"McGraw","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Ghent","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        P.","family":"Binzel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        M. Al","family":"Asad","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        L.","family":"Johnson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Philpott","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.
+        C. M.","family":"Susorney","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        A.","family":"Cloutis","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        D.","family":"Hanna","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"suffix":"Jr.","given":"H.
+        C.","family":"Connolly","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"F.","family":"Ciceri","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.
+        R.","family":"Hildebrand","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.-M.","family":"Ibrahim","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Breitenfeld","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Glotch","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.
+        D.","family":"Rogers","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.
+        E.","family":"Clark","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Ferrone","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        A.","family":"Thomas","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.","family":"Campins","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Y.","family":"Fernandez","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.","family":"Chang","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Cheuvront","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Trang","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Tachibana","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.","family":"Yurimoto","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        R.","family":"Brucato","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Poggiali","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Pajola","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Dotto","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        Mazzotta","family":"Epifani","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        K.","family":"Crombie","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Lantz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        R. M.","family":"Izawa","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"de
+        Leon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Licandro","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        L. Rizos","family":"Garcia","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Clemett","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Thomas-Keprta","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Van
+        wal","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Yoshikawa","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Bellerose","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Bhaskaran","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Boyles","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.
+        R.","family":"Chesley","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        M.","family":"Elder","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Farnocchia","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Harbison","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Kennedy","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Knight","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Martinez-Vlasoff","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Mastrodemos","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"McElrath","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.","family":"Owen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Park","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Rush","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Swanson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Y.","family":"Takahashi","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Velez","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Yetter","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Thayer","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Adam","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Antreasian","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Bauman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Bryan","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Carcich","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Corvin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Geeraert","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Hoffman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        M.","family":"Leonard","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Lessac-Chenen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Levine","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"McAdams","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"McCarthy","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Nelson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Page","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Pelgrift","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Sahr","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Stakkestad","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Stanbridge","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Wibben","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Williams","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Williams","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Wolff","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Hayne","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Kubitschek","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        A.","family":"Barucci","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        D. P.","family":"Deshapriya","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Fornasier","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Fulchignoni","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Hasselmann","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"F.","family":"Merlin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Praet","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        B.","family":"Bierhaus","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"O.","family":"Billett","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Boggs","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Buck","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Carlson-Kelly","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Cerna","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Chaffin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Church","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Coltrin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Daly","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Deguzman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Dubisher","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Eckart","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Ellis","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Falkenstern","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Fisher","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        E.","family":"Fisher","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Fleming","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Fortney","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Francis","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Freund","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Gonzales","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Haas","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Hasten","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Hauf","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Hilbert","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Howell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"F.","family":"Jaen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Jayakody","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Jenkins","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Johnson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Lefevre","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.","family":"Ma","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Mario","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Martin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"May","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"McGee","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Miller","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Miller","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Miller","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Mirfakhrai","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Muhle","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Norman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Olds","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Parish","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Ryle","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Schmitzer","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Sherman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Skeen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Susak","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Sutter","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Q.","family":"Tran","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Welch","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Witherspoon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Wood","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Zareski","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Arvizu-Jakubicki","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Asphaug","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Audi","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.-L.","family":"Ballouz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Bandrowski","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.
+        J.","family":"Becker","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.
+        L.","family":"Becker","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Bendall","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        A.","family":"Bennett","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.","family":"Bloomenthal","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Blum","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.
+        V.","family":"Boynton","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Brodbeck","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.
+        N.","family":"Burke","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Chojnacki","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Colpo","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Contreras","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Cutts","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        Y. Drouet","family":"d\u2019Aubigny","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Dean","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        N.","family":"DellaGiustina","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Diallo","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Drinnon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Drozd","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.
+        L.","family":"Enos","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Enos","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Fellows","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Ferro","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        R.","family":"Fisher","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Fitzgibbon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Fitzgibbon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Forelli","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Forrester","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"I.","family":"Galinsky","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Garcia","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Gardner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        R.","family":"Golish","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Habib","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Hamara","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Hammond","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Hanley","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Harshman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        W.","family":"Hergenrother","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Herzog","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Hill","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Hoekenga","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Hooven","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        S.","family":"Howell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Huettner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Janakus","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Jones","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.
+        R.","family":"Kareta","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Kidd","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Kingsbury","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.
+        S.","family":"Balram-Knutson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Koelbel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Kreiner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Lambert","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        S.","family":"Lauretta","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Lewin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Lovelace","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Loveridge","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Lujan","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        K.","family":"Maleszewski","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Malhotra","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Marchese","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"McDonough","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Mogk","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"V.","family":"Morrison","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Morton","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Munoz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Nelson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        C.","family":"Nolan","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Padilla","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Pennington","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Polit","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Ramos","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"V.","family":"Reddy","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Riehl","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Rizk","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.
+        L.","family":"Roper","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Salazar","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.
+        R.","family":"Schwartz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Selznick","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Shultz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.
+        H.","family":"Smith","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Stewart","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Sutton","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Swindle","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Y.
+        H.","family":"Tang","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Westermann","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        W. V.","family":"Wolner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Worden","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Zega","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Z.","family":"Zeszut","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Bjurstrom","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Bloomquist","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Dickinson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Keates","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Liang","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"V.","family":"Nifo","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Taylor","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"F.","family":"Teti","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Caplinger","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.","family":"Bowles","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Carter","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Dickenshied","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Doerres","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Fisher","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.","family":"Hagee","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Hill","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Miner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Noss","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Piacentine","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Smith","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Toland","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Wren","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Bernacki","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        Pino","family":"Munoz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.-i.","family":"Watanabe","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.
+        A.","family":"Sandford","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Aqueche","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Ashman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Barker","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Bartels","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Berry","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Bos","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Burns","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Calloway","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Carpenter","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Castro","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Cosentino","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Donaldson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        P.","family":"Dworkin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        Elsila","family":"Cook","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Emr","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Everett","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Fennell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Fleshman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Folta","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Gallagher","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Garvin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Getzandanner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Glavin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Hull","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Hyde","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.","family":"Ido","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Ingegneri","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Jones","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Kaotira","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.
+        F.","family":"Lim","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Liounis","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Lorentson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Lorenz","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Lyzhoft","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        M.","family":"Mazarico","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Mink","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.","family":"Moore","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Moreau","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Mullen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Nagy","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Neumann","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Nuth","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Poland","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        C.","family":"Reuter","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Rhoads","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Rieger","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Rowlands","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Sallitt","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Scroggins","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Shaw","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.
+        A.","family":"Simon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Swenson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Vasudeva","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Wasser","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Zellar","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Grossman","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Johnston","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Morris","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Wendel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Burton","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.
+        P.","family":"Keller","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"McNamara","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Messenger","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Nakamura-Messenger","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Nguyen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Righter","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.","family":"Queen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Bellamy","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Dill","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Gardner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Giuntini","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Key","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Kissell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Patterson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.","family":"Vaughan","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Wright","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        W.","family":"Gaskell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Le
+        Corre","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.-Y.","family":"Li","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        L.","family":"Molaro","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        E.","family":"Palmer","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        A.","family":"Siegler","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Tricarico","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        R.","family":"Weirich","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"X.-D.","family":"Zou","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.","family":"Ireland","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Tait","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Bland","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Anwar","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"N.","family":"Bojorquez-Murphy","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.
+        R.","family":"Christensen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        W.","family":"Haberle","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Mehall","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Rios","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"I.","family":"Franchi","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Rozitis","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.
+        B.","family":"Beddingfield","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Marshall","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        N.","family":"Brack","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.
+        S.","family":"French","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        W.","family":"McMahon","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"D.
+        J.","family":"Scheeres","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"E.
+        R.","family":"Jawin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"T.
+        J.","family":"McCoy","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Russell","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Killgore","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"W.
+        F.","family":"Bottke","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"V.
+        E.","family":"Hamilton","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"H.
+        H.","family":"Kaplan","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.
+        J.","family":"Walsh","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        L.","family":"Bandfield","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.
+        C.","family":"Clark","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Chodas","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Lambert","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        A.","family":"Masterson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        G.","family":"Daly","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Freemantle","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        A.","family":"Seabrook","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"O.
+        S.","family":"Barnouin","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Craft","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        T.","family":"Daly","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Ernst","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.
+        C.","family":"Espiritu","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Holdridge","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Jones","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.
+        H.","family":"Nair","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"L.","family":"Nguyen","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Peachey","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.
+        E.","family":"Perry","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Plescia","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.
+        H.","family":"Roberts","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Steele","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"R.","family":"Turner","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Backer","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"K.","family":"Edmundson","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"J.","family":"Mapel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Milazzo","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"S.","family":"Sides","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"C.","family":"Manzoni","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"May","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"M.","family":"Delbo\u2019","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"G.","family":"Libourel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"P.","family":"Michel","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"A.","family":"Ryan","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"F.","family":"Thuillet","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"B.","family":"Marty","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]}],"member":"297","published-online":{"date-parts":[[2020,9,2]]},"container-title":["Nature
+        Geoscience"],"language":"en","link":[{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0643-9.pdf","content-type":"application\/pdf","content-version":"vor","intended-application":"text-mining"},{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0643-9","content-type":"text\/html","content-version":"vor","intended-application":"text-mining"},{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0643-9.pdf","content-type":"application\/pdf","content-version":"vor","intended-application":"similarity-checking"}],"deposited":{"date-parts":[[2021,9,1]],"date-time":"2021-09-01T19:50:27Z","timestamp":1630525827000},"score":0.7244997,"resource":{"primary":{"URL":"https:\/\/www.nature.com\/articles\/s41561-020-0643-9"}},"issued":{"date-parts":[[2020,9,2]]},"references-count":0,"journal-issue":{"issue":"11","published-print":{"date-parts":[[2020,11]]}},"alternative-id":["643"],"URL":"https:\/\/doi.org\/10.1038\/s41561-020-0643-9","ISSN":["1752-0894","1752-0908"],"issn-type":[{"value":"1752-0894","type":"print"},{"value":"1752-0908","type":"electronic"}],"published":{"date-parts":[[2020,9,2]]},"assertion":[{"value":"2
+        September 2020","order":1,"name":"first_online","label":"First Online","group":{"name":"ArticleHistory","label":"Article
+        History"}},{"value":"This content has been made available to all.","name":"free","label":"Free
+        to read"}]}],"items-per-page":5,"query":{"start-index":0,"search-terms":"Lenard
+        et al. erosion"}}}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 01 Jun 2026 21:14:14 GMT
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-headers:
+      - X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language,
+        Accept-Ranges, Cache-Control
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - Link
+      permissions-policy:
+      - interest-cohort=()
+      server:
+      - Jetty(9.4.40.v20210413)
+      x-api-pool:
+      - polite
+      x-concurrency-limit:
+      - '3'
+      x-rate-limit-interval:
+      - 1s
+      x-rate-limit-limit:
+      - '10'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: ''
+    headers:
+      Host:
+      - api.crossref.org
+      User-Agent:
+      - ManuscriptRefLister/1.0 (mailto:sebastien.lenard@gmail.com)
+    method: GET
+    uri: https://api.crossref.org/works?query=Guns+and+Vanacker+erosion&rows=1&filter=from-pub-date%3A2014%2Cuntil-pub-date%3A2014%2Cissn%3A2213-3054&mailto=sebastien.lenard%40gmail.com
+  response:
+    body:
+      string: '{"status":"ok","message-type":"work-list","message-version":"1.0.0","message":{"facets":{},"total-results":6,"items":[{"indexed":{"date-parts":[[2026,4,9]],"date-time":"2026-04-09T06:04:44Z","timestamp":1775714684134,"version":"3.50.1"},"reference-count":46,"publisher":"Elsevier
+        BV","license":[{"start":{"date-parts":[[2014,6,1]],"date-time":"2014-06-01T00:00:00Z","timestamp":1401580800000},"content-version":"tdm","delay-in-days":0,"URL":"https:\/\/www.elsevier.com\/tdm\/userlicense\/1.0\/"}],"funder":[{"DOI":"10.13039\/501100001866","name":"Fonds
+        National de la Recherche Scientifique","doi-asserted-by":"publisher","id":[{"id":"10.13039\/501100001866","id-type":"DOI","asserted-by":"publisher"}]},{"name":"Prize
+        for Tropical Geography Yola Verhasselt of the Royal Academy for Overseas Sciences"}],"content-domain":{"domain":["elsevier.com","sciencedirect.com"],"crossmark-restriction":true},"short-container-title":["Anthropocene"],"published-print":{"date-parts":[[2014,6]]},"DOI":"10.1016\/j.ancene.2014.08.001","type":"journal-article","created":{"date-parts":[[2014,8,10]],"date-time":"2014-08-10T11:01:41Z","timestamp":1407668501000},"page":"75-85","update-policy":"https:\/\/doi.org\/10.1016\/elsevier_cm_policy","source":"Crossref","is-referenced-by-count":62,"special_numbering":"C","title":["Shifts
+        in landslide frequency\u2013area distribution after forest conversion in the
+        tropical Andes"],"prefix":"10.1016","volume":"6","author":[{"given":"Marie","family":"Guns","sequence":"first","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]},{"given":"Veerle","family":"Vanacker","sequence":"additional","affiliation":[],"role":[{"role":"author","vocabulary":"crossref"}]}],"member":"78","reference":[{"key":"10.1016\/j.ancene.2014.08.001_bib0005","doi-asserted-by":"crossref","first-page":"263","DOI":"10.1016\/j.epsl.2013.01.030","article-title":"Giant
+        non-catastrophic landslides and the long-term exhumation of the European Alps","volume":"365","author":"Agliardi","year":"2013","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"10.1016\/j.ancene.2014.08.001_bib0010","doi-asserted-by":"crossref","first-page":"152","DOI":"10.1016\/j.catena.2005.11.006","article-title":"Landsliding
+        related to land-cover change: a diachronic analysis of hillslope instability
+        distribution in the Sierra Norte, Puebla, Mexico","volume":"65","author":"Alc\u00e1ntara-Ayala","year":"2006","journal-title":"Catena"},{"key":"10.1016\/j.ancene.2014.08.001_bib0015","doi-asserted-by":"crossref","DOI":"10.1016\/j.geomorph.2014.02.030","article-title":"First
+        paleoseismic results for the Pallatanga fault (Central Ecuador), a major structure
+        of the South-American crust","author":"Baize","year":"2014","journal-title":"Geomorphology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0020","article-title":"Impacts
+        of forest cover change on ecosystem services in high Andean mountains","author":"Balthazar","year":"2014","journal-title":"Ecol.
+        Indicators"},{"key":"10.1016\/j.ancene.2014.08.001_bib0025","series-title":"Prevenci\u00f3n
+        de desastres naturales en la Cuenca del Paute \u2013 Informe final: Proyecto
+        Precupa.","author":"Basabe","year":"1998"},{"key":"10.1016\/j.ancene.2014.08.001_bib0030","doi-asserted-by":"crossref","first-page":"310","DOI":"10.1016\/j.epsl.2009.05.002","article-title":"Colluvial
+        sediment dynamics in mountain drainage basins","volume":"284","author":"Brardinoni","year":"2009","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"10.1016\/j.ancene.2014.08.001_bib0035","doi-asserted-by":"crossref","first-page":"369","DOI":"10.1126\/science.275.5298.369","article-title":"Hillslope
+        evolution by bedrock landslides","volume":"275","author":"Densmore","year":"1997","journal-title":"Science"},{"key":"10.1016\/j.ancene.2014.08.001_bib0040","doi-asserted-by":"crossref","first-page":"277","DOI":"10.1016\/S0013-7952(01)00087-4","article-title":"An
+        objective method to rank the importance of the factors predisposing to landslides
+        with the GIS methodology: application to an area of the Apennines (Valnerina;
+        Perugia, Italy)","volume":"63","author":"Donati","year":"2002","journal-title":"Eng.
+        Geol."},{"key":"10.1016\/j.ancene.2014.08.001_bib0045","doi-asserted-by":"crossref","first-page":"7","DOI":"10.1353\/lag.2010.0011","article-title":"Pathways
+        to forest transition: local case studies from the Ecuadorian Andes","volume":"9","author":"Farley","year":"2010","journal-title":"J.
+        Lat. Am. Geogr."},{"key":"10.1016\/j.ancene.2014.08.001_bib0050","doi-asserted-by":"crossref","first-page":"310","DOI":"10.1016\/j.epsl.2012.10.029","article-title":"The
+        role of material properties and landscape morphology on landslide size distributions","volume":"361","author":"Frattini","year":"2013","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"10.1016\/j.ancene.2014.08.001_bib0055","series-title":"La
+        photo a\u00e9rienne son interpr\u00e9tation dans les \u00e9tudes de l\u2019environnement
+        et de l\u2019am\u00e9nagement du territoire","author":"Gagnmon","year":"1974"},{"key":"10.1016\/j.ancene.2014.08.001_bib0060","doi-asserted-by":"crossref","first-page":"268","DOI":"10.1016\/j.geomorph.2006.09.023","article-title":"Comparing
+        landslide inventory maps","volume":"94","author":"Galli","year":"2008","journal-title":"Geomorphology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0065","doi-asserted-by":"crossref","first-page":"250","DOI":"10.1016\/j.geomorph.2010.03.036","article-title":"Land
+        cover changes and shallow landsliding in the flysch sector of the Spanish
+        Pyrenees","volume":"124","author":"Garc\u00eda-Ruiz","year":"2010","journal-title":"Geomorphology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0070","doi-asserted-by":"crossref","first-page":"297","DOI":"10.1016\/S0341-8162(02)00170-4","article-title":"Landslide
+        occurrence as a response to land use change: a review of evidence from New
+        Zealand","volume":"51","author":"Glade","year":"2003","journal-title":"Catena"},{"key":"10.1016\/j.ancene.2014.08.001_bib0075","series-title":"Sediment
+        Dynamics in Tropical Mountain Regions: Influence of Anthropogenic Disturbances
+        on Sediment Transfer Mechanisms","author":"Guns","year":"2013"},{"key":"10.1016\/j.ancene.2014.08.001_bib0080","doi-asserted-by":"crossref","first-page":"2941","DOI":"10.1007\/s12665-013-2352-9","article-title":"Forest
+        cover change trajectories and their impact on landslide occurrence in the
+        tropical Andes","volume":"70","author":"Guns","year":"2013","journal-title":"Environ.
+        Earth Sci."},{"key":"10.1016\/j.ancene.2014.08.001_bib0085","doi-asserted-by":"crossref","first-page":"266","DOI":"10.1016\/j.geomorph.2006.11.010","article-title":"Work,
+        persistence, and formative events: the geomorphic impact of landslides","volume":"88","author":"Guthrie","year":"2007","journal-title":"Geomorphology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0090","doi-asserted-by":"crossref","first-page":"115","DOI":"10.5194\/nhess-6-115-2006","article-title":"Landslide
+        hazard assessment in the Collazzone area, Umbria, Central Italy","volume":"6","author":"Guzzetti","year":"2006","journal-title":"Nat.
+        Hazards Earth Syst. Sci."},{"key":"10.1016\/j.ancene.2014.08.001_bib0095","doi-asserted-by":"crossref","first-page":"169","DOI":"10.1016\/S0012-821X(01)00589-1","article-title":"Power-law
+        correlations of landslide areas in central Italy","volume":"195","author":"Guzzetti","year":"2002","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"10.1016\/j.ancene.2014.08.001_bib0100","doi-asserted-by":"crossref","first-page":"272","DOI":"10.1016\/j.geomorph.2005.06.002","article-title":"Probabilistic
+        landslide hazard assessment at the basin scale","volume":"72","author":"Guzzetti","year":"2005","journal-title":"Geomorphology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0105","doi-asserted-by":"crossref","first-page":"8650","DOI":"10.1073\/pnas.0912668107","article-title":"From
+        the cover: quantification of global gross forest cover loss","volume":"107","author":"Hansen","year":"2010","journal-title":"Proc.
+        Natl. Acad. Sci."},{"key":"10.1016\/j.ancene.2014.08.001_bib0110","doi-asserted-by":"crossref","first-page":"231","DOI":"10.1130\/0091-7613(1997)025<0231:SFFAMB>2.3.CO;2","article-title":"Sediment
+        flux from a mountain belt derived by landslide mapping","volume":"25","author":"Hovius","year":"1997","journal-title":"Geology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0115","series-title":"Anuario
+        hidrologico y meteorol\u00f3gico 1970\u20132009","author":"INAMHI","year":"2009"},{"key":"10.1016\/j.ancene.2014.08.001_bib0120","doi-asserted-by":"crossref","first-page":"280","DOI":"10.1016\/j.epsl.2006.05.009","article-title":"Landslides
+        in vibrating sand box: what controls types of slope failure and frequency
+        magnitude relations?","volume":"247","author":"Katz","year":"2006","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"10.1016\/j.ancene.2014.08.001_bib0125","doi-asserted-by":"crossref","first-page":"305","DOI":"10.1002\/esp.1143","article-title":"Large
+        landslides and their effect on sediment flux in South Westland, New Zealand","volume":"30","author":"Korup","year":"2005","journal-title":"Earth
+        Surf. Process. Landf."},{"key":"10.1016\/j.ancene.2014.08.001_bib0130","doi-asserted-by":"crossref","first-page":"115","DOI":"10.1016\/j.earscirev.2012.02.006","article-title":"Earth''s
+        portfolio of extreme sediment transport events","volume":"112","author":"Korup","year":"2012","journal-title":"Earth\u2013Sci.
+        Rev."},{"key":"10.1016\/j.ancene.2014.08.001_bib0135","doi-asserted-by":"crossref","first-page":"22","DOI":"10.1080\/00139157.2003.10544695","article-title":"Regional
+        differences in tropical deforestation","volume":"45","author":"Lambin","year":"2003","journal-title":"Environment"},{"key":"10.1016\/j.ancene.2014.08.001_bib0140","doi-asserted-by":"crossref","first-page":"261","DOI":"10.1016\/S0959-3780(01)00007-3","article-title":"The
+        causes of land-use and land-cover change: moving beyond the myths","volume":"11","author":"Lambin","year":"2001","journal-title":"Glob.
+        Environ. Change"},{"key":"10.1016\/j.ancene.2014.08.001_bib0145","doi-asserted-by":"crossref","first-page":"247","DOI":"10.1038\/ngeo776","article-title":"Landslide
+        erosion controlled by hillslope material","volume":"3","author":"Larsen","year":"2010","journal-title":"Nat.
+        Geosci."},{"key":"10.1016\/j.ancene.2014.08.001_bib0150","series-title":"Remote
+        Sensing and Image Interpretation","author":"Lillesand","year":"1994"},{"key":"10.1016\/j.ancene.2014.08.001_bib0155","series-title":"P\u00e1ramos:
+        a checklist of plant diversity, geographical distribution, and botanical literature","author":"Luteyn","year":"1999"},{"key":"10.1016\/j.ancene.2014.08.001_bib0160","doi-asserted-by":"crossref","first-page":"687","DOI":"10.1002\/esp.1064","article-title":"Landslide
+        inventories and their statistical properties","volume":"29","author":"Malamud","year":"2004","journal-title":"Earth
+        Surf. Process. Landf."},{"key":"10.1016\/j.ancene.2014.08.001_bib0165","doi-asserted-by":"crossref","first-page":"176","DOI":"10.1016\/j.geomorph.2006.12.025","article-title":"Environmental
+        factors controlling spatial variation in sediment yield in a central Andean
+        mountain area","volume":"98","author":"Molina","year":"2008","journal-title":"Geomorphology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0170","series-title":"Gradients
+        in a Tropical Mountain Ecosystem of Ecuador","first-page":"37","article-title":"Ecuador
+        suffers the highest deforestation rate in South America","author":"Mosandl","year":"2008"},{"key":"10.1016\/j.ancene.2014.08.001_bib0175","series-title":"Institut
+        Fran\u00e7ais de recherche Scientifique Pour le D\u00e9veloppement en Coop\u00e9ration","article-title":"L\u2019eau
+        en Equateur: Principaux acquis en Hydroclimatologie","author":"Pourrut","year":"1994"},{"key":"10.1016\/j.ancene.2014.08.001_bib0180","series-title":"R.
+        Geophysical Research Abstracts, vol. 14, EGU2012-4938-1","article-title":"A
+        tool for the estimation of the distribution of landslide area","author":"Rossi","year":"2012"},{"key":"10.1016\/j.ancene.2014.08.001_bib0185","doi-asserted-by":"crossref","first-page":"1658","DOI":"10.1002\/esp.2184","article-title":"Evidence
+        of a changing size-frequency distribution of landslides in the Kyrgyz Tien
+        Shan, Central Asia","volume":"36","author":"Schl\u00f6gel","year":"2011","journal-title":"Earth
+        Surf. Process. Landf."},{"key":"10.1016\/j.ancene.2014.08.001_bib0190","first-page":"55","article-title":"Landslides:
+        processes","author":"Sidle","year":"2006","journal-title":"Predict. Land Use"},{"key":"10.1016\/j.ancene.2014.08.001_bib0195","series-title":"Landslides
+        Investigation and Mitigation","article-title":"Slope instability recognition,
+        analysis and zonation","author":"Soeters","year":"1996"},{"key":"10.1016\/j.ancene.2014.08.001_bib0200","doi-asserted-by":"crossref","first-page":"1091","DOI":"10.1029\/2000GL008527","article-title":"The
+        characterization of landslide size distributions","volume":"28","author":"Stark","year":"2001","journal-title":"Geophys.
+        Res. Lett."},{"key":"10.1016\/j.ancene.2014.08.001_bib0205","first-page":"229","article-title":"Magnitude\u2013frequency
+        distribution of landslide mass in uplifting mountains","volume":"22","author":"Sugai","year":"2001","journal-title":"Trans.
+        Jpn. Geomorphol. Union"},{"key":"10.1016\/j.ancene.2014.08.001_bib0210","doi-asserted-by":"crossref","first-page":"588","DOI":"10.1016\/j.epsl.2007.01.040","article-title":"Characteristics
+        of the size distribution of recent and historical landslides in a populated
+        hilly region","volume":"256","author":"Van Den Eeckhaut","year":"2007","journal-title":"Earth
+        Planet. Sci. Lett."},{"key":"10.1016\/j.ancene.2014.08.001_bib0215","doi-asserted-by":"crossref","first-page":"65","DOI":"10.3406\/rga.2000.3002","article-title":"Using
+        sequential aerial photographs to detect land-use changes in the Austro Ecuadoriano","volume":"88","author":"Vanacker","year":"2000","journal-title":"Rev.
+        G\u00e9ogr. Alp."},{"key":"10.1016\/j.ancene.2014.08.001_bib0220","doi-asserted-by":"crossref","first-page":"299","DOI":"10.1016\/S0169-555X(02)00263-5","article-title":"Linking
+        hydrological, infinite slope stability and land use change models through
+        GIS for assessing the impact of deforestation on landslide susceptibility
+        in High Andean watersheds","volume":"52","author":"Vanacker","year":"2003","journal-title":"Geomorphology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0225","doi-asserted-by":"crossref","first-page":"303","DOI":"10.1130\/G23109A.1","article-title":"Restoring
+        dense vegetation can slow mountain erosion to near natural benchmark levels","volume":"35","author":"Vanacker","year":"2007","journal-title":"Geology"},{"key":"10.1016\/j.ancene.2014.08.001_bib0230","series-title":"Las
+        regiones y paisages del Ecuador","author":"Winckell","year":"1997"}],"container-title":["Anthropocene"],"language":"en","link":[{"URL":"https:\/\/api.elsevier.com\/content\/article\/PII:S2213305414000472?httpAccept=text\/xml","content-type":"text\/xml","content-version":"vor","intended-application":"text-mining"},{"URL":"https:\/\/api.elsevier.com\/content\/article\/PII:S2213305414000472?httpAccept=text\/plain","content-type":"text\/plain","content-version":"vor","intended-application":"text-mining"}],"deposited":{"date-parts":[[2018,10,1]],"date-time":"2018-10-01T01:57:33Z","timestamp":1538359053000},"score":19.88823,"resource":{"primary":{"URL":"https:\/\/linkinghub.elsevier.com\/retrieve\/pii\/S2213305414000472"}},"issued":{"date-parts":[[2014,6]]},"references-count":46,"alternative-id":["S2213305414000472"],"URL":"https:\/\/doi.org\/10.1016\/j.ancene.2014.08.001","ISSN":["2213-3054"],"issn-type":[{"value":"2213-3054","type":"print"}],"published":{"date-parts":[[2014,6]]},"assertion":[{"value":"Elsevier","name":"publisher","label":"This
+        article is maintained by"},{"value":"Shifts in landslide frequency\u2013area
+        distribution after forest conversion in the tropical Andes","name":"articletitle","label":"Article
+        Title"},{"value":"Anthropocene","name":"journaltitle","label":"Journal Title"},{"value":"https:\/\/doi.org\/10.1016\/j.ancene.2014.08.001","name":"articlelink","label":"CrossRef
+        DOI link to publisher maintained version"},{"value":"article","name":"content_type","label":"Content
+        Type"},{"value":"Copyright \u00a9 2014 Elsevier Ltd. All rights reserved.","name":"copyright","label":"Copyright"}]}],"items-per-page":1,"query":{"start-index":0,"search-terms":"Guns
+        and Vanacker erosion"}}}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      Date:
+      - Mon, 01 Jun 2026 21:14:15 GMT
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-headers:
+      - X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language,
+        Accept-Ranges, Cache-Control
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - Link
+      permissions-policy:
+      - interest-cohort=()
+      server:
+      - Jetty(9.4.40.v20210413)
+      x-api-pool:
+      - polite
+      x-concurrency-limit:
+      - '3'
+      x-rate-limit-interval:
+      - 1s
+      x-rate-limit-limit:
+      - '10'
+    status:
+      code: 200
+      message: OK
+version: 1

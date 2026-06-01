@@ -79,6 +79,7 @@ class AppConfig(BaseSettings):
     openalex_api_timeout: float = default_api_timeout
     openalex_api_max_retry: int = default_api_max_retry
     openalex_api_url_max_character_length: int = default_api_url_max_character_length
+    openalex_api_url_max_character_length_for_issns_filter: int = 50
 
     # --- Style Repositories ---
     style_repo_url: UrlWithObjectName  # Contains oject_name placeholder for style
@@ -88,6 +89,8 @@ class AppConfig(BaseSettings):
     # Warning: csl_xml_namespaces with no HttpUrl type that Pydantic could alterate
 
     # --- Core Logic Settings ---
+    min_publication_year: int = 1600
+    max_publication_year: int = 2099
     context_keywords: str = ""
     journal_update_days: int = 30
     journal_update_limit: int = 100
@@ -98,8 +101,10 @@ class AppConfig(BaseSettings):
 
     # --- Blacklists & Cleaners ---
     parser_blacklist: list[str] = Field(default_factory=list)
-    work_cls_schema_blacklist_fields: list[str] = Field(default_factory=list)
-    author_cls_schema_blacklist_fields: list[str] = Field(default_factory=list)
+    work_crossref_schema_blacklist_fields: list[str] = Field(default_factory=list)
+    author_crossref_schema_blacklist_fields: list[str] = Field(default_factory=list)
+    work_openalex_schema_blacklist_fields: list[str] = Field(default_factory=list)
+    author_openalex_schema_blacklist_fields: list[str] = Field(default_factory=list)
 
     # HTML Cleaning Configuration
     # Structural tags to explicitly preserve in the local repository

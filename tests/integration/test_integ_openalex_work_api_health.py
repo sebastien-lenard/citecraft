@@ -1,8 +1,9 @@
+# filepath: tests/integration/test_integ_openalex_work_api_health.py
 import _socket
 
 import pytest
 
-from manuscript_reference_lister.repositories import CrossrefWorkRepository
+from manuscript_reference_lister.repositories import OpenAlexWorkRepository
 from manuscript_reference_lister.schemas import CitationMetadata
 from manuscript_reference_lister.utils import AppConfig
 
@@ -15,9 +16,9 @@ def allow_network_calls(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.integration
 @pytest.mark.vcr
-def test_integ_crossref_works_api_health(test_config: AppConfig) -> None:
-    """Check Crossref API Works health, limits, and dual-author parity logic."""
-    repo = CrossrefWorkRepository(config=test_config)
+def test_integ_openalex_works_api_health(test_config: AppConfig) -> None:
+    """Check OpenAlex API Works health, limits, and dual-author parity logic."""
+    repo = OpenAlexWorkRepository(config=test_config)
 
     test_author = "Lenard et al."
     test_year = "2020"
@@ -37,7 +38,7 @@ def test_integ_crossref_works_api_health(test_config: AppConfig) -> None:
 
     assert len(candidates) > 0, (
         f"No candidates found for '{test_author}'. Author filter might be "
-        "too strict or Crossref metadata structure has changed."
+        "too strict or OpenAlex metadata structure has changed."
     )
     assert len(candidates) <= requested_limit, (
         f"max_results limit not respected: got {len(candidates)} records, "
@@ -69,5 +70,5 @@ def test_integ_crossref_works_api_health(test_config: AppConfig) -> None:
 
     assert len(candidates_2) > 0, (
         f"Strict dual-author match failed for '{test_author_2}'. "
-        "Verify if Crossref metadata structure matches parser assumptions."
+        "Verify if OpenAlex metadata structure matches parser assumptions."
     )

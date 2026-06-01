@@ -11,8 +11,10 @@ from manuscript_reference_lister.schemas import CitationMetadata
 from .network import get_http_client_registry
 from .parsers import CitationParser, JournalParser
 from .repositories import (
+    CrossrefWorkRepository,
     DoiRepository,
     JournalRepository,
+    OpenAlexWorkRepository,
     StyleRepository,
     WorkRepository,
 )
@@ -37,6 +39,7 @@ class PipelineContext(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # Input parameters
+    api: str = "OpenAlex"
     input_file_path: str | None = None
     input_text: str | None = None
     style: str = "apa"
@@ -136,7 +139,12 @@ class WorkUpdateStep:
             ctx.journal_repo = JournalRepository(config=ctx.config)
             ctx.journal_repo.load_all()
 
-        ctx.work_repo = WorkRepository(config=ctx.config)
+        match ctx.api:
+            case "OpenAlex":
+                ctx.work_repo = OpenAlexWorkRepository(config=ctx.config)
+            case _:
+                ctx.work_repo = CrossrefWorkRepository(config=ctx.config)
+
         ctx.work_repo.load_all()
         ctx.work_repo.merge_new_works(ctx.citations)
 
@@ -159,7 +167,11 @@ class ReferenceFormattingStep:
             ctx.journal_repo.load_all()
 
         if ctx.work_repo is None:
-            ctx.work_repo = WorkRepository(config=ctx.config)
+            match ctx.api:
+                case "OpenAlex":
+                    ctx.work_repo = OpenAlexWorkRepository(config=ctx.config)
+                case _:
+                    ctx.work_repo = CrossrefWorkRepository(config=ctx.config)
             ctx.work_repo.load_all()
 
         if ctx.style_repo is None:
@@ -187,7 +199,11 @@ class ExportStep:
 
     def execute(self, ctx: PipelineContext) -> None:
         if ctx.work_repo is None:
-            ctx.work_repo = WorkRepository(config=ctx.config)
+            match ctx.api:
+                case "OpenAlex":
+                    ctx.work_repo = OpenAlexWorkRepository(config=ctx.config)
+                case _:
+                    ctx.work_repo = CrossrefWorkRepository(config=ctx.config)
             ctx.work_repo.load_all()
 
         if ctx.journal_repo is None:
@@ -235,6 +251,7 @@ def run(
     input_file_path: str | None,
     input_text: str | None,
     *,
+    api: str = "OpenAlex",
     style: str = "apa",
     journal_title: str | None = None,
     output_filepath: str | Path | None = None,
@@ -250,6 +267,7 @@ def run(
     out_path = Path(output_filepath) if output_filepath else None
 
     ctx = PipelineContext(
+        api=api,
         input_file_path=input_file_path,
         input_text=input_text,
         style=style,

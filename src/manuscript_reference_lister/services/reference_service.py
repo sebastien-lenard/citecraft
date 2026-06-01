@@ -78,10 +78,11 @@ class ReferenceService:
         last_display_time = time.time()
 
         for record in records_to_process:
-            if not record.csl_metadata:
-                record.csl_metadata = doi_repo.get_metadata(record.DOI)
+            if not record.crossref_metadata:
+                record.crossref_metadata = doi_repo.get_metadata(record.DOI)
+
             raw_reference = self.get_reference(
-                record.csl_metadata, csl_style_content, record.DOI
+                record.crossref_metadata, csl_style_content, record.DOI
             )
 
             cleaned_reference = html_cleaner.clean_to_plain_text(raw_reference)
