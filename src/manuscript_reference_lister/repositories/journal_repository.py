@@ -18,8 +18,11 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         self,
         local_filename: str = "journal_records.json",
         config: AppConfig | None = None,
+        api: str = "crossref",
     ) -> None:
-        super().__init__(local_filename, model_class=JournalMetadata, config=config)
+        super().__init__(
+            local_filename, model_class=JournalMetadata, config=config, api=api
+        )
         self.has_pending_updates: bool = False
 
     def _log_heartbeat_if_needed(
@@ -108,11 +111,11 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         params = {
             "query": input_title,
             "rows": 200,  # Large batch to find all matches
-            "mailto": self.config.crossref_api_email,
+            "mailto": self.config.user_email,
         }
 
         journal_records = []
-        response = self.http_client_wrapper.get(
+        response, _ = self.http_client_wrapper.get(
             str(self.config.crossref_api_journals_url),
             params=params,
             headers=self.headers,
@@ -281,12 +284,12 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             "sort": "published",
             "order": order,
             "rows": 1,
-            "mailto": self.config.crossref_api_email,
+            "mailto": self.config.user_email,
         }
         url = self.config.crossref_api_journals_issn_url.replace(
             "{object_name}", str(issn)
         )
-        response = self.http_client_wrapper.get(
+        response, _ = self.http_client_wrapper.get(
             url,
             params=params,
             headers=self.headers,

@@ -39,7 +39,11 @@ def test_get_journal_metadata_success(repo: JournalRepository) -> None:
     }
 
     with patch.object(repo.http_client_wrapper, "get") as mock_get:
-        mock_get.side_effect = [mock_main, mock_year, mock_year]
+        mock_get.side_effect = [
+            (mock_main, None),
+            (mock_year, None),
+            (mock_year, None),
+        ]
 
         results = repo.get_journal_metadata("Geology")
 
@@ -57,7 +61,7 @@ def test_get_journal_metadata_not_found_behavior(
     mock_resp = MagicMock(status_code=200)
     mock_resp.json.return_value = {"message": {"items": []}}
 
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_resp):
+    with patch.object(repo.http_client_wrapper, "get", return_value=(mock_resp, None)):
         with caplog.at_level(logging.WARNING):
             results = repo.get_journal_metadata("Unknown Journal")
 
@@ -116,7 +120,13 @@ def test_get_journal_metadata_similar_matches_found(
     with patch.object(repo.http_client_wrapper, "get") as mock_get:
         # 1 call for main query + 2 endpoints per unique ISSN found
         # (2 unique ISSNs = 4 calls)
-        mock_get.side_effect = [mock_main, mock_year, mock_year, mock_year, mock_year]
+        mock_get.side_effect = [
+            (mock_main, None),
+            (mock_year, None),
+            (mock_year, None),
+            (mock_year, None),
+            (mock_year, None),
+        ]
 
         with caplog.at_level(logging.WARNING):
             results = repo.get_journal_metadata("nature geoscience")
@@ -170,11 +180,11 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
 
     with patch.object(repo.http_client_wrapper, "get") as mock_get:
         mock_get.side_effect = [
-            mock_main,
-            year_mock(1869),
-            year_mock(2023),
-            year_mock(1997),
-            year_mock(2023),
+            (mock_main, None),
+            (year_mock(1869), None),
+            (year_mock(2023), None),
+            (year_mock(1997), None),
+            (year_mock(2023), None),
         ]
 
         results = repo.get_journal_metadata("Nature")
@@ -201,7 +211,7 @@ def test_get_journal_metadata_missing_issn_handling(repo: JournalRepository) -> 
     }
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=mock_main
+        repo.http_client_wrapper, "get", return_value=(mock_main, None)
     ) as mock_get:
         results = repo.get_journal_metadata("Natural Hazards and Earth System Sciences")
 
@@ -231,7 +241,11 @@ def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -
     mock_year_empty.json.return_value = {"message": {"items": []}}
 
     with patch.object(repo.http_client_wrapper, "get") as mock_get:
-        mock_get.side_effect = [mock_main, mock_year_empty, mock_year_empty]
+        mock_get.side_effect = [
+            (mock_main, None),
+            (mock_year_empty, None),
+            (mock_year_empty, None),
+        ]
 
         results = repo.get_journal_metadata("Empty Journal")
 
@@ -359,7 +373,7 @@ def test_get_issn_year_endpoint_scenarios(
     mock_response.json.return_value = {"message": {"items": mock_items}}
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=mock_response
+        repo.http_client_wrapper, "get", return_value=(mock_response, None)
     ) as mock_get:
         result = repo.get_issn_year_endpoint("1234-5678", order)
         assert result == expected_year
@@ -372,7 +386,7 @@ def test_get_issn_year_endpoint_scenarios(
                     "sort": "published",
                     "order": order,
                     "rows": 1,
-                    "mailto": repo.config.crossref_api_email,
+                    "mailto": repo.config.user_email,
                 },
                 headers=repo.headers,
             )

@@ -64,9 +64,9 @@ class StyleRepository:
         )
 
         try:
-            res = self.http_client_wrapper.get(url, headers=self.headers)
-            res.raise_for_status()
-            self.csl_content = res.text
+            response, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            response.raise_for_status()
+            self.csl_content = response.text
             logger.debug(
                 "Successfully fetched CSL metadata for style: %s", self.favored_style
             )
@@ -116,7 +116,7 @@ class StyleRepository:
         # 1. Fetch remote Zotero styles index
         url = str(self.config.all_styles_repo_url)
         try:
-            response = self.http_client_wrapper.get(url, headers=self.headers)
+            response, _ = self.http_client_wrapper.get(url, headers=self.headers)
             response.raise_for_status()
             styles_list = response.json()
         except (httpx.HTTPError, ValueError) as e:
@@ -192,7 +192,7 @@ class StyleRepository:
         )
 
         try:
-            response = self.http_client_wrapper.get(url, headers=self.headers)
+            response, _ = self.http_client_wrapper.get(url, headers=self.headers)
             response.raise_for_status()
             root = ET.fromstring(response.content)
         except httpx.HTTPStatusError as e:

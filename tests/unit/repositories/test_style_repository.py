@@ -55,7 +55,7 @@ def test_fetch_style_metadata_success(
     mock_response.text = valid_csl_content
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=mock_response
+        repo.http_client_wrapper, "get", return_value=(mock_response, None)
     ) as mock_get:
         repo.fetch_style_metadata()
 
@@ -90,7 +90,7 @@ def test_fetch_style_metadata_resolves_journal_late(test_config: AppConfig) -> N
         mock_res = MagicMock()
         mock_res.status_code = 200
         mock_res.text = "mock-csl-payload"
-        mock_get_http.return_value = mock_res
+        mock_get_http.return_value = (mock_res, None)
 
         repo.fetch_style_metadata()
 
@@ -124,7 +124,7 @@ def test_get_style_success_independent(test_config: AppConfig) -> None:
     mock_res = MagicMock()
     mock_res.json.return_value = mock_index
 
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_res):
+    with patch.object(repo.http_client_wrapper, "get", return_value=(mock_res, None)):
         style = repo.get_style("Nature")
         assert style == "nature"
 
@@ -155,7 +155,9 @@ def test_get_style_success_dependent(test_config: AppConfig) -> None:
     mock_res_xml.content = mock_xml_content.encode("utf-8")
 
     with patch.object(
-        repo.http_client_wrapper, "get", side_effect=[mock_res_index, mock_res_xml]
+        repo.http_client_wrapper,
+        "get",
+        side_effect=[(mock_res_index, None), (mock_res_xml, None)],
     ):
         style = repo.get_style("Geophysical Research: Solid Earth")
         assert style == "american-geophysical-union"
@@ -178,16 +180,24 @@ def test_get_style_success_dependent(test_config: AppConfig) -> None:
         ),
         # Case B: Index decoding exceptions propagate up
         (
-            lambda m: m.return_value.json.configure_mock(
-                side_effect=ValueError("Expecting value")
+            lambda m: m.configure_mock(
+                return_value=(
+                    MagicMock(
+                        json=MagicMock(side_effect=ValueError("Expecting value"))
+                    ),
+                    None,
+                )
             ),
             ValueError,
             "Expecting value",
         ),
         # Case C: Non-list formats raise TypeError
         (
-            lambda m: m.return_value.json.configure_mock(
-                return_value={"error": "not a list"}
+            lambda m: m.configure_mock(
+                return_value=(
+                    MagicMock(json=MagicMock(return_value={"error": "not a list"})),
+                    None,
+                )
             ),
             TypeError,
             None,
@@ -227,7 +237,9 @@ def test_resolve_parent_missing_xml_namespace(test_config: AppConfig) -> None:
     mock_res_xml.content = malformed_xml.encode("utf-8")
 
     with patch.object(
-        repo.http_client_wrapper, "get", side_effect=[mock_res_index, mock_res_xml]
+        repo.http_client_wrapper,
+        "get",
+        side_effect=[(mock_res_index, None), (mock_res_xml, None)],
     ):
         with pytest.raises(ValueError, match="does not define a namespace"):
             repo.get_style("Dependent J")
@@ -255,7 +267,9 @@ def test_resolve_parent_empty_parent_href(
 
     with (
         patch.object(
-            repo.http_client_wrapper, "get", side_effect=[mock_res_index, mock_res_xml]
+            repo.http_client_wrapper,
+            "get",
+            side_effect=[(mock_res_index, None), (mock_res_xml, None)],
         ),
         caplog.at_level(logging.WARNING),
     ):

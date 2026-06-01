@@ -29,7 +29,7 @@ def test_get_metadata_success(repo: DoiRepository) -> None:
     mock_response.json.return_value = mock_json_data
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=mock_response
+        repo.http_client_wrapper, "get", return_value=(mock_response, None)
     ) as mock_get:
         result = repo.get_metadata("10.1000/182")
 
@@ -84,20 +84,16 @@ def test_get_metadata_safe_fallbacks(
         mock_response.json.side_effect = side_effect
 
     with (
-        patch.object(
-            repo.http_client_wrapper,
-            "get",
-            side_effect=side_effect
-            if not isinstance(side_effect, json.JSONDecodeError)
-            else None,
-            return_value=mock_response
-            if isinstance(side_effect, json.JSONDecodeError) or side_effect is None
-            else None,
-        ),
+        patch.object(repo.http_client_wrapper, "get") as mock_get,
         patch(
             "manuscript_reference_lister.repositories.doi_repository.logger.warning"
         ) as mock_warn,
     ):
+        if isinstance(side_effect, httpx.HTTPStatusError):
+            mock_get.side_effect = side_effect
+        else:
+            mock_get.return_value = (mock_response, None)
+
         result = repo.get_metadata("10.1000/fallback-target")
 
         assert result == {}
@@ -125,12 +121,12 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
     scopes."""
     test_config = test_config.model_copy(
         update={
-            "work_cls_schema_blacklist_fields": [
-                "ISSN",
+            "work_crossref_schema_blacklist_fields": [
+                "ISSNs",
                 "assertion",
                 "is-referenced-by-count",
             ],
-            "author_cls_schema_blacklist_fields": [
+            "author_crossref_schema_blacklist_fields": [
                 "ORCID",
                 "authenticated-orcid",
                 "role",
@@ -141,7 +137,7 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
 
     mock_raw_csl = {
         "DOI": "10.1038/s41561-020-0585-2",
-        "ISSN": ["1752-0894"],
+        "ISSNs": ["1752-0894"],
         "is-referenced-by-count": 79,
         "assertion": [{"label": "Received"}],
         "title": "Steady erosion rates in the Himalayas",
@@ -160,12 +156,14 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
     mock_response.status_code = 200
     mock_response.json.return_value = mock_raw_csl
 
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_response):
+    with patch.object(
+        repo.http_client_wrapper, "get", return_value=(mock_response, None)
+    ):
         filtered_result = repo.get_metadata("10.1038/s41561-020-0585-2")
 
         assert "DOI" in filtered_result
         assert "title" in filtered_result
-        assert "ISSN" not in filtered_result
+        assert "ISSNs" not in filtered_result
         assert "is-referenced-by-count" not in filtered_result
         assert "assertion" not in filtered_result
 
@@ -186,8 +184,8 @@ def test_get_metadata_with_empty_or_missing_blacklists(test_config: AppConfig) -
     """Verify that blacklisting logic passes through unchanged when scopes are empty."""
     test_config = test_config.model_copy(
         update={
-            "work_cls_schema_blacklist_fields": [],
-            "author_cls_schema_blacklist_fields": [],
+            "work_crossref_schema_blacklist_fields": [],
+            "author_crossref_schema_blacklist_fields": [],
         }
     )
     repo = DoiRepository(config=test_config)
@@ -199,7 +197,9 @@ def test_get_metadata_with_empty_or_missing_blacklists(test_config: AppConfig) -
     mock_response.status_code = 200
     mock_response.json.return_value = mock_json_data
 
-    with patch.object(repo.http_client_wrapper, "get", return_value=mock_response):
+    with patch.object(
+        repo.http_client_wrapper, "get", return_value=(mock_response, None)
+    ):
         result = repo.get_metadata("10.1000/182")
         assert result == mock_json_data
         assert "ORCID" in result["author"][0]

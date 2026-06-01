@@ -35,7 +35,7 @@ class DoiRepository:
         url = self.config.doi_api_url.replace("{object_name}", str(doi))
 
         try:
-            res = self.http_client_wrapper.get(url, headers=headers)
+            res, _ = self.http_client_wrapper.get(url, headers=headers)
             res.raise_for_status()
             csl_metadata = res.json()
 
@@ -64,11 +64,13 @@ class DoiRepository:
                 return {}
 
             # Purge configured blacklisted fields
-            work_blacklist_fields = self.config.work_cls_schema_blacklist_fields
+            work_blacklist_fields = self.config.work_crossref_schema_blacklist_fields
             for field in work_blacklist_fields:
                 csl_metadata.pop(field, None)
 
-            author_blacklist_fields = self.config.author_cls_schema_blacklist_fields
+            author_blacklist_fields = (
+                self.config.author_crossref_schema_blacklist_fields
+            )
             if (
                 author_blacklist_fields
                 and "author" in csl_metadata

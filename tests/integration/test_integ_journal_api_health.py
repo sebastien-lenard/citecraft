@@ -9,12 +9,11 @@ def test_integ_journals_api_health() -> None:
     """Check Crossref API Journals health, schema, and Rate Limit status."""
     repo = JournalRepository()
     headers = {
-        "User-Agent": f"ManuscriptRefLister/1.0 (mailto:"
-        f"{repo.config.crossref_api_email})"
+        "User-Agent": f"ManuscriptRefLister/1.0 (mailto:{repo.config.user_email})"
     }
     input_title = "The Journal of Geology"
 
-    response = repo.http_client_wrapper.get(
+    response, _ = repo.http_client_wrapper.get(
         repo.config.crossref_api_journals_url,
         params={"query": input_title, "rows": 1},
         headers=headers,
