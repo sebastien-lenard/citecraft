@@ -72,6 +72,9 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             " et al." in input_first_authors_txt,
         )
 
+    def add_work_metadata(self, input_DOI: str) -> WorkMetadata:
+        """Fetch work metadata and create a new record"""
+
     def get_work_metadata(
         self,
         input_citation_metadata: CitationMetadata,
@@ -149,7 +152,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                         input_first_authors_txt=input_first_authors_txt,
                         input_year_and_suffix=input_year_and_suffix,
                         input_ISSNs=input_ISSNs,
-                        DOI=self.config.doi_api_url.replace("{object_name}", str(doi)),
+                        DOI=doi,
                         type=self._get_type_from_api_item(item),
                     )
 

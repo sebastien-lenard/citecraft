@@ -45,7 +45,7 @@ def test_integ_crossref_works_api_health(test_config: AppConfig) -> None:
     )
 
     first_candidate = candidates[0]
-    assert first_candidate.DOI.startswith("https://doi.org/"), (
+    assert first_candidate.DOI.startswith("10.1038"), (
         f"DOI Formatting error: unexpected prefix in '{first_candidate.DOI}'."
     )
     assert first_candidate.input_first_authors_txt == test_author, (

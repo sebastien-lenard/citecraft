@@ -129,7 +129,7 @@ def test_fill_missing_references_raises_on_repository_error(
         WorkMetadata(
             input_first_authors_txt="A",
             input_year_and_suffix="2020",
-            DOI="doi_a",
+            DOI="10.5194/esurf-8-447-2020",
             reference=None,
         )
     ]

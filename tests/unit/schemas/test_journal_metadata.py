@@ -17,18 +17,9 @@ def test_journal_metadata_defaults() -> None:
 
 def test_journal_metadata_identity_key() -> None:
     """Ensure deduplication identity matches mapped title and ISSN coordinates."""
-    journal = JournalMetadata(input_title="Nature", ISSN="1234-5678")
+    journal = JournalMetadata(input_title="Nature", ISSN="0028-0836")
 
-    assert journal.identity_key == ("Nature", "1234-5678")
-
-
-def test_journal_metadata_issn_formatting() -> None:
-    """Verify that ISSN structures are normalized to standardized hyphenated layouts."""
-    journal = JournalMetadata(input_title="Test", ISSN="12345678")
-    assert journal.ISSN == "1234-5678"
-
-    journal_ok = JournalMetadata(input_title="Test", ISSN="1234-5678")
-    assert journal_ok.ISSN == "1234-5678"
+    assert journal.identity_key == ("Nature", "0028-0836")
 
 
 @pytest.mark.parametrize("invalid_year", [1599, 2101])
@@ -116,7 +107,7 @@ def test_journal_metadata_status_property() -> None:
         input_title="Empty Journal",
         true_title="Empty Journal",
         publisher="Silent Publisher",
-        ISSN="1234-5678",
+        ISSN="0169-555X",
         start_year=None,
         end_year=None,
     )

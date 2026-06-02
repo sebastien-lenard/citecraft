@@ -3,6 +3,7 @@ from typing import Any, override
 from pydantic import Field, field_validator
 
 from .base_schema import BaseSchema
+from .doi_type import DOIType
 
 
 class WorkMetadata(BaseSchema):
@@ -21,7 +22,7 @@ class WorkMetadata(BaseSchema):
         None  # reference after html cleaning. e.g. Lenard, S. J. P., Lavé, J., France-Lanord, C., Aumaître, G., Bourlès, D. L., & Keddadouche, K. (2020). Steady erosion rates in the Himalayas through late Cenozoic climatic changes. Nature Geoscience, 13(6), 448–452. https://doi.org/10.1038/s41561-020-0585-2
     )
     style: str | None = None  # e.g. apa
-    DOI: str | None = None  # e.g. 10.1038/s41561-020-0585-2
+    DOI: DOIType | None = None  # e.g. 10.1038/s41561-020-0585-2
     # CSL-dict metadata of the work from DOI negotiation service / crossref
     crossref_metadata: dict[str, Any] | None = None
     # OpenAlex dict metadata of the work

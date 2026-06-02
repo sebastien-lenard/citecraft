@@ -23,12 +23,21 @@ def validate_issn(issn: str) -> str:
     # --- Modulus 11 Checksum Verification ---
     clean_issn = issn.replace("-", "").upper()
 
+    # Calculate weighted sum for the first 7 digits (weights from 8 down to 2)
     total = sum(int(clean_issn[i]) * (8 - i) for i in range(7))
 
-    check_char = clean_issn[7]
-    total += 10 if check_char == "X" else int(check_char)
+    # Calculate the expected check digit
+    remainder = total % 11
+    if remainder == 0:
+        expected_check = "0"
+    else:
+        calc_check = 11 - remainder
+        expected_check = "X" if calc_check == 10 else str(calc_check)
 
-    if total % 11 != 0:
+    # Compare with the actual 8th character
+    actual_check = clean_issn[7]
+
+    if actual_check != expected_check:
         logger.warning(
             "ISSN Validation Failed (Checksum): %s",
             issn,
