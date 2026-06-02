@@ -1,15 +1,17 @@
+# src/manuscript_reference_lister/cli.py
 import logging
 import os
+import sqlite3
 import sys
 import textwrap
 import traceback
-from datetime import datetime
 from pathlib import Path
 
 import click
 
 from .core import run
 from .logging_config import setup_logging
+from .storage.db import archive_database_cache
 from .ui.progress_bar_context import ProgressBarContext
 from .utils.config import get_config
 
@@ -41,8 +43,8 @@ def cli(ctx: click.Context) -> None:
     "--clear-cache",
     is_flag=True,
     help=(
-        "Safely archive local JSON cache repository files (journals and works) by"
-        " renaming them."
+        "Safely archive local SQLite cache database file by renaming it with a"
+        " timestamp backup suffix."
     ),
 )
 @click.option(
@@ -153,7 +155,7 @@ def main(
                 err=True,
             )
             click.echo(
-                "This will archive your existing journal and work local repositories,"
+                "This will archive your existing database local repository,"
                 " forcing fresh remote API lookups."
             )
 
@@ -161,57 +163,49 @@ def main(
                 click.echo("Operation cancelled. Cache left untouched.")
                 sys.exit(0)
 
-            # Define cache files from configuration paths
-            repo_path = Path(config.local_repo_dir_path).resolve()
-            cache_files = [
-                repo_path / "journal_records.json",  # Local journal database
-                repo_path / "work_records.json",  # Local works repository
-            ]
-
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            moved_count = 0
-
-            for cache_file in cache_files:
-                if cache_file.exists():
-                    backup_name = f"{cache_file.name}.bak_{timestamp}"
-                    backup_path = cache_file.with_name(backup_name)
-                    try:
-                        cache_file.rename(backup_path)
-                        click.echo(f"Moved: {cache_file.name} -> {backup_name}")
-                        logger.info(
-                            "Cache file archived: %s to %s",
-                            cache_file.name,
-                            backup_name,
-                        )
-                        moved_count += 1
-                    except Exception as e:
-                        logger.error(
-                            "Failed to archive cache file %s: %s",
-                            cache_file.name,
-                            str(e),
-                        )
-                        click.secho(
-                            f"Error archiving {cache_file.name}: {e}",
-                            fg="red",
-                            err=True,
-                        )
+            db_path = Path(config.db_filepath).resolve()
+            try:
+                backup_path = archive_database_cache(db_path)
+                if backup_path:
+                    backup_name = backup_path.name
+                    click.echo(f"Moved: {db_path.name} -> {backup_name}")
+                    logger.info(
+                        "Cache file archived: %s to %s",
+                        db_path.name,
+                        backup_name,
+                    )
+                    cache_summary_message = (
+                        f"🧹 Local cache cleared (Database safely archived"
+                        f" as '{backup_path}')."
+                    )
                 else:
                     click.secho(
-                        f"⚠️  Warning: Expected cache file '{cache_file.name}' was not"
-                        f" found. Skipping.",
+                        f"⚠️  Warning: Expected cache database '{db_path.name}' "
+                        f"was not found. Skipping.",
                         fg="yellow",
                     )
                     logger.warning(
-                        "Cache file not found for clearing: %s", cache_file.name
+                        "Cache file not found for clearing: %s", db_path.name
                     )
-
-            if moved_count > 0:
-                cache_summary_message = (
-                    f"🧹 Local cache cleared ({moved_count} file"
-                    f"(s) safely archived with suffix '.bak_{timestamp}')."
+                    cache_summary_message = (
+                        "ℹ️  No active cache database was found to clear."
+                    )
+            except (OSError, sqlite3.Error) as e:
+                logger.error(
+                    "Failed to archive cache database %s: %s",
+                    str(db_path),
+                    str(e),
                 )
-            else:
-                cache_summary_message = "ℹ️  No active cache files were found to clear."
+                logger.debug(
+                    "Detailed traceback for database archive failure:",
+                    exc_info=True,
+                )
+                click.secho(
+                    f"Error archiving {db_path.name}: {e}",
+                    fg="red",
+                    err=True,
+                )
+                cache_summary_message = "❌ Cache clearing failed."
 
             click.echo("")
             click.secho(cache_summary_message, fg="green", bold=True)
@@ -385,7 +379,7 @@ def main(
 
                 click.echo(
                     "  • Once the CSV file is cleaned and reviewed, you can directly"
-                    "copy and paste\n"
+                    " copy and paste\n"
                     "    the finalized reference list into your manuscript."
                 )
                 click.echo("")

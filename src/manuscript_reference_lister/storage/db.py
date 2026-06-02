@@ -1,7 +1,9 @@
+# src/storage/db.py
 import json
 import logging
 import sqlite3
 from contextlib import closing
+from datetime import datetime
 from pathlib import Path
 from types import UnionType
 from typing import Any, Union, get_args, get_origin
@@ -155,3 +157,49 @@ def load_records[T: BaseModel](
         rows = cursor.fetchall()
 
         return [deserialize_row(dict(row), model_class) for row in rows]
+
+
+def archive_database_cache(db_path: Path) -> Path | None:
+    """Safely archive the local database cache by renaming it with a timestamp
+    suffix."""
+    if not db_path.is_file():
+        logger.warning(
+            "Database cache file not found for archiving: %s",
+            str(db_path),
+            extra={
+                "event": "db_file_not_found",
+                "db_path": str(db_path),
+            },
+        )
+        return None
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_name = f"{db_path.name}.bak_{timestamp}"
+    backup_path = db_path.with_name(backup_name)
+
+    try:
+        db_path.rename(backup_path)
+        logger.info(
+            "Database cache archived: %s to %s",
+            db_path.name,
+            backup_name,
+            extra={
+                "event": "db_archived",
+                "db_path": db_path.name,
+                "db_backup_path": backup_name,
+            },
+        )
+        return backup_path
+    except OSError as e:
+        logger.error(
+            "Failed to archive database cache file %s: %s",
+            str(db_path),
+            str(e),
+            exc_info=True,
+            extra={
+                "event": "db_not_archived",
+                "db_path": str(db_path),
+                "error": str(e),
+            },
+        )
+        raise e

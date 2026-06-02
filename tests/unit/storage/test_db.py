@@ -1,4 +1,5 @@
-# tests/test_db.py
+# tests/storage/test_db.py
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,7 @@ from manuscript_reference_lister.schemas.work_metadata import WorkMetadata
 from manuscript_reference_lister.storage.db import (
     _get_sqlite_type,
     _is_collection_type,
+    archive_database_cache,
     load_records,
     save_records,
 )
@@ -22,6 +24,12 @@ class SimpleMockModel(BaseModel):
     tags: list[str] = Field(default_factory=list)
     attributes: dict[str, int] = Field(default_factory=dict)
     is_active: bool = True
+
+
+class MismatchedMockModel(BaseModel):
+    id: int
+    name: str
+    non_existent_column: str
 
 
 def test_type_mappings() -> None:
@@ -70,27 +78,27 @@ def test_dynamic_schema_and_save_load(tmp_path: Path) -> None:
 
 
 def test_transaction_rollback_integrity(tmp_path: Path) -> None:
-    """Verify that a write failure triggers a clean rollback of state."""
+    """Verify that a database-level write failure triggers a clean rollback."""
     db_path = tmp_path / "test_rollback.db"
 
+    # 1. Initialize the table with the original schema
     records = [SimpleMockModel(id=1, name="Original", tags=[])]
     save_records(db_path, "mock_table", records, SimpleMockModel)
 
-    # Intentionally pass invalid collection item to force serialization crash
+    # 2. Try to insert with the mismatched schema.
+    # We bypass schema creation by calling save_records with our mismatched model.
+    # This forces SQLite to raise a real sqlite3.OperationalError (no such column).
     bad_records = [
-        SimpleMockModel(id=2, name="Failure", tags=["ok"]),
-        "not_a_model",  # type: ignore[list-item]
+        MismatchedMockModel(id=2, name="Failure", non_existent_column="test")
     ]
 
-    with pytest.raises(Exception):
-        save_records(
-            db_path,
-            "mock_table",
-            bad_records,
-            SimpleMockModel,  # type: ignore[arg-type]
-        )
+    with pytest.raises(sqlite3.Error) as exc_info:
+        save_records(db_path, "mock_table", bad_records, MismatchedMockModel)
 
-    # Verify table maintains original records (not empty, not corrupted)
+    # Verify that a real SQLite error was raised
+    assert "has no column named non_existent_column" in str(exc_info.value)
+
+    # 3. Verify original database state remains uncorrupted and loaded successfully
     loaded = load_records(db_path, "mock_table", SimpleMockModel)
     assert len(loaded) == 1
     assert loaded[0].name == "Original"
@@ -138,3 +146,29 @@ def test_real_metadata_roundtrip(tmp_path: Path) -> None:
     assert loaded_works[0].DOI == "10.1038/s41561-020-0585-2"
     assert loaded_works[0].crossref_metadata == {"indexed": {"date-parts": [[2020]]}}
     assert loaded_works[0].openalex_metadata == {"id": "https://openalex.org/W1234"}
+
+
+def test_archive_database_cache_success(tmp_path: Path) -> None:
+    """Verify database is safely renamed with timestamp backup suffix on archive."""
+    db_path = tmp_path / "cache.db"
+    records = [SimpleMockModel(id=1, name="Item", tags=[])]
+    save_records(db_path, "mock_table", records, SimpleMockModel)
+
+    backup_path = archive_database_cache(db_path)
+
+    assert backup_path is not None
+    assert backup_path.is_file()
+    assert ".bak_" in backup_path.name
+    assert not db_path.exists()
+
+    # Verify backup data contains original elements
+    loaded = load_records(backup_path, "mock_table", SimpleMockModel)
+    assert len(loaded) == 1
+    assert loaded[0].name == "Item"
+
+
+def test_archive_database_cache_missing_returns_none(tmp_path: Path) -> None:
+    """Verify archiving returns None if targeted database cache file is absent."""
+    db_path = tmp_path / "absent_cache.db"
+    backup_path = archive_database_cache(db_path)
+    assert backup_path is None

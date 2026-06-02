@@ -1,3 +1,4 @@
+# tests/unit/test_cli.py
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import ANY, MagicMock, patch
@@ -11,19 +12,12 @@ from manuscript_reference_lister.utils import AppConfig
 
 
 @pytest.fixture
-def test_local_repo_filepaths(
-    test_config: AppConfig, tmp_path: Path
-) -> tuple[Path, list[Path]]:
-    """Create temporary local repository files inside the isolated directory."""
-    local_repo_files = [
-        test_config.local_repo_dir_path / "journal_records.json",
-        test_config.local_repo_dir_path / "work_records.json",
-    ]
-
-    for file in local_repo_files:
-        file.write_text('{"test": "data"}', encoding="utf-8")
-
-    return test_config.local_repo_dir_path, local_repo_files
+def test_local_repo_filepath(test_config: AppConfig, tmp_path: Path) -> Path:
+    """Create temporary local repository cache database inside the directory."""
+    db_path = Path(test_config.db_filepath).resolve()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    db_path.write_text("dummy database cache file", encoding="utf-8")
+    return db_path
 
 
 @pytest.fixture
@@ -68,8 +62,7 @@ def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
 def test_cli_journal_title_option_propagates(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify that the -j / --journal-title option is correctly propagated to the core
-    pipeline."""
+    """Verify that the -j option is correctly propagated to the pipeline."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -98,8 +91,7 @@ def test_cli_success_message_includes_resolved_style(
     runner: CliRunner,
     test_config: AppConfig,
 ) -> None:
-    """Verify that the success message printed by the CLI contains the resolved style
-    name."""
+    """Verify that success message contains the resolved style name."""
     mock_export_metadata = ExportResult(
         total_rows=3,
         output_filepath=Path("/mock/path/references.csv"),
@@ -138,8 +130,7 @@ def test_cli_exception_handling_paths(
     verbose_args: list[str],
     expect_traceback: bool,
 ) -> None:
-    """Verify that unexpected pipeline crashes are caught with correct traceback
-    display settings."""
+    """Verify that unexpected pipeline crashes are caught with traceback options."""
     with patch("manuscript_reference_lister.cli.run") as mock_run:
         mock_run.side_effect = RuntimeError("Database or File system corruption")
 
@@ -169,8 +160,7 @@ def test_cli_exception_handling_paths(
 def test_cli_piped_input_default_style(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify standard input redirection (piping) forwards strings correctly using APA
-    defaults."""
+    """Verify standard input redirection forwards strings correctly using defaults."""
     piped_text = "Some citation (Lenard et al., 2025)"
 
     with patch(
@@ -199,8 +189,7 @@ def test_cli_piped_input_default_style(
 def test_cli_custom_style_and_output_options(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify custom styles and output paths are propagated cleanly to core
-    pipelines."""
+    """Verify custom styles and output paths are propagated cleanly to pipelines."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -236,8 +225,7 @@ def test_cli_custom_style_and_output_options(
 def test_cli_skip_update_flags_propagate(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify that bypass flags propagate to core runs and display skipped
-    indicators."""
+    """Verify that bypass flags propagate to core runs and display skipped indicators."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -274,8 +262,7 @@ def test_cli_skip_update_flags_propagate(
 def test_cli_displays_journal_anomalies_warning_table(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify metadata anomalies are detected and displayed inside status formatting
-    grids."""
+    """Verify metadata anomalies are detected and displayed inside status grids."""
     mock_anomalies = {
         ("Natural Hazards", "1234-5678"): {
             "input_title": "Natural Hazards",
@@ -332,11 +319,10 @@ def test_cli_displays_journal_anomalies_warning_table(
 def test_cli_final_summary_display_integrity(
     runner: CliRunner,
     test_config: AppConfig,
-    test_local_repo_filepaths: tuple[Path, list[Path]],
+    test_local_repo_filepath: Path,
     tmp_path: Path,
 ) -> None:
-    """Verify formatting metrics and output textwrapping grids on final CLI summary
-    cards."""
+    """Verify formatting metrics and output textwrapping grids on summary cards."""
     mock_manuscript = tmp_path / "mock_manuscript.docx"
     mock_manuscript.write_text("dummy content", encoding="utf-8")
 
@@ -424,50 +410,40 @@ def test_cli_final_summary_display_integrity(
 def test_cli_clear_cache_option_absent_does_not_touch_files(
     runner: CliRunner,
     test_config: AppConfig,
-    test_local_repo_filepaths: tuple[Path, list[Path]],
+    test_local_repo_filepath: Path,
 ) -> None:
-    """Verify cache directories remain untouched unless clear-cache flags are
-    declared."""
-    _, local_repo_files = test_local_repo_filepaths
-
+    """Verify cache directories remain untouched unless clear-cache flags declared."""
     with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
         result = runner.invoke(
             cli, ["main", "-f", "manuscript.docx"], obj={"config": test_config}
         )
 
     assert result.exit_code == 0
-    for file in local_repo_files:
-        assert file.exists()
-        assert "bak_" not in result.output
+    assert test_local_repo_filepath.exists()
+    assert "bak_" not in result.output
 
 
 def test_cli_clear_cache_cancelled_by_user(
     runner: CliRunner,
     test_config: AppConfig,
-    test_local_repo_filepaths: tuple[Path, list[Path]],
+    test_local_repo_filepath: Path,
 ) -> None:
     """Verify cache cleanup stops on explicit user cancellation inputs."""
-    _, local_repo_files = test_local_repo_filepaths
-
     result = runner.invoke(
         cli, ["main", "--clear-cache"], input="n\n", obj={"config": test_config}
     )
 
     assert result.exit_code == 0
     assert "Operation cancelled. Cache left untouched." in result.output
-
-    for file in local_repo_files:
-        assert file.exists()
+    assert test_local_repo_filepath.exists()
 
 
 def test_cli_clear_cache_maintenance_only_success(
     runner: CliRunner,
     test_config: AppConfig,
-    test_local_repo_filepaths: tuple[Path, list[Path]],
+    test_local_repo_filepath: Path,
 ) -> None:
     """Verify standalone cache maintenance wipes cache files and generates back-ups."""
-    local_repo_dir_path, local_repo_files = test_local_repo_filepaths
-
     with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
         result = runner.invoke(
             cli, ["main", "--clear-cache"], input="y\n", obj={"config": test_config}
@@ -477,22 +453,17 @@ def test_cli_clear_cache_maintenance_only_success(
     assert "Local cache cleared" in result.output
     assert "Done." in result.output
 
-    for file in local_repo_files:
-        assert not file.exists()
-
-    backups = list(local_repo_dir_path.glob("*.bak_*"))
-    assert len(backups) == 2
+    assert not test_local_repo_filepath.exists()
+    backups = list(test_local_repo_filepath.parent.glob("*.bak_*"))
+    assert len(backups) == 1
 
 
 def test_cli_clear_cache_then_proceeds_to_run(
     runner: CliRunner,
     test_config: AppConfig,
-    test_local_repo_filepaths: tuple[Path, list[Path]],
+    test_local_repo_filepath: Path,
 ) -> None:
-    """Verify clean cache setup triggers first before compiling the manuscript
-    target."""
-    local_repo_dir_path, local_repo_files = test_local_repo_filepaths
-
+    """Verify clean cache setup triggers first before compiling manuscript target."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -508,19 +479,17 @@ def test_cli_clear_cache_then_proceeds_to_run(
     assert "Proceeding to manuscript processing with a fresh cache..." in result.output
     assert "Done." in result.output
 
-    for file in local_repo_files:
-        assert not file.exists()
-    assert len(list(local_repo_dir_path.glob("*.bak_*"))) == 2
+    assert not test_local_repo_filepath.exists()
+    assert len(list(test_local_repo_filepath.parent.glob("*.bak_*"))) == 1
     mock_run.assert_called_once()
 
 
 def test_cli_clear_cache_summary_displayed_at_the_very_end(
     runner: CliRunner,
     test_config: AppConfig,
-    test_local_repo_filepaths: tuple[Path, list[Path]],
+    test_local_repo_filepath: Path,
 ) -> None:
-    """Verify that cache maintenance completions print confirmation statuses before
-    exiting."""
+    """Verify that cache maintenance completions print confirmation statuses."""
     with patch(
         "manuscript_reference_lister.cli.run", return_value=({}, {})
     ) as mock_run:
@@ -544,13 +513,10 @@ def test_cli_clear_cache_summary_displayed_at_the_very_end(
 def test_cli_clear_cache_partial_files_shows_warning(
     runner: CliRunner,
     test_config: AppConfig,
-    test_local_repo_filepaths: tuple[Path, list[Path]],
+    test_local_repo_filepath: Path,
 ) -> None:
-    """Verify warning visibility if any targeted cache elements are already absent."""
-    _, local_repo_files = test_local_repo_filepaths
-
-    missing_file = local_repo_files[0]
-    missing_file.unlink()
+    """Verify warning visibility if targeted database cache file is already absent."""
+    test_local_repo_filepath.unlink()
 
     with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
         result = runner.invoke(
@@ -559,8 +525,7 @@ def test_cli_clear_cache_partial_files_shows_warning(
 
     assert result.exit_code == 0
     assert (
-        f"Warning: Expected cache file '{missing_file.name}' was not found"
-        in result.output
-    )
-    assert "Moved: work_records.json" in result.output
-    assert "Local cache cleared (1 file(s) safely archived" in result.output
+        f"Warning: Expected cache database '{test_local_repo_filepath.name}'"
+        f" was not found. Skipping."
+    ) in result.output
+    assert "No active cache database was found to clear." in result.output
