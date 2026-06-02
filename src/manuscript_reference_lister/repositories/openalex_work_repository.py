@@ -160,7 +160,9 @@ class OpenAlexWorkRepository(WorkRepository):
     @override
     def _get_type_from_api_item(self, item: dict) -> str | None:
         """Get type of an item returned by the api"""
-        return item["raw_type"] if "raw_type" in item else None
+        if "primary_location" in item and "raw_type" in item["primary_location"]:
+            return item["primary_location"]["raw_type"]
+        return item["type"] if "type" in item else None
 
     @override
     def _set_metadata_attribute(

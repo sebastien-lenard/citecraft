@@ -109,10 +109,42 @@ def test_get_issns_groups_for_api(repo: OpenAlexWorkRepository) -> None:
     assert groups == [["1111-1111", "2222-2222"], ["3333-3333"]]
 
 
-def test_get_type_from_api_item(repo: OpenAlexWorkRepository) -> None:
-    """Verify raw type extraction from raw OpenAlex items."""
-    item = {"raw_type": "journal-article"}
-    assert repo._get_type_from_api_item(item) == "journal-article"
+@pytest.mark.parametrize(
+    "item, expected_type",
+    [
+        # Case 1: Primary location raw_type is present (Takes highest priority)
+        (
+            {
+                "primary_location": {"raw_type": "journal-article"},
+                "type": "book-chapter",
+            },
+            "journal-article",
+        ),
+        # Case 2: Fallback to top-level type when primary_location or raw_type is missing
+        (
+            {"primary_location": {}, "type": "dataset"},
+            "dataset",
+        ),
+        (
+            {"type": "book"},
+            "book",
+        ),
+        # Case 3: Complete fallback when neither target keys are present
+        (
+            {"primary_location": {"source": "crossref"}},
+            None,
+        ),
+        (
+            {},
+            None,
+        ),
+    ],
+)
+def test_get_type_from_api_item(
+    repo: OpenAlexWorkRepository, item: dict, expected_type: str | None
+) -> None:
+    """Verify raw type extraction branches correctly from OpenAlex API payloads."""
+    assert repo._get_type_from_api_item(item) == expected_type
 
 
 def test_set_metadata_attribute(repo: OpenAlexWorkRepository) -> None:
