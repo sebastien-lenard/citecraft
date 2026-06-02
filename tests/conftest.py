@@ -73,13 +73,14 @@ def assert_logging_integrity(
 
 @pytest.fixture
 def test_config(tmp_path: Path) -> Generator[AppConfig, None, None]:
-    """Provide a configuration isolated with temporary directories."""
+    """Provide a configuration isolated with temporary directories and databases."""
     config_instance = create_config()
     test_config_obj = config_instance.model_copy(
         update={
             "local_repo_dir_path": tmp_path,
             "log_dir_path": tmp_path,
             "output_dir_path": tmp_path,
+            "db_filepath": tmp_path / config_instance.db_filename,
         }
     )
 

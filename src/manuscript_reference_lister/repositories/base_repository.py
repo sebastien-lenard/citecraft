@@ -1,5 +1,5 @@
-import json
 import logging
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import TypeVar
@@ -9,9 +9,9 @@ from manuscript_reference_lister.network import (
     get_http_client_registry,
 )
 from manuscript_reference_lister.schemas import BaseSchema
+from manuscript_reference_lister.storage.db import load_records, save_records
 from manuscript_reference_lister.utils import (
     AppConfig,
-    DataLoader,
     get_config,
 )
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseRepository[T: BaseSchema]:
-    """Base repository delivering structured local JSON storage and schema
+    """Base repository delivering structured local SQLite storage and schema
     enforcement."""
 
     def __init__(
@@ -39,6 +39,7 @@ class BaseRepository[T: BaseSchema]:
             f"{self.http_client_wrapper.email})"
         }
         self.local_filename: str = local_filename
+        self.table_name: str = Path(local_filename).stem
         self._load_failed: bool = False
         self.model_class: type[T] = model_class
         self.records: list[T] = []
@@ -65,48 +66,57 @@ class BaseRepository[T: BaseSchema]:
         *,
         raise_exception: bool = False,
     ) -> None:
-        """Load and validate records from local storage into memory. The list of records
-        of the object are set to [] if invalid."""
-        path = Path(
-            input_filepath
-            or Path(self.config.local_repo_dir_path) / self.local_filename
-        ).resolve()
+        """Load and validate records from SQLite storage into memory. The list of
+        records of the object are set to [] if invalid."""
+        path = Path(input_filepath or self.config.db_filepath).resolve()
 
-        data = DataLoader(path, raise_exception=raise_exception).load_json()
-        if data and isinstance(data, list):
-            try:
-                self.records = [self.model_class(**item) for item in data]
-                self._load_failed = False
-            except (TypeError, ValueError) as e:
-                logger.warning(
-                    "Failed validation for %s in file %s. Records set to [] for this "
-                    "run. Please check the file before a rerun.",
-                    self.model_class.__name__,
-                    str(path),
-                    extra={
-                        "status": "KO",
-                        "event": "repository_validation_failed",
-                        "model": self.model_class.__name__,
-                        "filepath": str(path),
-                    },
-                )
-                if raise_exception:
-                    raise e
-                logger.debug(
-                    "Validation error detail: %s",
-                    str(e),
-                    extra={
-                        "status": "KO",
-                        "event": "repository_validation_error_detail",
-                    },
-                )
-                self.records = []
-                self._load_failed = True
-        else:
+        try:
+            self.records = load_records(path, self.table_name, self.model_class)
+            self._load_failed = False
+        except (sqlite3.Error, TypeError, ValueError) as e:
+            logger.warning(
+                "Failed validation or database corrupted for %s in SQLite file %s. "
+                "Triggering database recovery and backup.",
+                self.model_class.__name__,
+                str(path),
+                exc_info=True,
+                extra={
+                    "status": "KO",
+                    "event": "repository_validation_failed",
+                    "model": self.model_class.__name__,
+                    "filepath": str(path),
+                },
+            )
+
+            if path.is_file():
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                backup_filename = f"{path.stem}_corrupted_{timestamp}{path.suffix}"
+                backup_path = path.with_name(backup_filename)
+                try:
+                    path.rename(backup_path)
+                    logger.warning(
+                        "Corrupted database backed up to: %s",
+                        str(backup_path),
+                        extra={"event": "database_corrupted_backup_created"},
+                    )
+                except OSError as backup_err:
+                    logger.error(
+                        "Failed to back up corrupted database: %s",
+                        str(backup_err),
+                        exc_info=True,
+                    )
+                    try:
+                        path.unlink(missing_ok=True)
+                    except OSError:
+                        pass
+
             self.records = []
+            self._load_failed = True
+            if raise_exception:
+                raise e
 
         logger.info(
-            "Loaded %d records into memory from %s",
+            "Loaded %d records into memory from SQLite %s",
             len(self.records),
             str(path),
             extra={
@@ -118,50 +128,23 @@ class BaseRepository[T: BaseSchema]:
         )
 
     def save_all(self, output_filepath: str | Path | None = None) -> None:
-        """Save records atomically to local storage using a temporary file strategy.
-        Saving is done in a recovery file if previous load_all failed."""
-        protected_path = Path(self.config.local_repo_dir_path) / self.local_filename
-        target_path = (
-            Path(output_filepath).resolve()
-            if output_filepath
-            else protected_path.resolve()
-        )
-
-        if self._load_failed and target_path == protected_path:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            new_filename = (
-                f"{target_path.stem}_recovered_{timestamp}{target_path.suffix}"
-            )
-            target_path = target_path.with_name(new_filename)
-
-            # Update state so the repo "migrates" to the new file
-            self.local_filename = new_filename
-            self._load_failed = False
-            logger.warning(
-                "Previous load failed; diverting save to recovery file: %s",
-                str(target_path),
-                extra={
-                    "status": "WARNING",
-                    "event": "repository_save_diverted_to_recovery",
-                    "recovery_filepath": str(target_path),
-                },
-            )
-
-        data_to_save = [record.model_dump() for record in self.records]
-        temp_path = target_path.with_suffix(".tmp")
+        """Save records atomically to SQLite storage within a transaction."""
+        target_path = Path(output_filepath or self.config.db_filepath).resolve()
 
         try:
-            target_path.parent.mkdir(parents=True, exist_ok=True)
-            # Explicitly open the file with utf-8
-            with open(temp_path, "w", encoding="utf-8") as f:
-                json.dump(data_to_save, f, indent=4, ensure_ascii=False)
-            temp_path.replace(target_path)
-        finally:
-            if temp_path.exists():
-                temp_path.unlink()
+            save_records(target_path, self.table_name, self.records, self.model_class)
+            self._load_failed = False
+        except (sqlite3.Error, OSError) as e:
+            logger.error(
+                "Failed to save records to SQLite at %s: %s",
+                str(target_path),
+                str(e),
+                exc_info=True,
+            )
+            raise e
 
         logger.info(
-            "Saved %d records to %s",
+            "Saved %d records to SQLite %s",
             len(self.records),
             str(target_path),
             extra={

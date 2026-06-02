@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 
 import pytest
@@ -6,6 +5,7 @@ from pydantic import ValidationError
 
 from manuscript_reference_lister.repositories import BaseRepository
 from manuscript_reference_lister.schemas import BaseSchema
+from manuscript_reference_lister.storage.db import load_records, save_records
 from manuscript_reference_lister.utils import AppConfig
 
 
@@ -49,74 +49,79 @@ def test_deduplicate_removes_repeats(base_repo: MockRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "file_content, expected_records_count, expected_load_failed",
+    "scenario, expected_records_count, expected_load_failed",
     [
-        # Case A: Valid JSON file loaded and verified
-        ('[{"id": 1, "content": "A"}, {"id": 2, "content": "B"}]', 2, False),
-        # Case B: Invalid JSON structure causes failure flag and clears entries
-        ('[{"content": "broken"}]', 0, True),
-        # Case C: Missing target repository file loads empty lists gracefully
-        (None, 0, False),
+        ("valid", 2, False),
+        ("corrupted", 0, True),
+        ("missing", 0, False),
     ],
 )
 def test_load_all_scenarios(
     base_repo: MockRepository,
-    file_content: str | None,
+    scenario: str,
     expected_records_count: int,
     expected_load_failed: bool,
 ) -> None:
-    """Verify load_all behaviors under standard file-system and validation states."""
-    path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
+    """Verify load_all behaviors under standard database corruption states."""
+    path = Path(base_repo.config.db_filepath)
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-    if file_content is not None:
-        path.write_text(file_content, encoding="utf-8")
-    elif path.exists():
-        path.unlink()
+    if scenario == "valid":
+        records = [MockSchema(id=1, content="A"), MockSchema(id=2, content="B")]
+        save_records(path, base_repo.table_name, records, MockSchema)
+    elif scenario == "corrupted":
+        path.write_text("invalid corrupted sqlite binary header data", encoding="utf-8")
+    elif scenario == "missing":
+        if path.exists():
+            path.unlink()
 
     base_repo.load_all()
 
     assert len(base_repo.records) == expected_records_count
     assert base_repo._load_failed is expected_load_failed
 
+    if scenario == "corrupted":
+        backup_files = list(path.parent.glob("*_corrupted_*.db"))
+        assert len(backup_files) == 1
+        assert not path.exists()
+
 
 def test_save_all_atomic_success(base_repo: MockRepository, tmp_path: Path) -> None:
-    """Verify save_all writes JSON and cleans up temporary swap files."""
+    """Verify save_all writes records cleanly to the SQLite database."""
     data = [MockSchema(id=1, content="saved")]
     base_repo.records = data
-    target = tmp_path / base_repo.local_filename
+    target = tmp_path / "test_db.db"
 
     base_repo.save_all(output_filepath=target)
 
     assert target.exists()
-    assert json.loads(target.read_text(encoding="utf-8"))[0]["id"] == 1
-    assert not target.with_suffix(".tmp").exists()
+    loaded = load_records(target, base_repo.table_name, MockSchema)
+    assert len(loaded) == 1
+    assert loaded[0].id == 1
 
 
 def test_save_all_overwrite_existing(base_repo: MockRepository) -> None:
-    """Verify that save_all correctly overwrites existing contents via atomic swap."""
-    path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
-    path.write_text("initial junk data", encoding="utf-8")
+    """Verify that save_all correctly overwrites existing SQLite table records."""
+    path = Path(base_repo.config.db_filepath)
+
+    initial_records = [MockSchema(id=1, content="old")]
+    save_records(path, base_repo.table_name, initial_records, MockSchema)
 
     new_record = MockSchema(id=99, content="new")
     base_repo.records = [new_record]
     base_repo.save_all()
 
-    saved_data = json.loads(path.read_text(encoding="utf-8"))
-    assert len(saved_data) == 1
-    assert saved_data[0]["id"] == 99
+    loaded = load_records(path, base_repo.table_name, MockSchema)
+    assert len(loaded) == 1
+    assert loaded[0].id == 99
 
 
 def test_save_all_preserves_utf8(base_repo: MockRepository) -> None:
-    """Ensure non-ASCII characters are saved as literal UTF-8 in the JSON file."""
+    """Ensure non-ASCII characters are saved as literal UTF-8 in the SQLite db."""
     special_content = "Lavé & Keddadouche — 2020"
     base_repo.records = [MockSchema(id=1, content=special_content)]
-    path = Path(base_repo.config.local_repo_dir_path) / base_repo.local_filename
 
     base_repo.save_all()
-    raw_text = path.read_text(encoding="utf-8")
-
-    assert "é" in raw_text
-    assert "—" in raw_text
 
     base_repo.load_all()
     assert base_repo.records[0].content == special_content

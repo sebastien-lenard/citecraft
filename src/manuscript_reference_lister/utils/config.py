@@ -2,10 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from pydantic import (
-    EmailStr,
-    Field,
-)
+from pydantic import EmailStr, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from manuscript_reference_lister.schemas import (
@@ -43,6 +40,9 @@ class AppConfig(BaseSettings):
     # -------------------------------------------- #
     # OTHER VARIABLES                              #
     # -------------------------------------------- #
+
+    # --- Filepaths ---
+    db_filename: str = Field(default="cache.db", alias="DB_FILENAME")
 
     # --- Default API calls ---
 
@@ -111,6 +111,12 @@ class AppConfig(BaseSettings):
     preserved_html_tags: set[str] = Field(default_factory=set)
     # Styling tags whose inner text is kept but boundaries are discarded
     discarded_html_tags: set[str] = Field(default_factory=set)
+
+    @computed_field
+    @property
+    def db_filepath(self) -> Path:
+        """Dynamically construct the db filepath once repo path is resolved."""
+        return self.local_repo_dir_path / self.db_filename
 
     # --- Directory Lifecycle Methods ---
     def ensure_repo_directory(self) -> None:
