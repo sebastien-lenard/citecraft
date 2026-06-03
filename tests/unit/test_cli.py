@@ -30,7 +30,8 @@ def runner() -> CliRunner:
 def mock_setup_logging() -> Generator[MagicMock, None, None]:
     """Isolate CLI tests from modifying global root log configurations."""
     with patch("citecraft.cli.setup_logging") as mock:
-        mock.return_value = "/mock/log/dir"
+        # Match the 3-tuple signature: (log_dir, intended_dir, is_fallback)
+        mock.return_value = (Path("/mock/log/dir"), Path("/mock/log/dir"), False)
         yield mock
 
 

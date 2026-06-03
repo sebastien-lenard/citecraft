@@ -3,15 +3,15 @@ import logging
 import logging.config
 import os
 import sys
-import tempfile
+import traceback
 import uuid
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from dotenv import dotenv_values
+from .utils import get_safe_dir
 
-# Unique run_id valid for the session CLI
+# Unique session identification tag
 RUN_ID: str = str(uuid.uuid4())[:8]
 
 
@@ -50,37 +50,24 @@ class ColorFormatter(logging.Formatter):
         """Clear current terminal progress line and apply color to the output."""
         orig_name = record.name
         record.name = orig_name.rpartition(".")[-1]
-        result = super().format(record)
-        record.name = orig_name  # Restore to avoid breaking other handlers
+        try:
+            result = super().format(record)
+        finally:
+            record.name = orig_name  # Restore to avoid breaking other handlers
+
         color = self.LEVEL_COLORS.get(record.levelno, self.RESET)
         return f"{self.CLEAR_LINE}{color}{result}{self.RESET}"
 
 
-def get_safe_log_dir() -> Path:
-    """Get validated log directory path from environment or system temp directory."""
-    env_val = os.environ.get("LOG_DIR_PATH")
-    if not env_val:
-        try:
-            env_vars = dotenv_values(".env")
-            env_val = env_vars.get("LOG_DIR_PATH")
-        except Exception:
-            pass
-
-    if env_val:
-        return Path(env_val.strip('"').strip("'")).resolve()
-
-    # Fallback solution C:\Users\Nom\AppData\Local\Temp\manuscript-reference-lister
-    # on Windows or /tmp/manuscript-reference-lister on Linux/MacOS
-    return Path(tempfile.gettempdir()).resolve() / "manuscript-reference-lister"
-
-
 def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
     """Build the configuration dictionary for system loggers."""
-    console_level = "WARNING"
-    if verbose_level == 1:
-        console_level = "INFO"
-    elif verbose_level >= 2:
-        console_level = "DEBUG"
+    match verbose_level:
+        case 1:
+            console_level = "INFO"
+        case lvl if lvl >= 2:
+            console_level = "DEBUG"
+        case _:
+            console_level = "WARNING"
 
     return {
         "version": 1,
@@ -114,7 +101,7 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
                 "formatter": "json",
                 "level": "DEBUG",
                 "filename": str(log_dir / "app.json.log"),
-                "maxBytes": 10485760,  # 10 MB
+                "maxBytes": 10_485_760,  # 10 MB (Clean digit separators)
                 "backupCount": 5,
                 "encoding": "utf8",
                 "filters": ["run_id_filter"],
@@ -134,20 +121,21 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
     }
 
 
-def setup_logging(verbose_level: int = 0) -> Path:
-    """Set up system loggers and return resolved log directory path."""
-    log_dir = get_safe_log_dir()
+def setup_logging(verbose_level: int = 0) -> tuple[Path, Path, bool]:
+    """Set up system loggers and return log directory path, original intended path,
+    and a boolean = True if it had to resort to a temp directory."""
+    log_dir, intended_dir, is_fallback = get_safe_dir("logs")
 
     try:
-        log_dir.mkdir(parents=True, exist_ok=True)
         config = get_logging_config(log_dir, verbose_level=verbose_level)
         logging.config.dictConfig(config)
     except Exception as e:
         # Fallback to standard error console if directory is locked or unwritable
         print(
-            f"CRITICAL: Failed to initialize log directory at {log_dir}: {e}",
+            f"CRITICAL: Failed to initialize logging system configuration: {e}",
             file=sys.stderr,
         )
+        traceback.print_exc(file=sys.stderr)
         logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
 
-    return log_dir
+    return log_dir, intended_dir, is_fallback

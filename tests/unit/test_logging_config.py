@@ -1,8 +1,7 @@
 # tests/unit/test_logging_config.py
 import json
 import logging
-import tempfile
-from collections.abc import Callable
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -10,121 +9,174 @@ import pytest
 from pythonjsonlogger.json import JsonFormatter
 
 from citecraft.logging_config import (
+    ColorFormatter,
     RunIdFilter,
     get_logging_config,
-    get_safe_log_dir,
     setup_logging,
 )
 
 
-def test_run_id_filter_injects_uuid() -> None:
-    """Verify that RunIdFilter injects a run_id string into the LogRecord."""
-    log_filter = RunIdFilter()
-    mock_record = MagicMock(spec=logging.LogRecord)
+class TestRunIdFilter:
+    def test_run_id_filter_injects_uuid(self) -> None:
+        """Verify that RunIdFilter injects a run_id string into the LogRecord."""
+        log_filter = RunIdFilter()
+        mock_record = MagicMock(spec=logging.LogRecord)
 
-    assert not hasattr(mock_record, "run_id")
+        del mock_record.run_id
 
-    result = log_filter.filter(mock_record)
+        result = log_filter.filter(mock_record)
 
-    assert result is True
-    assert hasattr(mock_record, "run_id")
-    assert isinstance(mock_record.run_id, str)
-    assert len(mock_record.run_id) == 8
-
-
-@pytest.mark.parametrize(
-    "mock_env_values, expected_path_callable",
-    [
-        # Scenario A: Missing env variables -> Fallback to temporary directory subfolder
-        (
-            {},
-            lambda: Path(tempfile.gettempdir()) / "manuscript-reference-lister",
-        ),
-        # Scenario B: Custom log directory path defined in the .env configuration
-        (
-            {"LOG_DIR_PATH": '"C:\\Custom\\Log\\Path"'},
-            lambda: Path("C:\\Custom\\Log\\Path"),
-        ),
-    ],
-)
-def test_get_safe_log_dir_scenarios(
-    mock_env_values: dict[str, str],
-    expected_path_callable: Callable[[], Path],
-) -> None:
-    """Verify log path resolution fallback and custom extraction behaviors."""
-    with patch(
-        "citecraft.logging_config.dotenv_values",
-        return_value=mock_env_values,
-    ):
-        log_dir = get_safe_log_dir()
-        assert log_dir == expected_path_callable()
+        assert result is True
+        assert hasattr(mock_record, "run_id")
+        assert isinstance(mock_record.run_id, str)
+        assert len(mock_record.run_id) == 8
 
 
-@pytest.mark.parametrize(
-    "verbose_level, expected_console_level",
-    [
-        (0, "WARNING"),
-        (1, "INFO"),
-        (2, "DEBUG"),
-        (3, "DEBUG"),
-    ],
-)
-def test_get_logging_config_levels(
-    verbose_level: int, expected_console_level: str
-) -> None:
-    """Verify that the console log level scales correctly with verbosity."""
-    dummy_path = Path("/dummy/path")
-    config = get_logging_config(dummy_path, verbose_level=verbose_level)
+class TestColorFormatter:
+    @pytest.fixture
+    def basic_record(self) -> logging.LogRecord:
+        """Isolated LogRecord fixture for format testing."""
+        return logging.LogRecord(
+            name="citecraft.core.engine",
+            level=logging.WARNING,
+            pathname="engine.py",
+            lineno=42,
+            msg="Task processing slow",
+            args=(),
+            exc_info=None,
+        )
 
-    assert config["handlers"]["console"]["level"] == expected_console_level
-    assert config["handlers"]["file"]["filename"] == str(dummy_path / "app.json.log")
+    def test_color_formatter_applies_ansi_and_truncates_name(
+        self, basic_record
+    ) -> None:
+        """Verify ANSI escapes are injected and package prefixes are truncated."""
+        formatter = ColorFormatter(fmt="%(name)s: %(message)s")
+        formatted = formatter.format(basic_record)
+
+        # Colors should be present (YELLOW for WARNING), line cleared, and reset applied
+        assert ColorFormatter.CLEAR_LINE in formatted
+        assert ColorFormatter.YELLOW in formatted
+        assert ColorFormatter.RESET in formatted
+
+        # Name should be truncated from citecraft.core.engine -> engine
+        assert "engine: Task processing slow" in formatted
+        assert basic_record.name == "citecraft.core.engine"  # Verify restoration
+
+    def test_color_formatter_restores_name_on_formatting_exception(
+        self, basic_record
+    ) -> None:
+        """Edge Case: Ensure record.name restoration even if rendering throws error."""
+        formatter = ColorFormatter(fmt="%(name)s: %(message)s")
+
+        # Force an exception during formatting by mocking super().format
+        with patch(
+            "logging.Formatter.format", side_effect=ValueError("Formatting failed")
+        ):
+            with pytest.raises(ValueError, match="Formatting failed"):
+                formatter.format(basic_record)
+
+        # The try...finally block must have recovered the original namespace name
+        assert basic_record.name == "citecraft.core.engine"
 
 
-def test_setup_logging_creates_directory_and_calls_dictconfig() -> None:
-    """Verify that setup_logging triggers directory creation and passes configuration
-    to dictConfig."""
-    with (
-        patch("citecraft.logging_config.get_safe_log_dir") as mock_get_dir,
-        patch("pathlib.Path.mkdir"),
-        patch("logging.config.dictConfig") as mock_dict_config,
-    ):
-        mock_path = MagicMock(spec=Path)
-        mock_get_dir.return_value = mock_path
+class TestLoggingConfigMatrix:
+    @pytest.mark.parametrize(
+        "verbose_level, expected_console_level",
+        [
+            (0, "WARNING"),
+            (1, "INFO"),
+            (2, "DEBUG"),
+            (3, "DEBUG"),
+        ],
+    )
+    def test_get_logging_config_levels(
+        self, verbose_level: int, expected_console_level: str
+    ) -> None:
+        """Verify that the console log level scales correctly with verbosity."""
+        dummy_path = Path("/dummy/path")
+        config = get_logging_config(dummy_path, verbose_level=verbose_level)
 
-        setup_logging(verbose_level=1)
+        assert config["handlers"]["console"]["level"] == expected_console_level
+        assert config["handlers"]["file"]["filename"] == str(
+            dummy_path / "app.json.log"
+        )
 
-        mock_path.mkdir.assert_called_once_with(parents=True, exist_ok=True)
+
+class TestSetupLoggingLifecycles:
+    # patch MUST point directly to the module consuming the function
+    @patch("citecraft.logging_config.get_safe_dir")
+    @patch("logging.config.dictConfig")
+    def test_setup_logging_success(self, mock_dict_config, mock_get_dir) -> None:
+        """Verify successful initialization loop with proper 3-tuple path unpacking."""
+        mock_path = Path("/mock/safe/dir")
+        mock_get_dir.return_value = (mock_path, mock_path, False)
+
+        log_dir, intended_dir, is_fallback = setup_logging(verbose_level=1)
+
+        assert log_dir == mock_path
+        assert intended_dir == mock_path
+        assert is_fallback is False
         mock_dict_config.assert_called_once()
 
+    @patch("citecraft.logging_config.get_safe_dir")
+    @patch("logging.config.dictConfig")
+    @patch("logging.basicConfig")
+    def test_setup_logging_failure_fallback(
+        self, mock_basic_config, mock_dict_config, mock_get_dir
+    ) -> None:
+        """Edge Case: Verify hard crashes in dictConfig trigger stderr reports and
+        basicConfig."""
+        mock_path = Path("/mock/safe/dir")
+        mock_get_dir.return_value = (mock_path, mock_path, True)
 
-def test_json_formatter_outputs_valid_structured_data() -> None:
-    """Verify that the JSON formatter properly extracts and maps log variables."""
-    dummy_path = Path("/dummy/path")
-    config = get_logging_config(dummy_path, verbose_level=1)
-    formatter_spec = config["formatters"]["json"]
+        # Simulate a component initialization failure (e.g., package missing or bad
+        # structure)
+        mock_dict_config.side_effect = RuntimeError(
+            "Invalid handler class configuration"
+        )
 
-    formatter = JsonFormatter(
-        fmt=formatter_spec["fmt"], rename_fields=formatter_spec["rename_fields"]
-    )
-    record = logging.LogRecord(
-        name="citecraft.http",
-        level=logging.INFO,
-        pathname="api.py",
-        lineno=10,
-        msg="HTTP request sent",
-        args=(),
-        exc_info=None,
-    )
-    record.run_id = "ca6e29ed"
+        with patch("sys.stderr.write"), patch("traceback.print_exc") as mock_traceback:
+            log_dir, _, is_fallback = setup_logging(verbose_level=0)
 
-    formatted_output = formatter.format(record)
-    parsed_json = json.loads(formatted_output)
+            # We should successfully catch the error, log data to streams, and return
+            # structural values
+            assert is_fallback is True
+            assert log_dir == mock_path
+            mock_traceback.assert_called_once_with(file=sys.stderr)
+            mock_basic_config.assert_called_once_with(
+                level=logging.WARNING, stream=sys.stderr
+            )
 
-    assert isinstance(parsed_json, dict)
-    assert "timestamp" in parsed_json
-    assert parsed_json["level"] == "INFO"
-    assert parsed_json["run_id"] == "ca6e29ed"
-    assert parsed_json["message"] == "HTTP request sent"
 
-    for key in parsed_json.keys():
-        assert "%(" not in key, f"Detected unsolved placeholder in JSON key: {key}"
+class TestStructuredJsonOutput:
+    def test_json_formatter_outputs_valid_structured_data(self) -> None:
+        """Verify that the JSON formatter properly extracts and maps log variables."""
+        dummy_path = Path("/dummy/path")
+        config = get_logging_config(dummy_path, verbose_level=1)
+        formatter_spec = config["formatters"]["json"]
+
+        formatter = JsonFormatter(
+            fmt=formatter_spec["fmt"], rename_fields=formatter_spec["rename_fields"]
+        )
+        record = logging.LogRecord(
+            name="citecraft.http",
+            level=logging.INFO,
+            pathname="api.py",
+            lineno=10,
+            msg="HTTP request sent",
+            args=(),
+            exc_info=None,
+        )
+        record.run_id = "ca6e29ed"
+
+        formatted_output = formatter.format(record)
+        parsed_json = json.loads(formatted_output)
+
+        assert isinstance(parsed_json, dict)
+        assert "timestamp" in parsed_json
+        assert parsed_json["level"] == "INFO"
+        assert parsed_json["run_id"] == "ca6e29ed"
+        assert parsed_json["message"] == "HTTP request sent"
+
+        for key in parsed_json.keys():
+            assert "%(" not in key, f"Detected unsolved placeholder in JSON key: {key}"

@@ -132,12 +132,16 @@ def main(
         sys.stdout.reconfigure(errors="replace")
         sys.stderr.reconfigure(errors="replace")
 
-    click.echo("Starting manuscript-reference-lister...")
+    click.echo("Starting citecraft...")
 
-    log_dir = setup_logging(verbose_level=verbose)
-    logger.info("Starting manuscript-reference-lister...")
+    log_dir, intended_dir, is_fallback = setup_logging(verbose_level=verbose)
     logger.debug("Current working directory: %s", os.getcwd())
     logger.debug("Logs are being written to: %s", str(log_dir))
+    if is_fallback:
+        logger.debug(f"⚠️ Warning: Could not create directory at '{intended_dir}'.")
+        logger.debug(f"   Falling back to temporary storage: '{log_dir}'")
+    else:
+        logger.debug("Logs are being written to: %s", str(log_dir))
 
     cache_summary_message = None
 
