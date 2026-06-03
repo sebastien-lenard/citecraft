@@ -4,13 +4,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import TypeVar
 
-from manuscript_reference_lister.network import (
+from citecraft.network import (
     HTTPClientRegistry,
     get_http_client_registry,
 )
-from manuscript_reference_lister.schemas import BaseSchema
-from manuscript_reference_lister.storage.db import load_records, save_records
-from manuscript_reference_lister.utils import (
+from citecraft.schemas import BaseSchema
+from citecraft.storage.db import load_records, save_records
+from citecraft.utils import (
     AppConfig,
     get_config,
 )

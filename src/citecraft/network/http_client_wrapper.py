@@ -11,7 +11,7 @@ from tenacity import (
     wait_exponential,
 )
 
-from manuscript_reference_lister.utils import AppConfig, get_config
+from citecraft.utils import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
 

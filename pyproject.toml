@@ -3,12 +3,12 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/manuscript_reference_lister"]
+packages = ["src/citecraft"]
 
 [project]
-name = "manuscript-reference-lister"
+name = "citecraft"
 version = "0.1.0"
-description = "Add your description here"
+description = "Generates bibliography of manuscripts"
 readme = "README.md"
 requires-python = ">=3.12.9"
 dependencies = [
@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.scripts]
-references-lister = "manuscript_reference_lister.cli:main"
+citecraft = "citecraft.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,4 +1,4 @@
-from manuscript_reference_lister.schemas.citation_metadata import CitationMetadata
+from citecraft.schemas.citation_metadata import CitationMetadata
 
 
 def test_citation_metadata_instantiation() -> None:

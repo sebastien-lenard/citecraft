@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from manuscript_reference_lister.adapters import CiteprocAdapter
+from citecraft.adapters import CiteprocAdapter
 
 # Minimalist valid XML CSL style mock derived from nature.csl for testing execution flow
 MOCK_CSL_STYLE = """<?xml version="1.0" encoding="utf-8"?>

@@ -120,7 +120,7 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
             },
         },
         "loggers": {
-            "manuscript_reference_lister": {
+            "citecraft": {
                 "handlers": (
                     ["console"]
                     if os.environ.get("ENV") == "test"

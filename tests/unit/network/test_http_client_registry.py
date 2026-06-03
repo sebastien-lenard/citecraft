@@ -3,11 +3,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister.network.http_client_registry import (
+from citecraft.network.http_client_registry import (
     HTTPClientRegistry,
     get_http_client_registry,
 )
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def test_registry_creates_and_caches_client(
     registry.config = configured_test_config
 
     with patch(
-        "manuscript_reference_lister.network.http_client_registry.HTTPClientWrapper"
+        "citecraft.network.http_client_registry.HTTPClientWrapper"
     ) as mock_wrapper_cls:
         client_first = registry.get_client("openalex")
         client_second = registry.get_client("openalex")
@@ -94,7 +94,7 @@ def test_registry_applies_correct_domain_configurations(
     registry = HTTPClientRegistry(config=configured_test_config)
 
     with patch(
-        "manuscript_reference_lister.network.http_client_registry.HTTPClientWrapper"
+        "citecraft.network.http_client_registry.HTTPClientWrapper"
     ) as mock_wrapper_cls:
         registry.get_client(domain)
 
@@ -112,7 +112,7 @@ def test_registry_close_all_clears_and_closes_resources(
     registry = HTTPClientRegistry(config=configured_test_config)
 
     with patch(
-        "manuscript_reference_lister.network.http_client_registry.HTTPClientWrapper"
+        "citecraft.network.http_client_registry.HTTPClientWrapper"
     ) as mock_wrapper_cls:
         mock_openalex = MagicMock()
         mock_default = MagicMock()

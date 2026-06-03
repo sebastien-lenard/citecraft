@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, Field
 
-from manuscript_reference_lister.schemas.journal_metadata import JournalMetadata
-from manuscript_reference_lister.schemas.work_metadata import WorkMetadata
-from manuscript_reference_lister.storage.db import (
+from citecraft.schemas.journal_metadata import JournalMetadata
+from citecraft.schemas.work_metadata import WorkMetadata
+from citecraft.storage.db import (
     _get_sqlite_type,
     _is_collection_type,
     archive_database_cache,

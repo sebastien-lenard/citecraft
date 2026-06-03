@@ -3,8 +3,8 @@ import logging
 import pytest
 from pydantic import ValidationError
 
-from manuscript_reference_lister.schemas.csl_reference import CSLReference
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.schemas.csl_reference import CSLReference
+from citecraft.utils import AppConfig
 
 
 def test_valid_minimal_reference() -> None:

@@ -6,9 +6,9 @@ from unittest.mock import ANY, MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-from manuscript_reference_lister.cli import cli
-from manuscript_reference_lister.services.bibliography_service import ExportResult
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.cli import cli
+from citecraft.services.bibliography_service import ExportResult
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture
@@ -29,16 +29,14 @@ def runner() -> CliRunner:
 @pytest.fixture(autouse=True)
 def mock_setup_logging() -> Generator[MagicMock, None, None]:
     """Isolate CLI tests from modifying global root log configurations."""
-    with patch("manuscript_reference_lister.cli.setup_logging") as mock:
+    with patch("citecraft.cli.setup_logging") as mock:
         mock.return_value = "/mock/log/dir"
         yield mock
 
 
 def test_cli_success(runner: CliRunner, test_config: AppConfig) -> None:
     """Verify that the CLI exits with 0 on successful execution runs."""
-    with patch(
-        "manuscript_reference_lister.cli.run", return_value=({}, {})
-    ) as mock_run:
+    with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli, ["main", "-f", "manuscript.docx"], obj={"config": test_config}
         )
@@ -63,9 +61,7 @@ def test_cli_journal_title_option_propagates(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
     """Verify that the -j option is correctly propagated to the pipeline."""
-    with patch(
-        "manuscript_reference_lister.cli.run", return_value=({}, {})
-    ) as mock_run:
+    with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli,
             ["main", "-f", "manuscript.docx", "-j", "Geomorphology"],
@@ -100,7 +96,7 @@ def test_cli_success_message_includes_resolved_style(
     )
 
     with patch(
-        "manuscript_reference_lister.cli.run",
+        "citecraft.cli.run",
         return_value=((), mock_export_metadata),
     ):
         result = runner.invoke(
@@ -131,7 +127,7 @@ def test_cli_exception_handling_paths(
     expect_traceback: bool,
 ) -> None:
     """Verify that unexpected pipeline crashes are caught with traceback options."""
-    with patch("manuscript_reference_lister.cli.run") as mock_run:
+    with patch("citecraft.cli.run") as mock_run:
         mock_run.side_effect = RuntimeError("Database or File system corruption")
 
         result = runner.invoke(
@@ -163,9 +159,7 @@ def test_cli_piped_input_default_style(
     """Verify standard input redirection forwards strings correctly using defaults."""
     piped_text = "Some citation (Lenard et al., 2025)"
 
-    with patch(
-        "manuscript_reference_lister.cli.run", return_value=({}, {})
-    ) as mock_run:
+    with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli, ["main"], input=piped_text, obj={"config": test_config}
         )
@@ -190,9 +184,7 @@ def test_cli_custom_style_and_output_options(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
     """Verify custom styles and output paths are propagated cleanly to pipelines."""
-    with patch(
-        "manuscript_reference_lister.cli.run", return_value=({}, {})
-    ) as mock_run:
+    with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli,
             [
@@ -226,9 +218,7 @@ def test_cli_skip_update_flags_propagate(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
     """Verify that bypass flags propagate to core runs and display skipped indicators."""
-    with patch(
-        "manuscript_reference_lister.cli.run", return_value=({}, {})
-    ) as mock_run:
+    with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli,
             [
@@ -285,7 +275,7 @@ def test_cli_displays_journal_anomalies_warning_table(
     mock_export.samples_duplicate = []
 
     with patch(
-        "manuscript_reference_lister.cli.run",
+        "citecraft.cli.run",
         return_value=(mock_anomalies, mock_export),
     ):
         result = runner.invoke(
@@ -361,8 +351,8 @@ def test_cli_final_summary_display_integrity(
     )
 
     with (
-        patch("manuscript_reference_lister.utils.get_config", return_value=test_config),
-        patch("manuscript_reference_lister.cli.run") as mock_run,
+        patch("citecraft.utils.get_config", return_value=test_config),
+        patch("citecraft.cli.run") as mock_run,
     ):
         mock_run.return_value = ({}, mock_export_metadata)
 
@@ -413,7 +403,7 @@ def test_cli_clear_cache_option_absent_does_not_touch_files(
     test_local_repo_filepath: Path,
 ) -> None:
     """Verify cache directories remain untouched unless clear-cache flags declared."""
-    with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
+    with patch("citecraft.cli.run", return_value=({}, {})):
         result = runner.invoke(
             cli, ["main", "-f", "manuscript.docx"], obj={"config": test_config}
         )
@@ -444,7 +434,7 @@ def test_cli_clear_cache_maintenance_only_success(
     test_local_repo_filepath: Path,
 ) -> None:
     """Verify standalone cache maintenance wipes cache files and generates back-ups."""
-    with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
+    with patch("citecraft.cli.run", return_value=({}, {})):
         result = runner.invoke(
             cli, ["main", "--clear-cache"], input="y\n", obj={"config": test_config}
         )
@@ -464,9 +454,7 @@ def test_cli_clear_cache_then_proceeds_to_run(
     test_local_repo_filepath: Path,
 ) -> None:
     """Verify clean cache setup triggers first before compiling manuscript target."""
-    with patch(
-        "manuscript_reference_lister.cli.run", return_value=({}, {})
-    ) as mock_run:
+    with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli,
             ["main", "-f", "manuscript.docx", "--clear-cache"],
@@ -490,9 +478,7 @@ def test_cli_clear_cache_summary_displayed_at_the_very_end(
     test_local_repo_filepath: Path,
 ) -> None:
     """Verify that cache maintenance completions print confirmation statuses."""
-    with patch(
-        "manuscript_reference_lister.cli.run", return_value=({}, {})
-    ) as mock_run:
+    with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli,
             ["main", "-f", "manuscript.docx", "--clear-cache"],
@@ -518,7 +504,7 @@ def test_cli_clear_cache_partial_files_shows_warning(
     """Verify warning visibility if targeted database cache file is already absent."""
     test_local_repo_filepath.unlink()
 
-    with patch("manuscript_reference_lister.cli.run", return_value=({}, {})):
+    with patch("citecraft.cli.run", return_value=({}, {})):
         result = runner.invoke(
             cli, ["main", "--clear-cache"], input="y\n", obj={"config": test_config}
         )

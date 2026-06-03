@@ -1,4 +1,4 @@
-# src/manuscript_reference_lister/cli.py
+# src/citecraft/cli.py
 import logging
 import os
 import sqlite3
@@ -114,7 +114,7 @@ def main(
     configurations.
     Examples:
         # Process a file and specify output
-        $ uv run python -m manuscript_reference_lister \
+        $ uv run python -m citecraft \
             -f "C:\\Documents\\manuscript.docx" -o "C:\\Documents\\bibliography.csv" \
             -s "copernicus-publications"
 
@@ -122,10 +122,10 @@ def main(
             OUTPUT_DIR_PATH / "manuscript_references.csv"
         # Pipe source directly
         $ echo "Voila (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | \
-            uv run python -m manuscript_reference_lister
+            uv run python -m citecraft
         
         # Clear the local cache safely
-        $ uv run python -m manuscript_reference_lister --clear-cache
+        $ uv run python -m citecraft --clear-cache
     """
     # Force console to replace characters that can't be encoded rather than throw fatal
     if sys.platform == "win32":

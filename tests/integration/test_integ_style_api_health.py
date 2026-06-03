@@ -1,6 +1,6 @@
 import pytest
 
-from manuscript_reference_lister.repositories import StyleRepository
+from citecraft.repositories import StyleRepository
 
 
 @pytest.mark.integration

@@ -1,6 +1,6 @@
 import pytest
 
-from manuscript_reference_lister.parsers import JournalParser
+from citecraft.parsers import JournalParser
 
 
 @pytest.fixture

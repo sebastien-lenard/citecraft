@@ -1,6 +1,6 @@
 import pytest
 
-from manuscript_reference_lister.schemas.work_metadata import WorkMetadata
+from citecraft.schemas.work_metadata import WorkMetadata
 
 
 def test_work_metadata_instantiation_defaults() -> None:

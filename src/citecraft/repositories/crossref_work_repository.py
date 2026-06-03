@@ -1,10 +1,10 @@
 import logging
 from typing import override
 
-from manuscript_reference_lister.schemas import (
+from citecraft.schemas import (
     WorkMetadata,
 )
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.utils import AppConfig
 
 from .work_repository import WorkRepository
 

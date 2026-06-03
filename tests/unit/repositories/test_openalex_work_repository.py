@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister.repositories import OpenAlexWorkRepository
-from manuscript_reference_lister.schemas import WorkMetadata
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.repositories import OpenAlexWorkRepository
+from citecraft.schemas import WorkMetadata
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture

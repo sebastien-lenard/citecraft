@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import EmailStr, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from manuscript_reference_lister.schemas import (
+from citecraft.schemas import (
     HttpsUrlStr,
     UrlWithObjectName,
 )

@@ -5,8 +5,8 @@ import time
 
 import pytest
 
-from manuscript_reference_lister.core import ProgressStep
-from manuscript_reference_lister.ui.progress_bar_context import ProgressBarContext
+from citecraft.core import ProgressStep
+from citecraft.ui.progress_bar_context import ProgressBarContext
 
 
 def test_generate_bar_string_initial_state() -> None:
@@ -131,7 +131,7 @@ def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> Non
     """Verify that logging integrations correctly erase progress bar lines before
     emitting logs."""
     # 1. Setup local logging infrastructure connected to root for context interception
-    test_logger = logging.getLogger("manuscript_reference_lister.integ_ui")
+    test_logger = logging.getLogger("citecraft.integ_ui")
     test_logger.setLevel(logging.WARNING)
     test_logger.propagate = (
         True  # Must propagate to root so ProgressBarContext can intercept it

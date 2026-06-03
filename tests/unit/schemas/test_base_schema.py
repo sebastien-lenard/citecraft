@@ -1,6 +1,6 @@
 import pytest
 
-from manuscript_reference_lister.schemas.base_schema import BaseSchema
+from citecraft.schemas.base_schema import BaseSchema
 
 
 class MockSchema(BaseSchema):

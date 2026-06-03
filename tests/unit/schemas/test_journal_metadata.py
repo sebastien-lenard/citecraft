@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from manuscript_reference_lister.schemas import JournalMetadata
+from citecraft.schemas import JournalMetadata
 
 
 def test_journal_metadata_defaults() -> None:

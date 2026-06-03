@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from pythonjsonlogger.json import JsonFormatter
 
-from manuscript_reference_lister.logging_config import (
+from citecraft.logging_config import (
     RunIdFilter,
     get_logging_config,
     get_safe_log_dir,
@@ -52,7 +52,7 @@ def test_get_safe_log_dir_scenarios(
 ) -> None:
     """Verify log path resolution fallback and custom extraction behaviors."""
     with patch(
-        "manuscript_reference_lister.logging_config.dotenv_values",
+        "citecraft.logging_config.dotenv_values",
         return_value=mock_env_values,
     ):
         log_dir = get_safe_log_dir()
@@ -83,9 +83,7 @@ def test_setup_logging_creates_directory_and_calls_dictconfig() -> None:
     """Verify that setup_logging triggers directory creation and passes configuration
     to dictConfig."""
     with (
-        patch(
-            "manuscript_reference_lister.logging_config.get_safe_log_dir"
-        ) as mock_get_dir,
+        patch("citecraft.logging_config.get_safe_log_dir") as mock_get_dir,
         patch("pathlib.Path.mkdir"),
         patch("logging.config.dictConfig") as mock_dict_config,
     ):
@@ -108,7 +106,7 @@ def test_json_formatter_outputs_valid_structured_data() -> None:
         fmt=formatter_spec["fmt"], rename_fields=formatter_spec["rename_fields"]
     )
     record = logging.LogRecord(
-        name="manuscript_reference_lister.http",
+        name="citecraft.http",
         level=logging.INFO,
         pathname="api.py",
         lineno=10,

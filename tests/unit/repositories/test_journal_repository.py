@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister.repositories import JournalRepository
-from manuscript_reference_lister.schemas import JournalMetadata
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.repositories import JournalRepository
+from citecraft.schemas import JournalMetadata
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture

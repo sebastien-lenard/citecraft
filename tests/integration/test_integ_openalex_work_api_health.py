@@ -3,9 +3,9 @@ import _socket
 
 import pytest
 
-from manuscript_reference_lister.repositories import OpenAlexWorkRepository
-from manuscript_reference_lister.schemas import CitationMetadata
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.repositories import OpenAlexWorkRepository
+from citecraft.schemas import CitationMetadata
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture(autouse=True)

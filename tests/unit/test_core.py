@@ -6,9 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
-from manuscript_reference_lister.core import ProgressStep, run
-from manuscript_reference_lister.services.bibliography_service import ExportResult
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.core import ProgressStep, run
+from citecraft.services.bibliography_service import ExportResult
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture
@@ -34,22 +34,14 @@ def configured_core_config(test_config: AppConfig) -> AppConfig:
 def mock_pipeline_dependencies() -> Generator[dict[str, Any], None, None]:
     """Insulate pipeline execution from real input/output and repository layers."""
     with (
-        patch("manuscript_reference_lister.core.DataLoader") as mock_loader,
-        patch("manuscript_reference_lister.core.StyleRepository") as mock_style_repo,
-        patch(
-            "manuscript_reference_lister.core.JournalRepository"
-        ) as mock_journal_repo,
-        patch(
-            "manuscript_reference_lister.core.OpenAlexWorkRepository"
-        ) as mock_openalex_repo,
-        patch(
-            "manuscript_reference_lister.core.CrossrefWorkRepository"
-        ) as mock_crossref_repo,
-        patch("manuscript_reference_lister.core.ReferenceService"),
-        patch(
-            "manuscript_reference_lister.core.BibliographyService"
-        ) as mock_bib_service,
-        patch("manuscript_reference_lister.core.get_http_client_registry"),
+        patch("citecraft.core.DataLoader") as mock_loader,
+        patch("citecraft.core.StyleRepository") as mock_style_repo,
+        patch("citecraft.core.JournalRepository") as mock_journal_repo,
+        patch("citecraft.core.OpenAlexWorkRepository") as mock_openalex_repo,
+        patch("citecraft.core.CrossrefWorkRepository") as mock_crossref_repo,
+        patch("citecraft.core.ReferenceService"),
+        patch("citecraft.core.BibliographyService") as mock_bib_service,
+        patch("citecraft.core.get_http_client_registry"),
     ):
         mock_loader.return_value.extract_text_from_docx.return_value = "Sample text"
         mock_style_repo.return_value.favored_style_is_valid = True
@@ -102,7 +94,7 @@ def test_run_pipeline_with_journal_title_style_lookup(
     configured_core_config: AppConfig, mock_pipeline_dependencies: dict[str, Any]
 ) -> None:
     """Verify that specifying a journal title triggers style lookup."""
-    with patch("manuscript_reference_lister.core.StyleRepository") as mock_style_repo:
+    with patch("citecraft.core.StyleRepository") as mock_style_repo:
         mock_style_inst = mock_style_repo.return_value
         mock_style_inst.favored_style_is_valid = True
         mock_style_inst.favored_style = "copernicus-publications"

@@ -1,15 +1,20 @@
-# Manuscript Reference Lister
+<!-- README.md -->
+# CiteCraft — Automated Manuscript Bibliography Generator
 
-A lightweight Python tool designed for scientists to generate and format a bibliography to a target journal style from in-text citations and cited journals in a `.docx` manuscript. By matching citations of published works against a user-provided list of cited journals, it automates lookups of DOIs associated with the citations and formatted bibliography generation using remote APIs (OpenAlex or Crossref) and a local citation engine.
+ <img src="citecraft_logo_64.png" alt="CiteCraft automated bibliography generator logo" align="left" width="64" height="72" style="margin-right: 15px; margin-bottom: 10px;"> CiteCraft is a lightweight Python bibliography generator and CLI tool designed for scientists and other users to automatically extract in-text citations from a `.docx` manuscript and format a complete bibliography to a target journal style. By matching cited works against a user-provided list of journals, the tool automates lookups of DOIs using remote academic APIs (OpenAlex or Crossref) and compiles the reference list through a local citation engine.
+
+Unlike complex reference managers, this project focuses on a streamlined, manuscript-centric workflow that converts raw in-text citations directly into plain-text bibliographic outputs without requiring manual data entry.
+
+---
 
 
 ## 🚀 The Concept
 
-Unlike complex reference managers, this tool focuses on a streamlined, manuscript-centric workflow:
+The application executes a highly targeted data pipeline based on three primary inputs found directly within or alongside your working text:
 
-1. **The Manuscript:** A `.docx` file containing your text and APA-style in-text citations.
+1. **The Manuscript:** A standard `.docx` file containing your narrative text and APA-style in-text citations.
 
-2. **The Publication Journal List:** A designated section at the end of your `.docx` manuscript under the heading `Journals`. It must list one exact cited journal title per line (e.g., *Nature Geoscience*), for instance:
+2. **The Publication Journal List:** A designated section at the end of your `.docx` manuscript under the heading `Journals`. This block must list one exact cited journal title per line (e.g., *Nature Geoscience*):
 ```
 
 Journals
@@ -17,15 +22,15 @@ Nature Geoscience
 Geomorphology
 
 ```
-The tool extracts the cited journal titles, resolves them to their ISSNs, and uses these ISSNs as a strict search filter for published work lookup. **Note:** The tool cannot discover or resolve a work if its cited journal is omitted from this section.
+The tool extracts these titles, resolves them to their official ISSNs, and uses these ISSNs as a strict search filter for published work lookup. **Note:** The tool cannot discover or resolve a work if its parent journal is omitted from this section.
 
-3. **The Result: a bibliography formatted to a target journal style:** The tool extracts the in-text citations and the cited journal titles, resolves the DOIs associated with citations using API calls filtered by the ISSNs and the first author names contained in the citations, and builds a clean bibliography formatted to the style of a target journal.
+3. **The Result:** The application processes the in-text citations and the cited journal list, executes an automated DOI lookup via API calls filtered by the resolved ISSNs and first-author surnames, and builds a clean bibliography formatted precisely to the CSL style of your target submission journal.
 
 ---
 
 ## 🛠 Installation & Setup
 
-This project uses `uv` for package and project management.
+This project uses `uv` for modern Python package and project management.
 
 ### 1. Install uv
 
@@ -49,8 +54,8 @@ curl -LsSf https://astral.sh | sh
 Clone the repository and sync the virtual environment:
 
 ```bash
-git clone https://github.com/sebastien-lenard/manuscript-reference-lister
-cd manuscript-reference-lister
+git clone https://github.com/sebastien-lenard/citecraft
+cd citecraft
 uv sync
 
 ```
@@ -59,19 +64,21 @@ uv sync
 
 ## ⚙️ Configuration
 
-The application relies on environment variables for file paths and API credentials.
+The application relies on environment variables for file paths, local caches, and API credentials.
 
 1. Copy the environment template file:
+
 * **Windows:** `copy .env.example .env`
 * **macOS & Linux:** `cp .env.example .env`
 
 
-2. Edit the `.env` file with your settings:
-* `WORK_DIR_PATH`: Local directory for processing and cache of cited journal and cited work metadata.
-* `OUTPUT_DIR_PATH`: Default local directory for results (bibliography output CSV file).
-* `LOG_DIR_PATH`: Local directory for log files.
-* `JOURNAL_UPDATE_DAYS`: Integer setting the cited journal metadata cache expiration window (Default: `30`).
-* `USER_EMAIL`: Your email address, required to access the API "Polite Pool."
+2. Edit the `.env` file with your local environment settings:
+
+* `WORK_DIR_PATH`: Local directory for processing and the SQLite database cache used for cited journal and work metadata.
+* `OUTPUT_DIR_PATH`: Default directory for your final bibliography output CSV files.
+* `LOG_DIR_PATH`: Directory for system log files.
+* `JOURNAL_UPDATE_DAYS`: Integer setting the metadata cache expiration window (Default: `30` days).
+* `USER_EMAIL`: Your email address, required to access the polite API usage pools.
 * `OPENALEX_API_KEY`: Your personal OpenAlex API key (request one at [openalex.org/settings/api-key](https://openalex.org/settings/api-key)).
 
 
@@ -84,25 +91,26 @@ Run the tool using the `uv run` prefix.
 
 ### Processing a Manuscript
 
-The tool accepts text data via two input modes: passing a local path to a `.docx` file using the `-f` flag, or piping raw text directly into standard input (`stdin`). Whichever mode is used, the input text must always conclude with the `Journals` section block.
+The tool accepts text data via two input modes: passing a local path to a `.docx` file using the `-f` flag, or piping raw text directly into standard input (`stdin`). Whichever mode is used, the input text must always conclude with the trailing `Journals` section block.
 
 * **Auto-detect style based on a submission journal:**
+
 ```bash
-uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -j "Geomorphology"
+uv run citecraft -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -j "Geomorphology"
 
 ```
 
 
 * **Force a specific CSL style identifier:**
 ```bash
-uv run references-lister -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -s "copernicus-publications"
+uv run citecraft -f "C:\Documents\manuscript.docx" -o "C:\Documents\bibliography.csv" -s "copernicus-publications"
 
 ```
 
 
 * **Piping Raw Text Directly:**
 ```bash
-echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run references-lister
+echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run citecraft
 
 ```
 
@@ -111,23 +119,26 @@ echo "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience" | uv run refe
 ### Advanced Controls
 
 * **Bypassing Remote API Updates (Speed Runs):**
+
 ```bash
-uv run references-lister -f "C:\Documents\manuscript.docx" --skip-journal-update --skip-work-update
+uv run citecraft -f "C:\Documents\manuscript.docx" --skip-journal-update --skip-work-update
 
 ```
 
 
 * **Cache Management:**
+
 ```bash
-uv run references-lister --clear-cache
+uv run citecraft --clear-cache
 
 ```
 
 
 * **Log Verbosity:**
+
 ```bash
-uv run references-lister -f "C:\Documents\manuscript.docx" -v   # For INFO logs
-uv run references-lister -f "C:\Documents\manuscript.docx" -vv  # For DEBUG logs
+uv run citecraft -f "C:\Documents\manuscript.docx" -v   # For INFO logs
+uv run citecraft -f "C:\Documents\manuscript.docx" -vv  # For DEBUG logs
 
 ```
 
@@ -136,13 +147,13 @@ uv run references-lister -f "C:\Documents\manuscript.docx" -vv  # For DEBUG logs
 ### CLI Arguments Summary
 
 * `-f` : Path to the `.docx` manuscript file.
-* `-o` : Path to the output CSV file. *(Default: `OUTPUT_DIR_PATH / "manuscript_references.csv"` if omitted)*
-* `-j` : Target journal title for submission (e.g., "Geomorphology"). Title matching is exact, ignoring case and punctuation variations. When passed, this option triggers an automated lookup against the official CSL repository to find the matching target journal style xml file, overriding any value provided via `-s`.
+* `-o` : Path to the output CSV file. *(Defaults to `OUTPUT_DIR_PATH / "manuscript_references.csv"` if omitted)*
+* `-j` : Target journal title for submission (e.g., "Geomorphology"). Title matching is case-insensitive and ignores punctuation. This option triggers an automated lookup against the official CSL repository to fetch the matching journal style XML file, overriding any value provided via `-s`.
 * `-s` : Style identifier recognized by [citation.doi.org](https://citation.doi.org/). If omitted, and no target journal title is passed via `-j`, this defaults to `apa`.
-* `-a` : Favored REST API for work DOI matching. Choice of `Crossref` or `OpenAlex`. *(Default: `OpenAlex`)*
-* `--skip-journal-update` : Skips remote API lookups for cited journal metadata and ISSNs. New cited journal titles from the manuscript are registered locally but without fetching remote metadata. Useful to bypass API latency when no new cited journals have been added to the manuscript cited journal list.
+* `-a` : Favored REST API backend for work DOI matching. Choice of `Crossref` or `OpenAlex`. *(Default: `OpenAlex`)*
+* `--skip-journal-update` : Skips remote API lookups for cited journal metadata and ISSNs. New cited journal titles from the manuscript are registered locally but without fetching remote records. Useful to bypass API latency when no new journals have been added to the trailing `Journals` section.
 * `--skip-work-update` : Skips remote API lookups for missing work DOIs. Existing local records are processed normally, but no network calls are made to fetch missing work DOIs and metadata.
-* `--clear-cache` : Deletes all locally cached cited journal and work data. Use only if the tool presents unexpected behavior.
+* `--clear-cache` : Deletes all locally cached cited journal and work records. Use only if the tool presents unexpected behavior.
 
 ---
 
@@ -179,11 +190,11 @@ The extraction engine scans the manuscript content or standard input using multi
 
 > ⚠️ **Parsing Scope:** The tool cannot parse alternative formatting frameworks, such as bracketed numbers (IEEE), superscript numbers (Chicago history), or author/page combinations (MLA).
 
-> ⚠️ **Publication years:** Citations of works published before 1600 or after 2099 raise a fatal error (`MIN_PUBLICATION_YEAR` and `MAX_PUBLICATION_YEAR` configuration in `.env` file).
+> ⚠️ **Publication Years:** Citations of works published before 1600 or after 2099 raise a fatal error (`MIN_PUBLICATION_YEAR` and `MAX_PUBLICATION_YEAR` configuration in `.env` file).
 
 ### 2. Isolated Remote Processes
 
-The application maintains three separated metadata workflows:
+The application maintains four separated metadata workflows:
 
 * **Process A: CSL Target Journal Style Definition Retrieval (Submission Context)**
 When you specify a submission journal via `-j`, the tool maps the journal title to its corresponding style identifier recognized by [citation.doi.org](https://citation.doi.org/). It automates this mapping by querying the official [CSL Styles GitHub Repository](https://github.com/citation-style-language/styles). For some major journals, the identifier is simply the lowercase title with spaces replaced by hyphens (e.g., `earth-surface-processes-and-landforms`). For others, it maps the title to its inherited parent format (e.g., mapping AGU journals to `american-geophysical-union`, or Copernicus journals to `copernicus-publications`).
@@ -192,7 +203,7 @@ The tool extracts the cited journal titles listed in the manuscript’s trailing
 * **Process C: Work DOI Lookup**
 Using the first author(s)'s surname and the publication year extracted from the in-text citation, the tool queries the remote API `/works` endpoint selected via the `-a` argument to resolve the correct DOI.
 * **Process D: Work Metadata Fetching**
-For Crossref, the tool fetches work metadata at the same time as Process C. For OpenAlex, the tool is currently unable to process their metadata using the local `citeproc-py` bibliographic rendering engine; therefore, the tool fetches Crossref metadata calling the DOI Negotiation Service [doi.org](https://doi.org) after Process C.
+For Crossref, the tool fetches work metadata at the same time as Process C. For OpenAlex, the tool is currently unable to process their native metadata using the local `citeproc-py` bibliographic rendering engine; therefore, the tool fetches Crossref metadata by calling the DOI Negotiation Service at [doi.org](https://doi.org) after Process C concludes.
 
 ### 3. Upstream API Pipeline Variations
 

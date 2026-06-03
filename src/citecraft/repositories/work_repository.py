@@ -3,11 +3,11 @@ import time
 
 from unidecode import unidecode
 
-from manuscript_reference_lister.schemas import (
+from citecraft.schemas import (
     CitationMetadata,
     WorkMetadata,
 )
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.utils import AppConfig
 
 from .base_repository import BaseRepository
 

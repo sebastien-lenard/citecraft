@@ -1,8 +1,8 @@
 import logging
 import re
 
-from manuscript_reference_lister.schemas import CitationMetadata
-from manuscript_reference_lister.utils import AppConfig, get_config
+from citecraft.schemas import CitationMetadata
+from citecraft.utils import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
 

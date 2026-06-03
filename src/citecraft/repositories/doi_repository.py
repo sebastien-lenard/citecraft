@@ -4,12 +4,12 @@ from typing import Any
 
 import httpx
 
-from manuscript_reference_lister.network import (
+from citecraft.network import (
     HTTPClientRegistry,
     HTTPClientWrapper,
     get_http_client_registry,
 )
-from manuscript_reference_lister.utils import AppConfig, get_config
+from citecraft.utils import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
 

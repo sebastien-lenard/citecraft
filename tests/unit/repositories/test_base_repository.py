@@ -3,10 +3,10 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from manuscript_reference_lister.repositories import BaseRepository
-from manuscript_reference_lister.schemas import BaseSchema
-from manuscript_reference_lister.storage.db import load_records, save_records
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.repositories import BaseRepository
+from citecraft.schemas import BaseSchema
+from citecraft.storage.db import load_records, save_records
+from citecraft.utils import AppConfig
 
 
 class MockSchema(BaseSchema):

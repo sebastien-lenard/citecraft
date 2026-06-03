@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from manuscript_reference_lister.network.http_client_registry import (
+from citecraft.network.http_client_registry import (
     get_http_client_registry,
 )
-from manuscript_reference_lister.utils import AppConfig, create_config, get_config
+from citecraft.utils import AppConfig, create_config, get_config
 
 
 def pytest_collection_modifyitems(config, items):
@@ -60,7 +60,7 @@ def assert_logging_integrity(
     caplog.set_level(logging.INFO)
     canary_message = "LOGGING_INTEGRITY_CHECK_CANARY_TOKEN"
 
-    logging.getLogger("manuscript_reference_lister").info(canary_message)
+    logging.getLogger("citecraft").info(canary_message)
 
     if canary_message not in caplog.text:
         raise AssertionError(
@@ -85,7 +85,7 @@ def test_config(tmp_path: Path) -> Generator[AppConfig, None, None]:
     )
 
     with patch(
-        "manuscript_reference_lister.utils.config.get_config",
+        "citecraft.utils.config.get_config",
         return_value=test_config_obj,
     ):
         yield test_config_obj

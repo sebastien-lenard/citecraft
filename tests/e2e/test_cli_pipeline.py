@@ -30,7 +30,7 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
         "run",
         "python",
         "-m",
-        "src.manuscript_reference_lister",
+        "src.citecraft",
         "-v",
         "-f",
         str(input_file),
@@ -97,7 +97,7 @@ def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
         "run",
         "python",
         "-m",
-        "src.manuscript_reference_lister",
+        "src.citecraft",
         "-v",
         "-f",
         str(input_file),
@@ -139,7 +139,7 @@ def test_stdin_pipeline_execution(tmp_path: Path) -> None:
 
     input_data = "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience"
     output_csv = tmp_path / "stdin_output.csv"
-    cmd = ["uv", "run", "references-lister", "-v", "-o", str(output_csv)]
+    cmd = ["uv", "run", "citecraft", "-v", "-o", str(output_csv)]
 
     isolated_env = os.environ.copy()
     isolated_env["LOCAL_REPO_DIR_PATH"] = str(tmp_path / "repo")

@@ -8,7 +8,7 @@ import pytest
 from docx import Document
 from docx.opc.exceptions import PackageNotFoundError
 
-from manuscript_reference_lister.utils import DataLoader
+from citecraft.utils import DataLoader
 
 
 @dataclass(frozen=True)

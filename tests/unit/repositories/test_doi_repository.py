@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import httpx
 import pytest
 
-from manuscript_reference_lister.repositories import DoiRepository
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.repositories import DoiRepository
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture
@@ -85,9 +85,7 @@ def test_get_metadata_safe_fallbacks(
 
     with (
         patch.object(repo.http_client_wrapper, "get") as mock_get,
-        patch(
-            "manuscript_reference_lister.repositories.doi_repository.logger.warning"
-        ) as mock_warn,
+        patch("citecraft.repositories.doi_repository.logger.warning") as mock_warn,
     ):
         if isinstance(side_effect, httpx.HTTPStatusError):
             mock_get.side_effect = side_effect

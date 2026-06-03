@@ -3,8 +3,8 @@ import time
 from datetime import date, datetime, timedelta
 from typing import Literal
 
-from manuscript_reference_lister.schemas import JournalMetadata
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.schemas import JournalMetadata
+from citecraft.utils import AppConfig
 
 from .base_repository import BaseRepository
 

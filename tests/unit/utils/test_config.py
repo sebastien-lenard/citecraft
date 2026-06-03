@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from manuscript_reference_lister.utils.config import create_config
+from citecraft.utils.config import create_config
 
 
 @pytest.fixture

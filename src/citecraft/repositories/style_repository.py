@@ -3,15 +3,15 @@ import xml.etree.ElementTree as ET
 
 import httpx
 
-from manuscript_reference_lister.network import (
+from citecraft.network import (
     HTTPClientRegistry,
     HTTPClientWrapper,
     get_http_client_registry,
 )
-from manuscript_reference_lister.repositories.journal_repository import (
+from citecraft.repositories.journal_repository import (
     JournalRepository,
 )
-from manuscript_reference_lister.utils import AppConfig, get_config
+from citecraft.utils import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
 

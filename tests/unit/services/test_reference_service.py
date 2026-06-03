@@ -3,9 +3,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister.schemas import WorkMetadata
-from manuscript_reference_lister.services.reference_service import ReferenceService
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.schemas import WorkMetadata
+from citecraft.services.reference_service import ReferenceService
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture
@@ -91,13 +91,13 @@ def test_fill_missing_references_success(
 
     with (
         patch(
-            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
         ) as mock_src,
         patch(
-            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
         ) as mock_style,
         patch(
-            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
         ) as mock_render,
     ):
         mock_src.return_value = (MagicMock(), None)
@@ -209,13 +209,13 @@ def test_get_reference_scenarios(
 
     with (
         patch(
-            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
         ) as mock_src,
         patch(
-            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
         ) as mock_style,
         patch(
-            "manuscript_reference_lister.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
         ) as mock_render,
     ):
         if should_mock_success:

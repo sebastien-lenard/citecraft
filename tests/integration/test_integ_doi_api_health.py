@@ -1,6 +1,6 @@
 import pytest
 
-from manuscript_reference_lister.repositories import DoiRepository
+from citecraft.repositories import DoiRepository
 
 
 @pytest.mark.integration

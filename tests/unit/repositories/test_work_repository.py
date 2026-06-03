@@ -4,12 +4,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from manuscript_reference_lister.repositories import WorkRepository
-from manuscript_reference_lister.schemas import (
+from citecraft.repositories import WorkRepository
+from citecraft.schemas import (
     CitationMetadata,
     WorkMetadata,
 )
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture

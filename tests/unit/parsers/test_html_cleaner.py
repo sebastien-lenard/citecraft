@@ -1,7 +1,7 @@
 import pytest
 
-from manuscript_reference_lister.parsers import HtmlCleaner
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.parsers import HtmlCleaner
+from citecraft.utils import AppConfig
 
 
 @pytest.mark.parametrize(

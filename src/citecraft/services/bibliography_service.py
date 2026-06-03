@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from manuscript_reference_lister.schemas import CitationMetadata, WorkMetadata
-from manuscript_reference_lister.utils import (
+from citecraft.schemas import CitationMetadata, WorkMetadata
+from citecraft.utils import (
     AppConfig,
     get_config,
 )

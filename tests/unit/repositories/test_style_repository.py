@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 import httpx
 import pytest
 
-from manuscript_reference_lister.repositories import StyleRepository
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.repositories import StyleRepository
+from citecraft.utils import AppConfig
 
 
 @pytest.fixture

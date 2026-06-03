@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from manuscript_reference_lister.schemas import CitationMetadata, WorkMetadata
-from manuscript_reference_lister.services.bibliography_service import (
+from citecraft.schemas import CitationMetadata, WorkMetadata
+from citecraft.services.bibliography_service import (
     BibliographyService,
 )
-from manuscript_reference_lister.utils import AppConfig
+from citecraft.utils import AppConfig
 
 
 @pytest.mark.parametrize(

@@ -6,7 +6,7 @@ from typing import Any, NamedTuple, Protocol
 
 from pydantic import BaseModel, ConfigDict
 
-from manuscript_reference_lister.schemas import CitationMetadata
+from citecraft.schemas import CitationMetadata
 
 from .network import get_http_client_registry
 from .parsers import CitationParser, JournalParser

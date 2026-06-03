@@ -4,12 +4,12 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from manuscript_reference_lister.adapters import CiteprocAdapter
-from manuscript_reference_lister.parsers import HtmlCleaner
-from manuscript_reference_lister.repositories import DoiRepository
-from manuscript_reference_lister.schemas import WorkMetadata
-from manuscript_reference_lister.schemas.csl_reference import CSLReference
-from manuscript_reference_lister.utils import (
+from citecraft.adapters import CiteprocAdapter
+from citecraft.parsers import HtmlCleaner
+from citecraft.repositories import DoiRepository
+from citecraft.schemas import WorkMetadata
+from citecraft.schemas.csl_reference import CSLReference
+from citecraft.utils import (
     AppConfig,
     get_config,
 )

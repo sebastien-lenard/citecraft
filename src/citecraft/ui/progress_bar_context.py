@@ -6,7 +6,7 @@ from collections.abc import Callable
 from types import TracebackType
 from typing import Any
 
-from manuscript_reference_lister.core import ProgressStep
+from citecraft.core import ProgressStep
 
 
 class LogInterceptor(logging.Handler):

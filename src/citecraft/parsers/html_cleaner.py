@@ -2,7 +2,7 @@ import html
 import re
 from html.parser import HTMLParser
 
-from manuscript_reference_lister.utils import AppConfig, get_config
+from citecraft.utils import AppConfig, get_config
 
 
 class HtmlCleaner(HTMLParser):

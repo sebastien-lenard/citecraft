@@ -5,7 +5,7 @@ import httpx
 import pytest
 from pydantic import TypeAdapter, networks
 
-from manuscript_reference_lister.network.http_client_wrapper import HTTPClientWrapper
+from citecraft.network.http_client_wrapper import HTTPClientWrapper
 
 
 @pytest.fixture

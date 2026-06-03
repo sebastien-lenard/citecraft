@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from manuscript_reference_lister.schemas import HttpsUrlStr, UrlWithObjectName
+from citecraft.schemas import HttpsUrlStr, UrlWithObjectName
 
 
 class MockUrlModel(BaseModel):

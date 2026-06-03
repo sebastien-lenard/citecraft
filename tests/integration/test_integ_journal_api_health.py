@@ -1,6 +1,6 @@
 import pytest
 
-from manuscript_reference_lister.repositories import JournalRepository
+from citecraft.repositories import JournalRepository
 
 
 @pytest.mark.integration

@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from manuscript_reference_lister.utils import AppConfig, get_config
+from citecraft.utils import AppConfig, get_config
 
 from .http_client_wrapper import HTTPClientWrapper
 
