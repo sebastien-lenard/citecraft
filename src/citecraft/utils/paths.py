@@ -1,3 +1,4 @@
+# src/citecraft/utils/paths.py
 import os
 import platform
 import tempfile
@@ -10,7 +11,7 @@ _ENV = {**dotenv_values(".env"), **os.environ}
 
 def get_app_name() -> str:
     """Get the application folder name, defaulting to project standard."""
-    return _ENV.get("APP_NAME", "manuscript-reference-lister").strip("\"'")
+    return _ENV.get("APP_NAME", "citecraft").strip("\"'")
 
 
 def get_app_base_dir() -> Path:

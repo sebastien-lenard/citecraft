@@ -1,3 +1,4 @@
+# tests/unit/utils/test_paths.py
 import os
 from pathlib import Path
 from unittest.mock import patch
@@ -11,14 +12,14 @@ from citecraft.utils import paths
 def clear_env_cache():
     """Reset the internal module _ENV before each test for isolation."""
     with patch.dict(os.environ, {}, clear=True):
-        paths._ENV = {"APP_NAME": "manuscript-reference-lister"}
+        paths._ENV = {"APP_NAME": "citecraft"}
         yield
 
 
 class TestAppNaming:
     def test_default_app_name(self):
         """Should fall back to standard app name if nothing is configured."""
-        assert paths.get_app_name() == "manuscript-reference-lister"
+        assert paths.get_app_name() == "citecraft"
 
     def test_custom_app_name_from_env(self):
         """Should respect APP_NAME from environment variables and strip quotes."""
@@ -35,21 +36,21 @@ class TestOSBaseDirectories:
                 "Windows",
                 "C:/Users/TestUser",
                 {"LOCALAPPDATA": "C:/Users/TestUser/AppData/Local"},
-                "C:/Users/TestUser/AppData/Local/manuscript-reference-lister",
+                "C:/Users/TestUser/AppData/Local/citecraft",
             ),
             # 2. macOS Configuration
             (
                 "Darwin",
                 "/Users/TestUser",
                 {},
-                "/Users/TestUser/Library/manuscript-reference-lister",
+                "/Users/TestUser/Library/citecraft",
             ),
             # 3. Linux Configuration
             (
                 "Linux",
                 "/home/testuser",
                 {},
-                "/home/testuser/.local/state/manuscript-reference-lister",
+                "/home/testuser/.local/state/citecraft",
             ),
         ],
         ids=["windows_default", "macos_default", "linux_default"],
@@ -116,8 +117,8 @@ class TestSafeDirectoryResolutionRealErrors:
         If a regular file already exists exactly where the application wants
         to build its directory tree, mkdir will fail hard on any OS.
         """
-        # Create a physical file named 'manuscript-reference-lister'
-        collision_file = tmp_path / "manuscript-reference-lister"
+        # Create a physical file named 'citecraft'
+        collision_file = tmp_path / "citecraft"
         collision_file.touch()
 
         # Point the base directory to this exact file path
