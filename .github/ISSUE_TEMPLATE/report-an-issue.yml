@@ -1,6 +1,5 @@
 name: "Report an Issue"
 description: "Found a bug or something broken? Let's fix it together!"
-title: "Process impacted, e.g. bibliography generation: A few words of description, e.g. Missing author initials"
 labels: ["status: triage"]
 body:
   # 1. Warm welcome message
@@ -9,6 +8,11 @@ body:
       value: |
         ### 👋 Thank you for helping improve the project!
         Whether you are a researcher racing against a deadline or a student writing a paper, your feedback is incredibly valuable. Let's get this sorted out for you.
+
+        ---
+        ### 📌 How to title your issue:
+        Please format your issue title above using the following format:
+        `[Process impacted, e.g. bibliography generation]: A few words of description, e.g. Missing author initials`
 
   # 2. Friendly Severity Dropdown
   - type: dropdown
