@@ -1,0 +1,38 @@
+name: Run Unit Tests
+
+on:
+  push:
+    branches: [ "main", "master" ] # Change this if your default branch has a different name
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # This triggers 3 parallel jobs: Ubuntu (Linux), Windows, and macOS
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv and Python
+      uses: astral-sh/setup-uv@v5
+      with:
+        # This automatically installs Python 3.12.9
+        python-version: "3.12.9"
+        enable-cache: true
+
+    - name: Run Pytest
+      # This runs your exact command across all platforms automatically
+      # If it's Linux, wrap the test in xvfb-run to simulate a fake virtual monitor.
+      # Windows and Mac runners handle UI threads natively and don't need it.
+      run: |
+        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+          xvfb-run uv run pytest -m unit
+        else
+          uv run pytest -m unit
+        fi
