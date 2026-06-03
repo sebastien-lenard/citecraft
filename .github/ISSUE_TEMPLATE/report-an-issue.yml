@@ -1,0 +1,56 @@
+name: "Report an Issue"
+description: "Found a bug or something broken? Let's fix it together!"
+title: "[Issue]: "
+labels: ["status: triage"]
+body:
+  # 1. Warm welcome message
+  - type: markdown
+    attributes:
+      value: |
+        ### 👋 Thank you for helping improve the project!
+        Whether you are a researcher racing against a deadline or a student writing a paper, your feedback is incredibly valuable. Let's get this sorted out for you.
+
+  # 2. Friendly Severity Dropdown
+  - type: dropdown
+    id: impact
+    attributes:
+      label: "How badly is this affecting your work? 🛑"
+      description: "Select the option that best matches your situation."
+      options:
+        - "Critical — I can't generate my bibliography at all / it crashes"
+        - "Major — It works, but a major feature or citation style is broken"
+        - "Minor — Just a small annoyance, typo, or minor visual issue"
+    validations:
+      required: true
+
+  # 3. Simple Description
+  - type: textarea
+    id: description
+    attributes:
+      label: "What happened? 📝"
+      description: "A quick 1-2 sentence summary of what went wrong."
+      placeholder: "e.g., When I try to export an APA 7 citation, the author names are missing."
+    validations:
+      required: true
+
+  # 4. Short Steps
+  - type: textarea
+    id: steps
+    attributes:
+      label: "How can I recreate it? 👣"
+      description: "A quick 1-3 sentence walkthrough of what you clicked or did."
+      placeholder: |
+        1. Implemented a journal article URL...
+        2. Clicked 'Generate'...
+    validations:
+      required: false
+
+  # 5. Optional Data/Logs
+  - type: textarea
+    id: context
+    attributes:
+      label: "Optional: Links, citation data, or logs 📋"
+      description: "If you have the specific DOI, BibTeX data, error logs, or a screenshot, paste them here!"
+      placeholder: "e.g., DOI: 10.1000/xyz123 or the text that caused the crash."
+    validations:
+      required: false
