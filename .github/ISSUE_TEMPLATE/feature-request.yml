@@ -1,0 +1,33 @@
+name: "Suggest a Feature"
+description: "Have an idea for a new citation style or feature? Let's discuss it!"
+title: "[Feature Idea]: Short description of your idea"
+labels: ["type: enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ✨ Got a great idea? 
+        Whether it is supporting a new niche journal style or adding an exporter feature, I want to hear it! Let's make this tool better for everyone.
+
+        ---
+        ### 📌 How to title your issue:
+        Please format your issue title above using the following format:
+        `[Process, e.g. File parsing]: A few words of description, e.g. Adding latex manuscripts`
+
+  - type: textarea
+    id: idea_description
+    attributes:
+      label: "What is your feature idea? 💡"
+      description: "Describe the new feature you would love to see."
+      placeholder: "e.g., Parsing latex manuscripts that don't have an associated .bib file."
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_value
+    attributes:
+      label: "How will this help you or other researchers? 🎓"
+      description: "Tell me a bit about why this feature would make your life easier."
+      placeholder: "e.g., in my team, we exclusively use latex but the handling of external files is messy."
+    validations:
+      required: true
