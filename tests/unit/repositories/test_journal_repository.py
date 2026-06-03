@@ -1,3 +1,4 @@
+# tests/unit/repositories/test_journal_repository.py
 import logging
 from datetime import date, timedelta
 from typing import Any, Literal

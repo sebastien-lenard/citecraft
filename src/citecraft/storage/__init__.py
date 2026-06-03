@@ -1,3 +1,4 @@
+# src/citecraft/storage/__init__.py
 from .db import (
     _get_sqlite_type,
     _is_collection_type,

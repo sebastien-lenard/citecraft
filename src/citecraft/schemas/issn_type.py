@@ -1,3 +1,4 @@
+# src/citecraft/schemas/issn_type.py
 import logging
 import re
 from typing import Annotated

@@ -1,3 +1,4 @@
+# tests/unit/schemas/test_journal_metadata.py
 from datetime import date
 
 import pytest

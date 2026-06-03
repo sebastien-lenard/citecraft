@@ -1,3 +1,4 @@
+# src/citecraft/schemas/journal_metadata.py
 from datetime import date
 from typing import Self, override
 

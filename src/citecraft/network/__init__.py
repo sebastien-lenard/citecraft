@@ -1,3 +1,4 @@
+# src/citecraft/network/__init__.py
 from .http_client_registry import HTTPClientRegistry, get_http_client_registry
 from .http_client_wrapper import HTTPClientWrapper
 

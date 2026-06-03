@@ -1,3 +1,4 @@
+# src/citecraft/schemas/csl_reference.py
 import logging
 from typing import Any
 

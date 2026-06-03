@@ -1,3 +1,4 @@
+# src/citecraft/utils/__init__.py
 from .config import AppConfig, create_config, get_config
 from .data_loader import DataLoader
 

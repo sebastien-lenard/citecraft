@@ -1,3 +1,4 @@
+# src/citecraft/parsers/journal_parser.py
 import logging
 import re
 

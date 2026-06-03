@@ -1,3 +1,4 @@
+# src/citecraft/network/http_client_registry.py
 from functools import lru_cache
 
 from citecraft.utils import AppConfig, get_config

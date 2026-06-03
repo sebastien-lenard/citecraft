@@ -1,3 +1,4 @@
+# src/citecraft/schemas/base_schema.py
 from pydantic import BaseModel, ConfigDict
 
 

@@ -1,3 +1,4 @@
+# src/citecraft/schemas/citation_metadata.py
 from typing import Literal, override
 
 from pydantic import ConfigDict, Field

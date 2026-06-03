@@ -1,3 +1,4 @@
+# src/citecraft/core.py
 import logging
 from collections.abc import Callable
 from dataclasses import is_dataclass, replace

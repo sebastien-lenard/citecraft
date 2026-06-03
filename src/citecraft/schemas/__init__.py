@@ -1,3 +1,4 @@
+# src/citecraft/schemas/__init__.py
 from .base_schema import BaseSchema
 from .citation_metadata import CitationMetadata
 from .crossref_author import CrossrefAuthor

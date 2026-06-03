@@ -1,3 +1,4 @@
+# src/citecraft/schemas/types.py
 import re
 from typing import Annotated
 from urllib.parse import urlparse, urlunparse

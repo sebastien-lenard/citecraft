@@ -1,3 +1,4 @@
+# src/citecraft/parsers/__init__.py
 from .citation_parser import CitationParser
 from .html_cleaner import HtmlCleaner
 from .journal_parser import JournalParser

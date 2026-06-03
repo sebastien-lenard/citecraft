@@ -1,3 +1,4 @@
+# tests/e2e/test_cli_pipeline.py
 import csv
 import os
 import subprocess

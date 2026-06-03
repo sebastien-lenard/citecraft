@@ -1,3 +1,4 @@
+# src/citecraft/logging_config.py
 import logging
 import logging.config
 import os

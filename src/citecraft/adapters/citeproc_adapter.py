@@ -1,3 +1,4 @@
+# src/citecraft/adapters/citeproc_adapter.py
 import io
 import logging
 import warnings

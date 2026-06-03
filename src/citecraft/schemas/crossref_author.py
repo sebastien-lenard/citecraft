@@ -1,3 +1,4 @@
+# src/citecraft/schemas/crossref_author.py
 from typing import Any, TypedDict
 
 CrossrefAuthor = TypedDict(

@@ -1,4 +1,4 @@
-# src/storage/db.py
+# src/citecraft/storage/db.py
 import json
 import logging
 import sqlite3

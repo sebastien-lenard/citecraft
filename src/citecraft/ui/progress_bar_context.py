@@ -1,3 +1,4 @@
+# src/citecraft/ui/progress_bar_context.py
 import logging
 import sys
 import threading

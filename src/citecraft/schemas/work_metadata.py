@@ -1,3 +1,4 @@
+# src/citecraft/schemas/work_metadata.py
 from typing import Any, override
 
 from pydantic import Field, field_validator

@@ -1,3 +1,4 @@
+# src/citecraft/repositories/__init__.py
 from .base_repository import BaseRepository
 from .crossref_work_repository import CrossrefWorkRepository
 from .doi_repository import DoiRepository

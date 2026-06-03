@@ -1,3 +1,4 @@
+# src/citecraft/__init__.py
 from .cli import main
 from .core import ProgressStep
 
