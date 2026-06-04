@@ -1,19 +1,22 @@
 # tests/unit/network/test_http_client_wrapper.py
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 from pydantic import TypeAdapter, networks
 
-from citecraft.network.http_client_wrapper import HTTPClientWrapper
+from citecraft.network.http_client_wrapper import HTTPClientConfig, HTTPClientWrapper
 
 
 @pytest.fixture
 def wrapper() -> Generator[HTTPClientWrapper, None, None]:
     """Provide HTTPClientWrapper with low backoffs for deterministic tests."""
+    client_options = HTTPClientConfig(max_retries=3, backoff_factor=0.01, delay=0.0)
     client_wrapper = HTTPClientWrapper(
-        email="test@example.com", max_retries=3, backoff_factor=0.01, delay=0.0
+        email="test@example.com",
+        client_config=client_options,
     )
     yield client_wrapper
     client_wrapper.close()
@@ -168,6 +171,7 @@ def test_get_follows_redirects(wrapper: HTTPClientWrapper) -> None:
     with patch.object(wrapper.client, "send", return_value=response_200) as mock_send:
         response, _ = wrapper.get("https://doi.org/10.1038/sample")
 
+        assert response is not None
         assert response.status_code == 200
         assert response.text == "Ceci est la référence finale"
         assert len(response.history) == 1
@@ -178,7 +182,7 @@ def test_get_follows_redirects(wrapper: HTTPClientWrapper) -> None:
 def test_get_accepts_and_converts_pydantic_http_url(
     wrapper: HTTPClientWrapper,
 ) -> None:
-    """Verify get handler converts Pydantic HttpUrl to standard string representations."""
+    """Verify get handler converts Pydantic HttpUrl to standard representations."""
     url_raw = "https://api.crossref.org/styles"
     pydantic_url = TypeAdapter(networks.HttpUrl).validate_python(url_raw)
 
@@ -186,8 +190,10 @@ def test_get_accepts_and_converts_pydantic_http_url(
     mock_response.status_code = 200
 
     with patch.object(wrapper.client, "send", return_value=mock_response) as mock_send:
-        response, _ = wrapper.get(url=pydantic_url)
+        url_arg: Any = pydantic_url
+        response, _ = wrapper.get(url=url_arg)
 
+        assert response is not None
         assert response.status_code == 200
 
         mock_send.assert_called_once()
@@ -260,3 +266,23 @@ def test_get_unexpected_errors_logging(
         assert any(
             "Unexpected or unrecoverable error" in r.message for r in caplog.records
         )
+
+
+def test_get_respects_initial_delay() -> None:
+    """Verify that the initial delay triggers a sleep wait sequence."""
+    client_options = HTTPClientConfig(delay=0.05, max_retries=1)
+    delay_wrapper = HTTPClientWrapper(
+        email="test@example.com",
+        client_config=client_options,
+    )
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 200
+
+    with (
+        patch.object(delay_wrapper.client, "send", return_value=mock_response),
+        patch("time.sleep") as mock_sleep,
+    ):
+        delay_wrapper.get("https://api.test.com")
+        mock_sleep.assert_called_once_with(0.05)
+
+    delay_wrapper.close()

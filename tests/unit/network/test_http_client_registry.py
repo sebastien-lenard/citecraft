@@ -54,14 +54,13 @@ def test_registry_creates_and_caches_client(
 
 
 @pytest.mark.parametrize(
-    "domain, expected_keys_and_values",
+    "domain, expected_config_attrs",
     [
         (
             "openalex",
             {
                 "api_key": "toto",
                 "delay": 1.5,
-                "email": "user@test.com",
                 "max_retries": 5,
                 "timeout": 45.0,
                 "url_max_character_length": 4000,
@@ -72,7 +71,6 @@ def test_registry_creates_and_caches_client(
             {
                 "api_key": None,
                 "delay": 1.0,
-                "email": "user@test.com",
                 "max_retries": 3,
                 "timeout": 30.0,
                 "url_max_character_length": 3000,
@@ -80,18 +78,16 @@ def test_registry_creates_and_caches_client(
         ),
         (
             "unknown_domain",
-            {
-                "email": "user@test.com",
-            },
+            None,
         ),
     ],
 )
 def test_registry_applies_correct_domain_configurations(
     configured_test_config: AppConfig,
     domain: str,
-    expected_keys_and_values: dict[str, Any],
+    expected_config_attrs: dict[str, Any] | None,
 ) -> None:
-    """Verify that distinct domains receive their expected initialization parameters."""
+    """Verify distinct domains receive correct configuration structures."""
     registry = HTTPClientRegistry(config=configured_test_config)
 
     with patch(
@@ -99,11 +95,20 @@ def test_registry_applies_correct_domain_configurations(
     ) as mock_wrapper_cls:
         registry.get_client(domain)
 
-        expected_kwargs = {
-            **expected_keys_and_values,
-            "config": configured_test_config,
-        }
-        mock_wrapper_cls.assert_called_with(**expected_kwargs)
+        if expected_config_attrs is None:
+            mock_wrapper_cls.assert_called_once_with(
+                email="user@test.com",
+                config=configured_test_config,
+            )
+        else:
+            mock_wrapper_cls.assert_called_once_with(
+                email="user@test.com",
+                client_config=mock_wrapper_cls.call_args[1]["client_config"],
+                config=configured_test_config,
+            )
+            client_config = mock_wrapper_cls.call_args[1]["client_config"]
+            for attr, expected_value in expected_config_attrs.items():
+                assert getattr(client_config, attr) == expected_value
 
 
 def test_registry_close_all_clears_and_closes_resources(
