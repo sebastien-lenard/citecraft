@@ -55,7 +55,3 @@ unfixable = []
 
 [tool.ruff.format]
 quote-style = "double"
-
-[tool.bandit]
-skips = ["B101"]
-

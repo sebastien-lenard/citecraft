@@ -12,8 +12,8 @@ from citecraft.utils import AppConfig
         # CASES WITH NEWLINES, Standard HTML collapsing behavior: \n + spaces -> 1 space
         # =====================================================================
         (
-            "Tracking CO\n          <sub>2</sub>\n          Plumes in Clay‐Rich Rock",
-            "Tracking CO <sub>2</sub> Plumes in Clay‐Rich Rock",
+            "Tracking CO\n          <sub>2</sub>\n          Plumes in Clay‐Rich Rock",  # noqa: RUF001
+            "Tracking CO <sub>2</sub> Plumes in Clay‐Rich Rock",  # noqa: RUF001
         ),
         (
             "Complex multifault rupture during the 2016\n            <i>M</i>\n      "
@@ -45,9 +45,9 @@ from citecraft.utils import AppConfig
         # CASES WITHOUT NEWLINES (Strict preservation of standard spaces)
         # =====================================================================
         (
-            "Townsend, J. P. (2020). Liquid‐Vapor Coexistence and Critical Point of "
+            "Townsend, J. P. (2020). Liquid‐Vapor Coexistence and Critical Point of "  # noqa: RUF001
             "Mg<sub>2</sub>SiO<sub>4</sub> From Ab Initio Simulations.",
-            "Townsend, J. P. (2020). Liquid‐Vapor Coexistence and Critical Point of "
+            "Townsend, J. P. (2020). Liquid‐Vapor Coexistence and Critical Point of "  # noqa: RUF001
             "Mg<sub>2</sub>SiO<sub>4</sub> From Ab Initio Simulations.",
         ),
         (
@@ -58,18 +58,18 @@ from citecraft.utils import AppConfig
         ),
         (
             "Experimental and Theoretical Comparison of the Metallophilicity between "
-            "d<sup>10</sup>–d<sup>10</sup>Au<sup>I</sup>–Hg<sup>II</sup>and d<sup>8"
-            "</sup>–d<sup>10</sup>Au<sup>III</sup>–Hg<sup>II</sup>Interactions.",
+            "d<sup>10</sup>–d<sup>10</sup>Au<sup>I</sup>–Hg<sup>II</sup>and d<sup>8"  # noqa: RUF001
+            "</sup>–d<sup>10</sup>Au<sup>III</sup>–Hg<sup>II</sup>Interactions.",  # noqa: RUF001
             "Experimental and Theoretical Comparison of the Metallophilicity between "
-            "d<sup>10</sup>–d<sup>10</sup>Au<sup>I</sup>–Hg<sup>II</sup>and d<sup>8"
-            "</sup>–d<sup>10</sup>Au<sup>III</sup>–Hg<sup>II</sup>Interactions.",
+            "d<sup>10</sup>–d<sup>10</sup>Au<sup>I</sup>–Hg<sup>II</sup>and d<sup>8"  # noqa: RUF001
+            "</sup>–d<sup>10</sup>Au<sup>III</sup>–Hg<sup>II</sup>Interactions.",  # noqa: RUF001
         ),
         (
-            " Helium Low Gas Flow Measurements in the Range 10<sup>−13</sup> to "
-            "10<sup>−11</sup> mol/s (10<sup>−9</sup> to 10<sup>−7</sup> cm<sup>3</sup>"
+            " Helium Low Gas Flow Measurements in the Range 10<sup>−13</sup> to "  # noqa: RUF001
+            "10<sup>−11</sup> mol/s (10<sup>−9</sup> to 10<sup>−7</sup> cm<sup>3</sup>"  # noqa: RUF001
             "/s).",
-            "Helium Low Gas Flow Measurements in the Range 10<sup>−13</sup> to "
-            "10<sup>−11</sup> mol/s (10<sup>−9</sup> to 10<sup>−7</sup> cm<sup>3</sup>"
+            "Helium Low Gas Flow Measurements in the Range 10<sup>−13</sup> to "  # noqa: RUF001
+            "10<sup>−11</sup> mol/s (10<sup>−9</sup> to 10<sup>−7</sup> cm<sup>3</sup>"  # noqa: RUF001
             "/s).",
         ),
         (

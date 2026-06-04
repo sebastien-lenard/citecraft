@@ -51,8 +51,8 @@ def parser() -> CitationParser:
         ),
         # Unicode hyphens and language coordinators
         (
-            "Work by Lyon‐Caen and Molnar (1985) and Lyon‐Caen et Molnar (1985).",
-            ["Lyon‐Caen and Molnar", "Lyon‐Caen et Molnar"],
+            "Work by Lyon‐Caen and Molnar (1985) and Lyon‐Caen et Molnar (1985).",  # noqa: RUF001
+            ["Lyon‐Caen and Molnar", "Lyon‐Caen et Molnar"],  # noqa: RUF001
         ),
     ],
 )
@@ -86,7 +86,7 @@ def test_multiple_years_narrative(parser: CitationParser) -> None:
         "When this happened (August 31, 2020).",
         (
             "Bernard, T., G., Lague, D., and Philippe Steer, P. (2021). "
-            "Beyond 2D Landslide Inventories. Earth Surface Dynamics 9 (4), 1013–44."
+            "Beyond 2D Landslide Inventories. Earth Surface Dynamics 9 (4), 1013–44."  # noqa: RUF001
         ),
     ],
 )

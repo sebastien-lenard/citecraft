@@ -23,7 +23,7 @@ def _is_collection_type(type_annotation: Any) -> bool:
     if origin in (Union, UnionType):
         return any(_is_collection_type(arg) for arg in get_args(type_annotation))
     try:
-        if issubclass(type_annotation, (list, dict, set)):
+        if issubclass(type_annotation, list | dict | set):
             return True
     except TypeError:
         pass
@@ -69,7 +69,7 @@ def serialize_model(record: BaseModel) -> dict[str, Any]:
     """Serialize model fields, converting lists, dicts, and sets to JSON strings."""
     data = record.model_dump()
     for key, val in data.items():
-        if isinstance(val, (list, dict, set)):
+        if isinstance(val, list | dict | set):
             data[key] = json.dumps(val, ensure_ascii=False)
         elif isinstance(val, Path):
             data[key] = str(val)

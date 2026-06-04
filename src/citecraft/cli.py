@@ -192,7 +192,7 @@ def main(
                         "Cache file not found for clearing: %s", db_path.name
                     )
                     cache_summary_message = (
-                        "ℹ️  No active cache database was found to clear."
+                        "ℹ️  No active cache database was found to clear."  # noqa: RUF001
                     )
             except (OSError, sqlite3.Error) as e:
                 logger.error(
@@ -260,7 +260,7 @@ def main(
 
         if skip_journal_update or skip_work_update:
             click.echo("")
-            click.echo("ℹ️  Pipeline Skips:")
+            click.echo("ℹ️  Pipeline Skips:")  # noqa: RUF001
             if skip_journal_update:
                 click.echo("   - Journal metadata update was skipped.")
             if skip_work_update:

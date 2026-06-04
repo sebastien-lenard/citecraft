@@ -18,6 +18,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 2 # Crucial for Codecov to track the commit git parent context
 
     - name: Install uv and Python
       uses: astral-sh/setup-uv@v5
@@ -33,7 +35,8 @@ jobs:
     - name: Run Pytest with Coverage (Linux)
       # This step only runs on the Ubuntu machine
       if: matrix.os == 'ubuntu-latest'
-      run: xvfb-run uv run --with pytest-cov pytest -m unit --cov=src/ --cov-report=xml
+      run: xvfb-run uv run --with pytest-cov pytest -m unit --cov=src/ --cov-branch --cov-report=xml
+      
 
     - name: Run Pytest (Windows & macOS)
       # This step runs on Windows and Mac, skipping the virtual screen wrapper
