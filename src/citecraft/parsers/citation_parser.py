@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class CitationParser:
-    """Handles extraction of narrative and parenthetical academic citations from raw text."""
+    """Handles extraction of narrative and parenthetical citations from raw text."""
 
     def __init__(
         self,
@@ -97,14 +97,16 @@ class CitationParser:
             author_name = match.group(1).strip()
             # Capture all years listed (e.g., ['2017', '2019'])
             years = self._year_regex.findall(match.group(2))
-            for y in years:
-                results.append(
+            results.extend(
+                [
                     CitationMetadata(
                         first_authors_txt=author_name,
                         year_and_suffix=y.strip(),
                         type="narrative",
                     )
-                )
+                    for y in years
+                ]
+            )
 
         # 2. PARENTHETICAL CITATIONS: (Hovius et al., 1997; Parker and Smith, 2011)
         # First, extract everything inside parentheses
@@ -137,14 +139,16 @@ class CitationParser:
                 if author_match:
                     author_name = author_match.group(1).strip()
                     years = self._year_regex.findall(clean_group)
-                    for y in years:
-                        results.append(
+                    results.extend(
+                        [
                             CitationMetadata(
                                 first_authors_txt=author_name,
-                                year_and_suffix=y,
+                                year_and_suffix=y.strip(),
                                 type="parenthetical",
                             )
-                        )
+                            for y in years
+                        ]
+                    )
 
         logger.info(
             "Extracted %d raw citations from text",

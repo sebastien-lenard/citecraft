@@ -66,7 +66,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             return (None, False)
         return (
             (
-                input_first_authors_txt.split(" et al.")[0]
+                input_first_authors_txt.split(" et al.", maxsplit=1)[0]
                 .replace(" et ", " and ")
                 .split(" and ")
             ),
