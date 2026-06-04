@@ -30,13 +30,12 @@ jobs:
       run: cp .env.example .env
       shell: bash
 
-    - name: Run Pytest
-      # This runs your exact command across all platforms automatically
-      # If it's Linux, wrap the test in xvfb-run to simulate a fake virtual monitor.
-      # Windows and Mac runners handle UI threads natively and don't need it.
-      run: |
-        if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-          xvfb-run uv run pytest -m unit
-        else
-          uv run pytest -m unit
-        fi
+    - name: Run Pytest (Linux)
+      # This step only runs on the Ubuntu machine
+      if: matrix.os == 'ubuntu-latest'
+      run: xvfb-run uv run pytest -m unit
+
+    - name: Run Pytest (Windows & macOS)
+      # This step runs on Windows and Mac, skipping the virtual screen wrapper
+      if: matrix.os != 'ubuntu-latest'
+      run: uv run pytest -m unit
