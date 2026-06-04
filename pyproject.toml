@@ -55,18 +55,20 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "PLR2004", "UP", "RUF"]
-ignore = ["E501"]
+select = ["E", "F", "I", "B", "ANN", "ARG", "BLE", "C4", "C90", "ERA", "FLY", "N", "PERF", "PL", "RET", "RUF", "S", "SIM", "UP"]
+ignore = []
 fixable = ["ALL"]
 unfixable = []
 allowed-confusables = ["ℹ"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
-    "PLR2004",
+    "ARG001", # Allow apparently non accessed arguments
+    "PLR2004", # Allow numerical values not being constant
     "BLE001",  # Allow broad exception catching (great for checking fallback paths)
     "S101",    # Allow 'assert' statements (otherwise bandit flags every single test)
     "PLW0120", # Allow loose control structures if an LLM generated messy loop edge-case tests
+    "PLR0913", # Allow many arguments
 ]
 
 [tool.ruff.format]

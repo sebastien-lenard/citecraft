@@ -14,7 +14,7 @@ from typing import Final
 
 import click
 
-from .core import run
+from .core import AnomalousJournal, PipelineOptions, run
 from .logging_config import setup_logging
 from .services import ExportResult
 from .storage.db import archive_database_cache
@@ -75,9 +75,9 @@ def _read_piped_input() -> str:
 # ==============================================================================
 
 
-def _render_anomalies(anomalies: dict[str, dict[str, str]]) -> None:
-    """Print an aligned, structured table detailing repository anomalies."""
-    if not anomalies:
+def _render_anomalous_journals(anomalous_journals: list[AnomalousJournal]) -> None:
+    """Print an aligned, structured table detailing repository journals in anomaly."""
+    if not anomalous_journals:
         return
 
     click.echo("")
@@ -97,10 +97,10 @@ def _render_anomalies(anomalies: dict[str, dict[str, str]]) -> None:
     click.secho(header, fg="cyan", bold=True, err=True)
     click.secho("-" * 90, fg="cyan", err=True)
 
-    for data in anomalies.values():
+    for journal in anomalous_journals:
         click.echo(
-            f"{data['input_title']:<35} | {data['issn']:<10} |"
-            f" {data['status']:<20} | {data['issns_found']}",
+            f"{journal.input_title:<35} | {journal.issn:<10} |"
+            f" {journal.status:<20} | {journal.issns_found}",
             err=True,
         )
     click.echo("", err=True)
@@ -252,19 +252,21 @@ def _execute_processing_pipeline(
         )
 
         with progress_context as ctx_manager:
-            anomalies, export_metadata = run(
-                api=p_args.api,
-                input_file_path=p_args.input_file,
-                input_text=valid_text,
-                output_filepath=p_args.output_file,
-                config=config,
-                style=favored_style,
-                journal_title=p_args.journal_title,
-                progress_callback=(
-                    ctx_manager.update if ctx_manager.is_active else None
-                ),
-                skip_journal_update=p_args.skip_journal_update,
-                skip_work_update=p_args.skip_work_update,
+            anomalous_journals, export_metadata = run(
+                PipelineOptions(
+                    api=p_args.api,
+                    input_file_path=p_args.input_file,
+                    input_text=valid_text,
+                    output_filepath=p_args.output_file,
+                    config=config,
+                    style=favored_style,
+                    journal_title=p_args.journal_title,
+                    progress_callback=(
+                        ctx_manager.update if ctx_manager.is_active else None
+                    ),
+                    skip_journal_update=p_args.skip_journal_update,
+                    skip_work_update=p_args.skip_work_update,
+                )
             )
 
         if cache_summary_message:
@@ -279,7 +281,7 @@ def _execute_processing_pipeline(
             if p_args.skip_work_update:
                 click.echo("   - Work DOI search and update was skipped.")
 
-        _render_anomalies(anomalies)
+        _render_anomalous_journals(anomalous_journals)
         if export_metadata:
             _render_export_summary(export_metadata)
             _render_csv_preview(export_metadata)

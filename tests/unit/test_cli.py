@@ -20,13 +20,14 @@ from citecraft.cli import (
     _execute_processing_pipeline,
     _handle_execution_failure,
     _read_piped_input,
-    _render_anomalies,
+    _render_anomalous_journals,
     _render_csv_preview,
     _render_export_summary,
     _render_recommendations,
     clear_cache_command,
     cli,
 )
+from citecraft.core import AnomalousJournal
 from citecraft.services.bibliography_service import ExportResult
 from citecraft.utils import AppConfig
 
@@ -105,26 +106,27 @@ def test_read_piped_input_with_stream_data() -> None:
         assert "\r" not in result
 
 
-def test_render_anomalies_empty() -> None:
+def test_render_anomalous_journals_empty() -> None:
     """Ensure anomaly printer returns early with zero console allocations if empty."""
     with patch("click.echo") as mock_echo:
-        _render_anomalies({})
+        _render_anomalous_journals([])
         mock_echo.assert_not_called()
 
 
-def test_render_anomalies_displays_table() -> None:
+def test_render_anomalous_journals_displays_table() -> None:
     """Verify anomaly layouts match parameters and trigger multi-line text wrapping."""
-    anomalies = {
-        "item1": {
-            "input_title": "Nature",
-            "issn": "0028-0836",
+    anomalous_journals = [
+        AnomalousJournal(
+            input_title="Nature",
+            issn="0028-0836",
             # Exceeds visual column layouts to force multiple wrapper line sequences
-            "status": "Missing Works " * 20,
-            "issns_found": "0028-0836",
-        }
-    }
+            status="Missing Works " * 20,
+            issns_found="0028-0836",
+        )
+    ]
+
     with patch("click.echo") as mock_echo, patch("click.secho") as mock_secho:
-        _render_anomalies(anomalies)
+        _render_anomalous_journals(anomalous_journals)
         assert mock_secho.called
         assert mock_echo.called
         # Check that content lines are captured by verifying the text keywords exist
@@ -391,8 +393,8 @@ def test_cli_forward_to_process_command_by_default() -> None:
 
 
 def test_cli_root_intercepts_clear_cache_and_returns(
-    test_config: AppConfig,  # noqa: ARG001
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    test_config: AppConfig,
+    mock_setup_logging: MagicMock,
 ) -> None:
     """Verify that the root cli group intercepts the --clear-cache flag, forwards
     execution to clear_cache_command, and returns immediately without running
@@ -446,7 +448,7 @@ def test_cli_clear_cache_hit_explicit_return_statement() -> None:
 
 def test_cache_clear_command_exits_early_unconditionally(
     test_config: AppConfig,
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    mock_setup_logging: MagicMock,
 ) -> None:
     """Verify standalone cache clear terminates with the official spec exit message."""
     expected_backup = Path("repo/cache.db.backup")
@@ -470,7 +472,7 @@ def test_cache_clear_command_exits_early_unconditionally(
 
 def test_process_command_with_clear_cache_flag_halts_pipeline(
     test_config: AppConfig,
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    mock_setup_logging: MagicMock,
 ) -> None:
     """Verify process command halts instantly when --clear-cache flag is provided."""
     with (
@@ -495,8 +497,8 @@ def test_process_command_with_clear_cache_flag_halts_pipeline(
 
 
 def test_cache_clear_command_flow_confirmed(
-    test_config: AppConfig,  # noqa: ARG001
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    test_config: AppConfig,
+    mock_setup_logging: MagicMock,
 ) -> None:
     """Verify file archive transformations execute completely on confirmation."""
     with (
@@ -512,7 +514,7 @@ def test_cache_clear_command_flow_confirmed(
         mock_archive.assert_called_once()
 
 
-def test_cache_clear_command_flow_aborted(test_config: AppConfig) -> None:  # noqa: ARG001
+def test_cache_clear_command_flow_aborted(test_config: AppConfig) -> None:
     """Verify state protection layers break safely when authorization matches false."""
     runner = CliRunner()
     result = runner.invoke(cli, ["cache", "clear"], input="n\n")
@@ -521,8 +523,8 @@ def test_cache_clear_command_flow_aborted(test_config: AppConfig) -> None:  # no
 
 
 def test_cache_clear_handles_database_missing(
-    test_config: AppConfig,  # noqa: ARG001
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    test_config: AppConfig,
+    mock_setup_logging: MagicMock,
 ) -> None:
     """Ensure missing paths skip file operations gracefully."""
     with patch("citecraft.cli.archive_database_cache", return_value=None):
@@ -534,7 +536,7 @@ def test_cache_clear_handles_database_missing(
 
 def test_cache_clear_handles_sqlite_exceptions(
     test_config: AppConfig,
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    mock_setup_logging: MagicMock,
 ) -> None:
     """Ensure sqlite operational locks capture traceback states and exit with 1."""
     with patch(
@@ -550,8 +552,8 @@ def test_cache_clear_handles_sqlite_exceptions(
 
 
 def test_process_command_triggers_inline_cache_clear(
-    test_config: AppConfig,  # noqa: ARG001
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    test_config: AppConfig,
+    mock_setup_logging: MagicMock,
     mock_core_run: MagicMock,
 ) -> None:
     """Verify using processing flags triggers forward operations across controllers."""
@@ -578,7 +580,7 @@ def test_process_command_triggers_inline_cache_clear(
     ],
 )
 def test_process_command_verbosity_mapping(
-    test_config: AppConfig,  # noqa: ARG001
+    test_config: AppConfig,
     mock_setup_logging: MagicMock,
     mock_core_run: MagicMock,
     verbose_flag: list[str],
@@ -596,7 +598,7 @@ def test_process_command_verbosity_mapping(
 
 
 def test_process_command_logging_fallback_notices(
-    test_config: AppConfig,  # noqa: ARG001
+    test_config: AppConfig,
     mock_core_run: MagicMock,
     mock_setup_logging: MagicMock,
 ) -> None:
@@ -614,8 +616,8 @@ def test_process_command_logging_fallback_notices(
 
 
 def test_process_command_handles_type_fallback_guards(
-    test_config: AppConfig,  # noqa: ARG001
-    mock_setup_logging: MagicMock,  # noqa: ARG001
+    test_config: AppConfig,
+    mock_setup_logging: MagicMock,
     mock_core_run: MagicMock,
 ) -> None:
     """Check mappings process parameters without mutations or runtime exceptions."""
