@@ -260,7 +260,7 @@ def run(
     progress_callback: Callable[[ProgressStep], None] | None = None,
     skip_journal_update: bool = False,
     skip_work_update: bool = False,
-) -> tuple[dict[str, Any], ExportResult | dict[str, Any]]:
+) -> tuple[dict[str, Any], ExportResult | None]:
     """Orchestrate the linear citation processing pipeline step-by-step.
     Returns a tuple: (anomalies_map, export_metadata), with map of problematic journals
     and bibliography export information."""

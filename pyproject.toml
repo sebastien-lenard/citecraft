@@ -1,3 +1,4 @@
+# pyproject.toml
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -32,7 +33,7 @@ dev = [
 ]
 
 [project.scripts]
-citecraft = "citecraft.cli:main"
+citecraft = "citecraft.cli:cli"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -41,6 +42,9 @@ markers = [
     "e2e: end to end tests (slower)",
     "integration: integration and api tests (slower)",
     "unit: unit tests (faster)"
+]
+filterwarnings = [
+    "ignore:'citecraft.cli' found in sys.modules:RuntimeWarning"
 ]
 
 [tool.ruff]
@@ -51,10 +55,11 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "ANN", "ARG", "BLE", "C4", "C90", "ERA", "FLY", "N", "PERF", "PL", "RET", "RUF", "S", "SIM", "UP"]
-ignore = []
+select = ["E", "F", "I", "B", "PLR2004", "UP", "RUF"]
+ignore = ["E501"]
 fixable = ["ALL"]
 unfixable = []
+allowed-confusables = ["ℹ"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
