@@ -26,6 +26,10 @@ jobs:
         python-version: "3.12.9"
         enable-cache: true
 
+    - name: Create dummy .env file
+      run: cp .env.example .env
+      shell: bash
+
     - name: Run Pytest
       # This runs your exact command across all platforms automatically
       # If it's Linux, wrap the test in xvfb-run to simulate a fake virtual monitor.
