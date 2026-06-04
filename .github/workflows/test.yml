@@ -2,7 +2,7 @@ name: Run Unit Tests
 
 on:
   push:
-    branches: [ "main", "master" ] # Change this if your default branch has a different name
+    branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
 
@@ -30,12 +30,21 @@ jobs:
       run: cp .env.example .env
       shell: bash
 
-    - name: Run Pytest (Linux)
+    - name: Run Pytest with Coverage (Linux)
       # This step only runs on the Ubuntu machine
       if: matrix.os == 'ubuntu-latest'
-      run: xvfb-run uv run pytest -m unit
+      run: xvfb-run uv run --with pytest-cov pytest -m unit --cov=./ --cov-report=xml
 
     - name: Run Pytest (Windows & macOS)
       # This step runs on Windows and Mac, skipping the virtual screen wrapper
       if: matrix.os != 'ubuntu-latest'
       run: uv run pytest -m unit
+
+
+
+    # Upload report
+    - name: Upload coverage reports to Codecov
+      if: matrix.os == 'ubuntu-latest'
+      uses: codecov/codecov-action@v6
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
