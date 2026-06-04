@@ -5,7 +5,7 @@
 
 Unlike complex reference managers, this project focuses on a streamlined, manuscript-centric workflow that converts raw in-text citations directly into plain-text bibliographic outputs without requiring manual data entry.
 
-![Tests Status](https://github.com/sebastien-lenard/citecraft/actions/workflows/test.yml/badge.svg)
+![Tests Status](https://github.com/sebastien-lenard/citecraft/actions/workflows/test.yml/badge.svg) [![codecov](https://codecov.io/github/sebastien-lenard/citecraft/graph/badge.svg?token=Z3LBC4ROF9)](https://codecov.io/github/sebastien-lenard/citecraft)
 
 ---
 
