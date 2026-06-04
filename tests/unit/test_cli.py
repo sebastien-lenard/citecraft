@@ -218,7 +218,7 @@ def test_cli_custom_style_and_output_options(
 def test_cli_skip_update_flags_propagate(
     runner: CliRunner, test_config: AppConfig
 ) -> None:
-    """Verify that bypass flags propagate to core runs and display skipped indicators."""
+    """Bypass flags should propagate to core runs and display skipped indicators."""
     with patch("citecraft.cli.run", return_value=({}, {})) as mock_run:
         result = runner.invoke(
             cli,
@@ -245,7 +245,7 @@ def test_cli_skip_update_flags_propagate(
             skip_journal_update=True,
             skip_work_update=True,
         )
-        assert "ℹ️  Pipeline Skips:" in result.output
+        assert "ℹ️  Pipeline Skips:" in result.output  # noqa RUF001
         assert "- Journal metadata update was skipped." in result.output
         assert "- Work DOI search and update was skipped." in result.output
 

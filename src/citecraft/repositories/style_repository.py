@@ -1,6 +1,7 @@
 # src/citecraft/repositories/style_repository.py
 import logging
 import xml.etree.ElementTree as ET
+from http import HTTPStatus
 
 import httpx
 
@@ -72,9 +73,10 @@ class StyleRepository:
                 "Successfully fetched CSL metadata for style: %s", self.favored_style
             )
         except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
+            if e.response.status_code == HTTPStatus.NOT_FOUND:
                 logger.warning(
-                    "CSL style file not found (404) at URL: %s",
+                    "CSL style file not found (%d) at URL: %s",
+                    HTTPStatus.NOT_FOUND,
                     url,
                     extra={
                         "status": "KO",

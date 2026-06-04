@@ -1,6 +1,7 @@
 # src/citecraft/repositories/doi_repository.py
 import json
 import logging
+from http import HTTPStatus
 from typing import Any
 
 import httpx
@@ -105,15 +106,16 @@ class DoiRepository:
             )
             return {}
         except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
+            if e.response.status_code == HTTPStatus.NOT_FOUND:
                 logger.warning(
-                    "DOI not found (404) for CSL-JSON: %s",
+                    "DOI not found (%d) for CSL-JSON: %s",
+                    HTTPStatus.NOT_FOUND,
                     doi,
                     extra={
                         "status": "KO",
                         "event": "doi_csl_json_not_found",
                         "doi": doi,
-                        "status_code": 404,
+                        "status_code": HTTPStatus.NOT_FOUND,
                     },
                 )
                 return {}

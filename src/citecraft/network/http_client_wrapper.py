@@ -1,6 +1,7 @@
 # src/citecraft/network/http_client_wrapper.py
 import logging
 import time
+from http import HTTPStatus
 from typing import Any
 
 import httpx
@@ -66,7 +67,10 @@ class HTTPClientWrapper:
             return True
         if isinstance(exception, httpx.HTTPStatusError):
             status = exception.response.status_code
-            return status == 429 or status >= 500
+            return (
+                status == HTTPStatus.TOO_MANY_REQUESTS
+                or status >= HTTPStatus.INTERNAL_SERVER_ERROR
+            )
         return False
 
     def _log_retry(self, retry_state: RetryCallState) -> None:

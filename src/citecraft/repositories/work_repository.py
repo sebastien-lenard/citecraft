@@ -166,7 +166,10 @@ class WorkRepository(BaseRepository[WorkMetadata]):
     ) -> float:
         """Log progress status every 10 seconds of processing time."""
         current_time = time.time()
-        if current_time - last_time > 10.0:
+        if (
+            current_time - last_time
+            > self.config.default_logging_frequency_for_batch_updates
+        ):
             remaining = total - processed
             logger.info(
                 "Batch update status: %d updates remaining out of %d",
@@ -224,7 +227,10 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         if input_first_authors_count and not input_is_et_al:
             if api_authors_count != input_first_authors_count:
                 return False
-        elif input_is_et_al and api_authors_count <= 2:
+        elif (
+            input_is_et_al
+            and api_authors_count <= self.config.max_count_of_authors_in_citation
+        ):
             # A citation "X et al." implies at least 3 authors
             return False
         return True
@@ -246,8 +252,8 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             input_first_authors[0], api_authors[0]
         )
 
-        if len(input_first_authors) == 2:
-            if len(api_authors) < 2:
+        if len(input_first_authors) == self.config.max_count_of_authors_in_citation:
+            if len(api_authors) < self.config.max_count_of_authors_in_citation:
                 return False
             validate_first_author = validate_first_author & self._validate_author(
                 input_first_authors[1], api_authors[1]

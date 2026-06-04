@@ -33,7 +33,7 @@ def validate_issn(issn: str) -> str:
         expected_check = "0"
     else:
         calc_check = 11 - remainder
-        expected_check = "X" if calc_check == 10 else str(calc_check)
+        expected_check = "X" if calc_check == 10 else str(calc_check)  # noqa: PLR2004
 
     # Compare with the actual 8th character
     actual_check = clean_issn[7]

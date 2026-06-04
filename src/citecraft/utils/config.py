@@ -81,6 +81,7 @@ class AppConfig(BaseSettings):
     openalex_api_max_retry: int = default_api_max_retry
     openalex_api_url_max_character_length: int = default_api_url_max_character_length
     openalex_api_url_max_character_length_for_issns_filter: int = 50
+    openalex_api_max_piped_filters: int = 100
 
     # --- Style Repositories ---
     style_repo_url: UrlWithObjectName  # Contains oject_name placeholder for style
@@ -92,10 +93,12 @@ class AppConfig(BaseSettings):
     # --- Core Logic Settings ---
     min_publication_year: int = 1600
     max_publication_year: int = 2099
+    max_count_of_authors_in_citation: int = 2
     context_keywords: str = ""
     journal_update_days: int = 30
     journal_update_limit: int = 100
     default_reference_style: str = "apa"
+    default_logging_frequency_for_batch_updates: float = 10.0
 
     # --- Values for schemas ---
     work_csl_schema_types: list[str] = Field(default_factory=list)

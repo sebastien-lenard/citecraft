@@ -51,10 +51,18 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "RUF"]
-ignore = []
+select = ["E", "F", "I", "B", "PLR2004", "UP", "RUF"]
+ignore = ["E501"]
 fixable = ["ALL"]
 unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "PLR2004",
+    "BLE001",  # Allow broad exception catching (great for checking fallback paths)
+    "S101",    # Allow 'assert' statements (otherwise bandit flags every single test)
+    "PLW0120", # Allow loose control structures if an LLM generated messy loop edge-case tests
+]
 
 [tool.ruff.format]
 quote-style = "double"

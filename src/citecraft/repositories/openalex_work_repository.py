@@ -56,7 +56,7 @@ class OpenAlexWorkRepository(WorkRepository):
             )
             return []
 
-        if len(input_ISSNs) > 100:
+        if len(input_ISSNs) > self.config.openalex_api_max_piped_filters:
             logger.warning(
                 (
                     "OpenAlex API accepts a maximum of 100 ISSNs for a filter"

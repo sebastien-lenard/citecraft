@@ -31,7 +31,10 @@ class JournalRepository(BaseRepository[JournalMetadata]):
     ) -> float:
         """Log update batch progress status every 10 seconds of processing time."""
         current_time = time.time()
-        if current_time - last_time > 10.0:
+        if (
+            current_time - last_time
+            > self.config.default_logging_frequency_for_batch_updates
+        ):
             remaining = total - processed
             logger.info(
                 "Batch update status: %d updates remaining out of %d",
