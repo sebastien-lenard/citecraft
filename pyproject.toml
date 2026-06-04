@@ -46,6 +46,9 @@ markers = [
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+extend-exclude = [
+    "uv.lock"
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "RUF"]
