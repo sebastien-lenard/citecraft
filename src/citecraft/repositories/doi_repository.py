@@ -11,6 +11,7 @@ from citecraft.network import (
     HTTPClientWrapper,
     get_http_client_registry,
 )
+from citecraft.schemas import DoiType
 from citecraft.utils import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ class DoiRepository:
         registry = registry or get_http_client_registry()
         self.http_client_wrapper: HTTPClientWrapper = registry.get_client("doi")
 
-    def get_metadata(self, doi: str) -> dict[str, Any]:
+    def get_metadata(self, doi: DoiType) -> dict[str, Any]:
         """Retrieve CSL-JSON metadata via DOI content negotiation.
         Ensures that metadata contains an attribute id or DOI, necessary for
         CSLReference validation.
