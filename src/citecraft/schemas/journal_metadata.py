@@ -28,8 +28,8 @@ class JournalMetadata(BaseSchema):
         default_factory=lambda: str(date.today())
     )  # ISO format: YYYY-MM-DD
 
-    @override
     @property
+    @override
     def identity_key(self) -> tuple[str, str | None]:
         """Return the unique tuple identifier used for deduplication."""
         return (self.input_title, self.issn)

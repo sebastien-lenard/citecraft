@@ -17,8 +17,8 @@ class CitationMetadata(BaseSchema):
     year_and_suffix: str = Field(pattern=r"^\d{4}[a-z]?$")  # e.g. 2020a
     type: Literal["narrative", "parenthetical"] = "narrative"
 
-    @override
     @property
+    @override
     def identity_key(self) -> tuple[str, str]:
         """Returns the unique tuple identifier used for deduplication."""
         return (self.first_authors_txt, self.year_and_suffix)
