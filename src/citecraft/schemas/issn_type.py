@@ -49,9 +49,9 @@ def validate_issn(issn: str) -> str:
     return issn
 
 
-ISSNType = Annotated[str, AfterValidator(validate_issn)]
+IssnType = Annotated[str, AfterValidator(validate_issn)]
 
-issn_adapter = TypeAdapter(ISSNType)
+issn_adapter = TypeAdapter(IssnType)
 
 
 def check_standalone_issn(issn: str) -> bool:

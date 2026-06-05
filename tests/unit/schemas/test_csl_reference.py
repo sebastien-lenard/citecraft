@@ -63,7 +63,7 @@ def test_issn_parsing_variants(
     """Verify raw ISSN data input variants map onto a singular identifier string."""
     raw_data = {"id": "test_id", "type": "book", "ISSN": issn_input}
     validated = CSLReference.model_validate(raw_data)
-    assert validated.ISSN == expected_issn
+    assert validated.issn == expected_issn
 
 
 def test_extra_fields_not_ignored_automatically() -> None:

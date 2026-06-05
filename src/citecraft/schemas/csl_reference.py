@@ -3,6 +3,7 @@ import logging
 from typing import Any
 
 from pydantic import (
+    AliasChoices,
     BaseModel,
     ConfigDict,
     Field,
@@ -20,7 +21,12 @@ logger = logging.getLogger(__name__)
 class CSLReference(BaseModel):
     """Main schema representing a CSL-JSON reference item."""
 
-    model_config = ConfigDict(populate_by_name=True, extra="allow")
+    model_config = ConfigDict(
+        populate_by_name=True,
+        extra="allow",
+        validate_by_name=True,
+        validate_by_alias=True,
+    )
 
     # Required structural roots
     id: str
@@ -63,14 +69,16 @@ class CSLReference(BaseModel):
     DOI: str | None = None
     URL: str | None = None
     ISBN: str | None = None
-    ISSN: str | None = None
+    issn: str | None = Field(
+        default=None, validation_alias=AliasChoices("ISSN", "issn")
+    )
 
     # Miscellaneous Metadata
     abstract: str | None = None
     note: str | None = None
     language: str | None = None
 
-    @field_validator("ISSN", mode="before")
+    @field_validator("issn", mode="before")
     @classmethod
     def handle_crossref_issn_array(cls, value: Any) -> str | None:
         """Intercept the incoming ISSN data and extract the first element if a list."""

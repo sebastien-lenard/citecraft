@@ -2,19 +2,23 @@
 from datetime import date
 from typing import Self, override
 
-from pydantic import Field, model_validator
+from pydantic import AliasChoices, ConfigDict, Field, model_validator
 
 from .base_schema import BaseSchema
-from .issn_type import ISSNType
+from .issn_type import IssnType
 
 
 class JournalMetadata(BaseSchema):
     """Represents validated metadata for a scientific journal."""
 
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
+
     input_title: str  # e.g. Nature Geoscience
     true_title: str | None = None  # e.g. Nature Geoscience
     publisher: str | None = None  # e.g. Nature Portfolio / Springer Nature
-    ISSN: ISSNType | None = None  # e.g. 1752-0894
+    issn: IssnType | None = Field(
+        default=None, validation_alias=AliasChoices("ISSN", "issn")
+    )  # e.g. 1752-0894
     start_year: int | None = Field(default=None, ge=1600, le=2099)  # e.g. 2008
     end_year: int | None = Field(default=None, ge=1600, le=2099)  # e.g. 2026
     similar_titles: list[str] | None = (
@@ -28,7 +32,7 @@ class JournalMetadata(BaseSchema):
     @property
     def identity_key(self) -> tuple[str, str | None]:
         """Return the unique tuple identifier used for deduplication."""
-        return (self.input_title, self.ISSN)
+        return (self.input_title, self.issn)
 
     @property
     def is_complete(self) -> bool:
@@ -43,9 +47,9 @@ class JournalMetadata(BaseSchema):
     @property
     def status(self) -> str:
         """Deduce the synchronization status of the journal record."""
-        if self.ISSN is None and self.true_title is not None:
+        if self.issn is None and self.true_title is not None:
             return "Found without ISSN"
-        if self.ISSN is not None and (self.start_year is None or self.end_year is None):
+        if self.issn is not None and (self.start_year is None or self.end_year is None):
             return "Found without work"
         if not self.is_complete:
             return "Not found"

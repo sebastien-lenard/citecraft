@@ -23,7 +23,7 @@ def test_get_journal_metadata_success(repo: JournalRepository) -> None:
     # 1. Main search response
     mock_main = MagicMock(status_code=200)
     mock_main.json.return_value = {
-        "message": {"items": [{"title": "Geology", "ISSN": ["0091-7613"]}]}
+        "message": {"items": [{"title": "Geology", "issn": ["0091-7613"]}]}
     }
 
     # 2. Year endpoint response (reused for min/max)
@@ -49,7 +49,7 @@ def test_get_journal_metadata_success(repo: JournalRepository) -> None:
         results = repo.get_journal_metadata("Geology")
 
         assert len(results) == 1
-        assert results[0].ISSN == "0091-7613"
+        assert results[0].issn == "0091-7613"
         assert results[0].start_year == 1973
         assert results[0].end_year == 1995
 
@@ -69,7 +69,7 @@ def test_get_journal_metadata_not_found_behavior(
             assert "Journal Unknown Journal not found." in caplog.text
             assert "similar titles found" not in caplog.text
             assert len(results) == 1
-            assert results[0].ISSN is None
+            assert results[0].issn is None
             assert results[0].similar_titles is None
             assert results[0].input_title == "Unknown Journal"
 
@@ -86,22 +86,22 @@ def test_get_journal_metadata_similar_matches_found(
                 {
                     "title": "Nature Geoscience",
                     "publisher": "Springer Nature",
-                    "ISSN": ["1752-0894"],
+                    "issn": ["1752-0894"],
                 },
                 {
                     "title": "Nature-Geosciences",
                     "publisher": "Springer Nature",
-                    "ISSN": ["1752-0894", "1752-0908"],
+                    "issn": ["1752-0894", "1752-0908"],
                 },
                 {
                     "title": "Nature Geoscience",
                     "publisher": "Springer Nature",
-                    "ISSN": ["1752-0894"],
+                    "issn": ["1752-0894"],
                 },
                 {
                     "title": "Science Journal",
                     "publisher": "Other",
-                    "ISSN": ["0091-7613"],
+                    "issn": ["0091-7613"],
                 },
             ]
         }
@@ -140,7 +140,7 @@ def test_get_journal_metadata_similar_matches_found(
 
             assert results[0].input_title == "nature geoscience"
             assert results[0].true_title == "Nature Geoscience"
-            assert results[0].ISSN == "1752-0894"
+            assert results[0].issn == "1752-0894"
             assert results[0].start_year == 2008
             assert results[0].end_year == 2026
             assert results[0].similar_titles == [
@@ -150,7 +150,7 @@ def test_get_journal_metadata_similar_matches_found(
 
             assert results[1].input_title == "nature geoscience"
             assert results[1].true_title == "Nature-Geosciences"
-            assert results[1].ISSN == "1752-0908"
+            assert results[1].issn == "1752-0908"
             assert results[1].similar_titles == [
                 "Nature Geoscience",
                 "Nature-Geosciences",
@@ -166,7 +166,7 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
             "items": [
                 {
                     "title": "Nature",
-                    "ISSN": ["0028-0836", "1476-4687"],
+                    "issn": ["0028-0836", "1476-4687"],
                 }
             ]
         }
@@ -191,8 +191,8 @@ def test_get_journal_metadata_multiple_issns(repo: JournalRepository) -> None:
         results = repo.get_journal_metadata("Nature")
 
         assert len(results) == 2
-        assert results[0].ISSN == "0028-0836"
-        assert results[1].ISSN == "1476-4687"
+        assert results[0].issn == "0028-0836"
+        assert results[1].issn == "1476-4687"
         assert mock_get.call_count == 5
 
 
@@ -218,7 +218,7 @@ def test_get_journal_metadata_missing_issn_handling(repo: JournalRepository) -> 
 
         assert len(results) == 1
         assert results[0].true_title == "Natural Hazards and Earth System Sciences"
-        assert results[0].ISSN is None
+        assert results[0].issn is None
         assert results[0].start_year is None
         assert results[0].end_year is None
         assert mock_get.call_count == 1
@@ -233,7 +233,7 @@ def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -
                 {
                     "title": "Empty Journal",
                     "publisher": "Silent Publisher",
-                    "ISSN": ["0010-051x"],
+                    "issn": ["0010-051x"],
                 }
             ]
         }
@@ -252,7 +252,7 @@ def test_get_journal_metadata_empty_publication_years(repo: JournalRepository) -
 
         assert len(results) == 1
         assert results[0].true_title == "Empty Journal"
-        assert results[0].ISSN == "0010-051x"
+        assert results[0].issn == "0010-051x"
         assert results[0].start_year is None
         assert results[0].end_year is None
         assert mock_get.call_count == 3
@@ -263,14 +263,14 @@ def test_get_issns_by_input_title(repo: JournalRepository) -> None:
     empty fields."""
     repo.records = [
         JournalMetadata(
-            input_title="Journal A", ISSN="0010-051x", start_year=2000, end_year=2010
+            input_title="Journal A", issn="0010-051x", start_year=2000, end_year=2010
         ),
         JournalMetadata(
-            input_title="Journal A", ISSN="2049-3630", start_year=2005, end_year=2015
+            input_title="Journal A", issn="2049-3630", start_year=2005, end_year=2015
         ),
-        JournalMetadata(input_title="Journal A", ISSN=None),
+        JournalMetadata(input_title="Journal A", issn=None),
         JournalMetadata(
-            input_title="Journal B", ISSN="1752-0894", start_year=2000, end_year=2020
+            input_title="Journal B", issn="1752-0894", start_year=2000, end_year=2020
         ),
     ]
 
@@ -285,25 +285,25 @@ def test_get_unique_issns_for_titles(repo: JournalRepository) -> None:
     repo.records = [
         JournalMetadata(
             input_title="Nature Geoscience",
-            ISSN="1752-0894",
+            issn="1752-0894",
             start_year=2008,
             end_year=2026,
         ),
         JournalMetadata(
             input_title="Nature Geoscience",
-            ISSN="1752-0908",
+            issn="1752-0908",
             start_year=2008,
             end_year=2026,
         ),
         JournalMetadata(
             input_title="Journal of Climate",
-            ISSN="2049-3630",
+            issn="2049-3630",
             start_year=2000,
             end_year=2010,
         ),
         JournalMetadata(
             input_title="Remote Sensing",
-            ISSN=None,
+            issn=None,
         ),
     ]
 
@@ -407,7 +407,7 @@ def test_get_issn_year_endpoint_scenarios(
                     input_title="Valid J",
                     true_title="T",
                     publisher="P",
-                    ISSN="2049-3630",
+                    issn="2049-3630",
                     start_year=2000,
                     end_year=2026,
                     update=str(date.today() - timedelta(days=5)),
@@ -416,7 +416,7 @@ def test_get_issn_year_endpoint_scenarios(
                     input_title="Expired J",
                     true_title="T",
                     publisher="P",
-                    ISSN="1752-0908",
+                    issn="1752-0908",
                     start_year=2000,
                     end_year=2026,
                     update=str(date.today() - timedelta(days=45)),
@@ -425,7 +425,7 @@ def test_get_issn_year_endpoint_scenarios(
                     input_title="Missing J",
                     true_title=None,
                     publisher=None,
-                    ISSN=None,
+                    issn=None,
                     start_year=None,
                     end_year=None,
                     update=str(date.today() - timedelta(days=5)),
@@ -444,7 +444,7 @@ def test_get_issn_year_endpoint_scenarios(
                     input_title="Valid J",
                     true_title="T",
                     publisher="P",
-                    ISSN="2049-3630",
+                    issn="2049-3630",
                     start_year=2000,
                     end_year=2026,
                     update=str(date.today() - timedelta(days=5)),
@@ -483,17 +483,17 @@ def test_get_sync_status_scenarios(
 def test_merge_new_titles(repo: JournalRepository) -> None:
     """Verify new titles merge as blank templates without overriding pre-existing
     records."""
-    repo.records = [JournalMetadata(input_title="Existing", ISSN="2049-3630")]
+    repo.records = [JournalMetadata(input_title="Existing", issn="2049-3630")]
     repo.merge_new_titles(input_titles=["Existing", "Geology", "Geology"])
 
     assert len(repo) == 2
     assert any(
-        r.input_title == "Existing" and r.ISSN == "2049-3630" for r in repo.records
+        r.input_title == "Existing" and r.issn == "2049-3630" for r in repo.records
     )
 
     new_entries = [r for r in repo.records if r.input_title == "Geology"]
     assert len(new_entries) == 1
-    assert new_entries[0].ISSN is None
+    assert new_entries[0].issn is None
     assert new_entries[0].update == str(date.today())
 
 
@@ -516,17 +516,17 @@ def test_update_all_priority_and_limit(
             input_title="Old",
             true_title="Old Journal",
             publisher="Pub",
-            ISSN="0036-8075",
+            issn="0036-8075",
             start_year=2000,
             end_year=2024,
             update=old_date,
         ),
-        # This one is MISSING (ISSN is None)
+        # This one is MISSING (issn is None)
         JournalMetadata(
             input_title="Missing",
             true_title=None,
             publisher=None,
-            ISSN=None,
+            issn=None,
             start_year=None,
             end_year=None,
             update=recent_date,
@@ -536,7 +536,7 @@ def test_update_all_priority_and_limit(
             input_title="Recent",
             true_title="Recent Journal",
             publisher="Pub",
-            ISSN="0010-051X",
+            issn="0010-051X",
             start_year=2020,
             end_year=2024,
             update=recent_date,
@@ -548,7 +548,7 @@ def test_update_all_priority_and_limit(
             input_title="Missing",
             true_title="Missing Journal",
             publisher="Pub",
-            ISSN="2049-3630",
+            issn="2049-3630",
             start_year=2000,
             end_year=2024,
             update=str(today),
@@ -576,7 +576,7 @@ def test_update_all_priority_and_limit(
         # "Old" (O) -> "Recent" (R)
         assert repo.records[0].input_title == "Missing"
         assert (
-            repo.records[0].ISSN == "2049-3630"
+            repo.records[0].issn == "2049-3630"
         )  # Verifies the API update took effect
 
         assert repo.records[1].input_title == "Old"
@@ -606,7 +606,7 @@ def test_update_all_sorting_logic_strict(repo: JournalRepository) -> None:
             input_title="Alpha Missing",
             true_title=None,
             publisher=None,
-            ISSN=None,
+            issn=None,
             start_year=None,
             end_year=None,
             update=recent_date,
@@ -616,7 +616,7 @@ def test_update_all_sorting_logic_strict(repo: JournalRepository) -> None:
             input_title="Zulu Complete",
             true_title="Zulu Journal",
             publisher="Pub",
-            ISSN="1752-0894",
+            issn="1752-0894",
             start_year=2020,
             end_year=2026,
             update=recent_date,
@@ -626,7 +626,7 @@ def test_update_all_sorting_logic_strict(repo: JournalRepository) -> None:
             input_title="Mike Missing",
             true_title=None,
             publisher=None,
-            ISSN=None,
+            issn=None,
             start_year=None,
             end_year=None,
             update=recent_date,
@@ -636,7 +636,7 @@ def test_update_all_sorting_logic_strict(repo: JournalRepository) -> None:
             input_title="Bravo Complete",
             true_title="Bravo Journal",
             publisher="Pub",
-            ISSN="0361-0160",
+            issn="0361-0160",
             start_year=2010,
             end_year=2026,
             update=recent_date,

@@ -62,7 +62,7 @@ dev = [
 requires-dist = [
     { name = "citeproc-py", specifier = ">=0.9.3" },
     { name = "click", specifier = ">=8.3.3" },
-    { name = "defusedxml", specifier = ">=0.7.1" },
+    { name = "defusedxml" },
     { name = "email-validator", specifier = ">=2.3.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pydantic-settings", specifier = ">=2.14.1" },

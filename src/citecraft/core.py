@@ -234,7 +234,7 @@ class WorkUpdateStep:
                 "Updating local works database for target ISSNs.",
                 extra={"step": self.name, "issns_count": len(issns) if issns else 0},
             )
-            ctx.work_repo.update_all(ISSNs=issns)
+            ctx.work_repo.update_all(issns=issns)
         else:
             logger.info(
                 "Skipped finding and linking work DOI to citations via flag.",
@@ -369,7 +369,7 @@ class ExportStep:
                         AnomalousJournal(
                             input_title=j.input_title,
                             status=j.status,
-                            issn=j.ISSN or "",
+                            issn=j.issn or "",
                             issns_found=", ".join(all_found_issns)
                             if all_found_issns
                             else "",

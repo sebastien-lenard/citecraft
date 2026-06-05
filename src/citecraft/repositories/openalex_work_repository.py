@@ -41,12 +41,12 @@ class OpenAlexWorkRepository(WorkRepository):
         self,
         input_first_authors_txt: str,
         year_int: int,
-        input_ISSNs: list[str],
+        input_issns: list[str],
         keywords: str = "",
         get_limit: int | None = None,
     ) -> list[dict] | None:
         """Return the list of items fetched by the api call."""
-        if not input_ISSNs:
+        if not input_issns:
             logger.warning(
                 "%s needs at least one ISSN.",
                 type(self).__qualname__,
@@ -56,17 +56,17 @@ class OpenAlexWorkRepository(WorkRepository):
             )
             return []
 
-        if len(input_ISSNs) > self.config.openalex_api_max_piped_filters:
+        if len(input_issns) > self.config.openalex_api_max_piped_filters:
             logger.warning(
                 (
                     "OpenAlex API accepts a maximum of 100 ISSNs for a filter"
                     " parameter: %d provided."
                 ),
-                len(input_ISSNs),
+                len(input_issns),
                 extra={
                     "event": "openalex_work_api_too_many_issns",
-                    "ISSNs": ", ".join(input_ISSNs),
-                    "count_of_ISSNs": len(input_ISSNs),
+                    "issns": ", ".join(input_issns),
+                    "count_of_issns": len(input_issns),
                 },
             )
             return []
@@ -90,7 +90,7 @@ class OpenAlexWorkRepository(WorkRepository):
             else self.config.openalex_api_works_get_limit
         )
 
-        issn_filter_str = "|".join(input_ISSNs)
+        issn_filter_str = "|".join(input_issns)
         filters = (
             f"publication_year:{year_int},"
             f"primary_location.source.issn:{issn_filter_str},"
@@ -130,13 +130,13 @@ class OpenAlexWorkRepository(WorkRepository):
         return None
 
     @override
-    def _get_ISSNs_groups_for_api(self, ISSNs: list[str]) -> list[list[str]]:
+    def _get_issns_groups_for_api(self, issns: list[str]) -> list[list[str]]:
         """Split ISSNs in groups that can be used as filters (OR) by API."""
-        ISSNs_groups = []
+        issns_groups = []
         current_group = []
         current_length = 0
 
-        for issn in ISSNs:
+        for issn in issns:
             # Calculate length with the "|" delimiter included (if not the first item)
             delimiter_penalty = 1 if current_group else 0
             potential_length = current_length + len(issn) + delimiter_penalty
@@ -148,15 +148,15 @@ class OpenAlexWorkRepository(WorkRepository):
                 current_length = potential_length
             else:
                 if current_group:
-                    ISSNs_groups.append(current_group)
+                    issns_groups.append(current_group)
                 current_group = [issn]
                 current_length = len(issn)
 
         # Append the final remaining group
         if current_group:
-            ISSNs_groups.append(current_group)
+            issns_groups.append(current_group)
 
-        return ISSNs_groups
+        return issns_groups
 
     @override
     def _get_type_from_api_item(self, item: dict) -> str | None:

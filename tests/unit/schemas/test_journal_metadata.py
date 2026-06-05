@@ -11,14 +11,14 @@ def test_journal_metadata_defaults() -> None:
     """Ensure optional fields default to None and update dates fallback to today."""
     journal = JournalMetadata(input_title="Science")
 
-    assert journal.ISSN is None
+    assert journal.issn is None
     assert journal.similar_titles is None
     assert journal.update == str(date.today())
 
 
 def test_journal_metadata_identity_key() -> None:
     """Ensure deduplication identity matches mapped title and ISSN coordinates."""
-    journal = JournalMetadata(input_title="Nature", ISSN="0028-0836")
+    journal = JournalMetadata(input_title="Nature", issn="0028-0836")
 
     assert journal.identity_key == ("Nature", "0028-0836")
 
@@ -73,7 +73,7 @@ def test_journal_metadata_completeness_logic() -> None:
         input_title="Nature Geoscience",
         true_title="Nature Geoscience",
         publisher="Nature Portfolio",
-        ISSN="1752-0894",
+        issn="1752-0894",
         start_year=2008,
         end_year=2026,
     )
@@ -83,7 +83,7 @@ def test_journal_metadata_completeness_logic() -> None:
         input_title="Nature Geo",
         true_title="Nature Geoscience",
         publisher="Nature Portfolio",
-        ISSN="1752-0894",
+        issn="1752-0894",
         start_year=2008,
         end_year=2026,
         similar_titles=["Nature Geoscience", "Nature Geography"],
@@ -100,7 +100,7 @@ def test_journal_metadata_status_property() -> None:
         input_title="Nature Physics",
         true_title="Nature Physics",
         publisher="Springer",
-        ISSN=None,
+        issn=None,
     )
     assert j_no_issn.status == "Found without ISSN"
 
@@ -108,7 +108,7 @@ def test_journal_metadata_status_property() -> None:
         input_title="Empty Journal",
         true_title="Empty Journal",
         publisher="Silent Publisher",
-        ISSN="0169-555X",
+        issn="0169-555X",
         start_year=None,
         end_year=None,
     )
@@ -118,7 +118,7 @@ def test_journal_metadata_status_property() -> None:
         input_title="Science",
         true_title="Science",
         publisher="AAAS",
-        ISSN="0036-8075",
+        issn="0036-8075",
         start_year=1880,
         end_year=2026,
     )

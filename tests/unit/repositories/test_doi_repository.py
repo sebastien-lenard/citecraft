@@ -121,7 +121,7 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
     test_config = test_config.model_copy(
         update={
             "work_crossref_schema_blacklist_fields": [
-                "ISSNs",
+                "issns",
                 "assertion",
                 "is-referenced-by-count",
             ],
@@ -136,7 +136,7 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
 
     mock_raw_csl = {
         "DOI": "10.1038/s41561-020-0585-2",
-        "ISSNs": ["1752-0894"],
+        "issns": ["1752-0894"],
         "is-referenced-by-count": 79,
         "assertion": [{"label": "Received"}],
         "title": "Steady erosion rates in the Himalayas",
@@ -162,7 +162,7 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
 
         assert "DOI" in filtered_result
         assert "title" in filtered_result
-        assert "ISSNs" not in filtered_result
+        assert "issns" not in filtered_result
         assert "is-referenced-by-count" not in filtered_result
         assert "assertion" not in filtered_result
 

@@ -26,7 +26,7 @@ from citecraft.utils import AppConfig
 class MockJournalRecord:
     input_title: str
     status: str
-    ISSN: str | None
+    issn: str | None
 
 
 @pytest.fixture
@@ -281,7 +281,7 @@ def test_export_step_extracts_anomalous_journals(
     mock_journal_inst = mock_pipeline_dependencies["journal"].return_value
     mock_journal_inst.records = [
         MockJournalRecord(
-            input_title="Errant Journal", status="NOT_FOUND", ISSN="1234-5678"
+            input_title="Errant Journal", status="NOT_FOUND", issn="1234-5678"
         )
     ]
     mock_journal_inst.get_issns_by_input_title.return_value = ["1234-5678"]

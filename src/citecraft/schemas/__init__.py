@@ -6,7 +6,7 @@ from .csl_date import CSLDate
 from .csl_name import CSLName
 from .csl_reference import CSLReference
 from .doi_type import DOIType, check_standalone_doi
-from .issn_type import ISSNType, check_standalone_issn
+from .issn_type import IssnType, check_standalone_issn
 from .journal_metadata import JournalMetadata
 from .types import HttpsUrlStr, UrlWithObjectName
 from .work_metadata import WorkMetadata
@@ -20,7 +20,7 @@ __all__ = [
     "CrossrefAuthor",
     "DOIType",
     "HttpsUrlStr",
-    "ISSNType",
+    "IssnType",
     "JournalMetadata",
     "UrlWithObjectName",
     "WorkMetadata",

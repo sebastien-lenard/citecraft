@@ -34,7 +34,7 @@ def test_call_work_api_success(repo: OpenAlexWorkRepository) -> None:
         items = repo._call_work_api(
             input_first_authors_txt="Lenard",
             year_int=2020,
-            input_ISSNs=["1752-0894"],
+            input_issns=["1752-0894"],
         )
 
         assert items == [{"doi": "https://doi.org/10.1001"}]
@@ -53,7 +53,7 @@ def test_call_work_api_no_issns_fails(
     items = repo._call_work_api(
         input_first_authors_txt="Lenard",
         year_int=2020,
-        input_ISSNs=[],
+        input_issns=[],
     )
     assert items == []
     assert any("needs at least one ISSN" in r.message for r in caplog.records)
@@ -69,7 +69,7 @@ def test_call_work_api_too_many_issns_fails(
     items = repo._call_work_api(
         input_first_authors_txt="Lenard",
         year_int=2020,
-        input_ISSNs=many_issns,
+        input_issns=many_issns,
     )
     assert items == []
     assert any("maximum of 100 ISSNs" in r.message for r in caplog.records)
@@ -106,7 +106,7 @@ def test_get_issns_groups_for_api(repo: OpenAlexWorkRepository) -> None:
     # 1111-1111 (9 chars)
     # |2222-2222 (10 chars penalty) -> 19 chars (valid < 20)
     # |3333-3333 would exceed 20 limit.
-    groups = repo._get_ISSNs_groups_for_api(issns)
+    groups = repo._get_issns_groups_for_api(issns)
     assert groups == [["1111-1111", "2222-2222"], ["3333-3333"]]
 
 
@@ -220,7 +220,7 @@ def test_call_work_api_calls_build_author_api_filter(
     items = repo._call_work_api(
         input_first_authors_txt="Too Many Authors et al.",
         year_int=2020,
-        input_ISSNs=["1752-0894"],
+        input_issns=["1752-0894"],
     )
 
     assert items == []

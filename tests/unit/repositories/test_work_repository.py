@@ -138,12 +138,12 @@ def test_get_work_metadata_parsing_scenarios(
 
     results = repo.get_work_metadata(
         CitationMetadata(first_authors_txt="Lenard et al.", year_and_suffix="2020"),
-        input_ISSNs=["1752-0894"],
+        input_issns=["1752-0894"],
     )
 
     assert len(results) == expected_length
     if expected_length > 0:
-        assert results[0].DOI == expected_first_doi
+        assert expected_first_doi == results[0].DOI
         assert results[0].type == expected_first_type
 
 
@@ -166,7 +166,7 @@ def test_get_work_metadata_verifies_internal_calls(repo: WorkRepository) -> None
 
     results = repo.get_work_metadata(
         CitationMetadata(first_authors_txt="Lenard", year_and_suffix="2020"),
-        input_ISSNs=["0361-0160"],
+        input_issns=["0361-0160"],
     )
 
     assert len(results) == 1
@@ -222,7 +222,7 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
             first_authors_txt="Guns et al.",
             year_and_suffix="2014",
         ),
-        input_ISSNs=["0361-0160"],
+        input_issns=["0361-0160"],
     )
     assert len(results) == 2
     assert results[0].DOI == "10.1029/98jb00510"
@@ -328,7 +328,7 @@ def test_validate_first_authors_count(
                 WorkMetadata(
                     input_first_authors_txt="Lenard et al.",
                     input_year_and_suffix="2020a",
-                    input_ISSNs=["1752-0894"],
+                    input_issns=["1752-0894"],
                     DOI="10.1038/s41561-020-0585-2",
                 )
             ],
@@ -365,9 +365,9 @@ def test_merge_new_works_scenarios(
 
     assert len(repo) == expected_final_count
     if expected_final_count > 0:
-        assert repo.records[0].DOI == expected_first_doi
+        assert expected_first_doi == repo.records[0].DOI
         expected_issns = [expected_first_issn] if expected_first_issn else None
-        assert repo.records[0].input_ISSNs == expected_issns
+        assert repo.records[0].input_issns == expected_issns
 
 
 def test_update_all_replaces_template_with_rich_record(
@@ -375,7 +375,7 @@ def test_update_all_replaces_template_with_rich_record(
 ) -> None:
     """Verify that a record without a DOI is updated when get_work_metadata returns."""
     caplog.set_level(logging.INFO)
-    repo._get_ISSNs_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
+    repo._get_issns_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
 
     template = WorkMetadata(
         input_first_authors_txt="Lenard et al.", input_year_and_suffix="2020a"
@@ -390,7 +390,7 @@ def test_update_all_replaces_template_with_rich_record(
     mock_rich_result = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
-        input_ISSNs=["1752-0894"],
+        input_issns=["1752-0894"],
         DOI="10.5194/esurf-8-447-2020",
         type="journal-article",
     )
@@ -398,7 +398,7 @@ def test_update_all_replaces_template_with_rich_record(
     with patch.object(
         repo, "get_work_metadata", return_value=[mock_rich_result]
     ) as mock_get:
-        repo.update_all(ISSNs=["1752-0894"])
+        repo.update_all(issns=["1752-0894"])
 
         assert "Work resolution completed. Updated: 1, Failed: 0" in caplog.text
         assert mock_get.call_count == 1
@@ -412,7 +412,7 @@ def test_update_all_replaces_template_with_rich_record(
             r for r in repo.records if r.input_first_authors_txt == "Lenard et al."
         )
         assert updated_record.DOI == "10.5194/esurf-8-447-2020"
-        assert updated_record.input_ISSNs == ["1752-0894"]
+        assert updated_record.input_issns == ["1752-0894"]
 
 
 def test_update_all_skips_if_no_results_found(
@@ -420,7 +420,7 @@ def test_update_all_skips_if_no_results_found(
 ) -> None:
     """Verify that if get_work_metadata returns nothing, template is untouched."""
     caplog.set_level(logging.INFO)
-    repo._get_ISSNs_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
+    repo._get_issns_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
 
     template = WorkMetadata(
         input_first_authors_txt="Unknown", input_year_and_suffix="2024"
@@ -428,7 +428,7 @@ def test_update_all_skips_if_no_results_found(
     repo.records = [template]
 
     with patch.object(repo, "get_work_metadata", return_value=[]):
-        repo.update_all(ISSNs=["0361-0160"])
+        repo.update_all(issns=["0361-0160"])
 
         assert "No work found for Unknown, 2024." in caplog.text
         assert "Work resolution completed. Updated: 0, Failed: 1" in caplog.text
@@ -441,12 +441,12 @@ def test_update_all_filters_already_queried_issns(
 ) -> None:
     """Verify that update_all queries only the new ISSNs."""
     caplog.set_level(logging.INFO)
-    repo._get_ISSNs_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
+    repo._get_issns_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
 
     template = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
-        looked_up_ISSNs=["0361-0160"],
+        looked_up_issns=["0361-0160"],
     )
     repo.records = [template]
 
@@ -454,7 +454,7 @@ def test_update_all_filters_already_queried_issns(
     mock_rich_result = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
-        input_ISSNs=["2222-2222"],
+        input_issns=["2222-2222"],
         DOI="10.1038/s41561-020-0585-2",
         type="journal-article",
     )
@@ -463,22 +463,22 @@ def test_update_all_filters_already_queried_issns(
         repo, "get_work_metadata", return_value=[mock_rich_result]
     ) as mock_get:
         # Call update_all with both old and new ISSNs
-        repo.update_all(ISSNs=["0361-0160", "1752-0894"])
+        repo.update_all(issns=["0361-0160", "1752-0894"])
 
         # Check that get_work_metadata was called exactly once, with the new ISSN
         mock_get.assert_called_once_with(
             input_citation_metadata=CitationMetadata(
                 first_authors_txt="Lenard et al.", year_and_suffix="2020a"
             ),
-            input_ISSNs=["1752-0894"],
+            input_issns=["1752-0894"],
         )
 
-        repo._get_ISSNs_groups_for_api.assert_called_once_with(["1752-0894"])
+        repo._get_issns_groups_for_api.assert_called_once_with(["1752-0894"])
         assert "on 1 new ISSNs" in caplog.text
 
         # Verify that both ISSNs are now marked as looked up on the resolved record
         updated_record = repo.records[0]
-        assert updated_record.looked_up_ISSNs == ["0361-0160", "1752-0894"]
+        assert updated_record.looked_up_issns == ["0361-0160", "1752-0894"]
 
 
 def test_update_all_skips_when_all_issns_previously_queried(
@@ -490,12 +490,12 @@ def test_update_all_skips_when_all_issns_previously_queried(
     template = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
-        looked_up_ISSNs=["0010-051x", "1752-0894"],
+        looked_up_issns=["0010-051x", "1752-0894"],
     )
     repo.records = [template]
 
     with patch.object(repo, "get_work_metadata") as mock_get:
-        repo.update_all(ISSNs=["0010-051x", "1752-0894"])
+        repo.update_all(issns=["0010-051x", "1752-0894"])
 
         # API should not be called at all
         mock_get.assert_not_called()
@@ -513,18 +513,18 @@ def test_update_all_updates_history_on_failure(
 ) -> None:
     """Verify queried ISSNs are appended to history on failure."""
     caplog.set_level(logging.INFO)
-    repo._get_ISSNs_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
+    repo._get_issns_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
 
     template = WorkMetadata(
         input_first_authors_txt="Unresolvable et al.",
         input_year_and_suffix="2023",
-        looked_up_ISSNs=["0010-051x"],
+        looked_up_issns=["0010-051x"],
     )
     repo.records = [template]
 
     with patch.object(repo, "get_work_metadata", return_value=[]):
-        repo.update_all(ISSNs=["0010-051x", "2049-3630"])
+        repo.update_all(issns=["0010-051x", "2049-3630"])
 
         assert len(repo.records) == 1
         # The template record is retained and its lookup list now includes the new ISSN
-        assert repo.records[0].looked_up_ISSNs == ["0010-051x", "2049-3630"]
+        assert repo.records[0].looked_up_issns == ["0010-051x", "2049-3630"]

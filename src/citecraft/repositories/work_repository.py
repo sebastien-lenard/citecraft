@@ -32,7 +32,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         self,
         input_first_authors_txt: str,
         year_int: int,
-        input_ISSNs: list[str],
+        input_issns: list[str],
         keywords: str = "",
         get_limit: int | None = None,
     ) -> list[dict] | None:
@@ -49,9 +49,9 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         """Get doi of an item returned by the api"""
         raise NotImplementedError("Subclasses must implement _get_doi_from_api_item")
 
-    def _get_ISSNs_groups_for_api(self, ISSNs: list[str]) -> list[list[str]]:
+    def _get_issns_groups_for_api(self, issns: list[str]) -> list[list[str]]:
         """Split ISSNs in groups that can be used as filters by API."""
-        raise NotImplementedError("Subclasses must implement _get_ISSNs_groups_for_api")
+        raise NotImplementedError("Subclasses must implement _get_issns_groups_for_api")
 
     def _get_type_from_api_item(self, item: dict) -> str | None:
         """Get type of an item returned by the api"""
@@ -73,29 +73,26 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             " et al." in input_first_authors_txt,
         )
 
-    def add_work_metadata(self, input_DOI: str) -> WorkMetadata:
-        """Fetch work metadata and create a new record"""
-
     def get_work_metadata(
         self,
         input_citation_metadata: CitationMetadata,
-        input_ISSNs: list[str],
+        input_issns: list[str],
         keywords: str = "",
         get_limit: int | None = None,
     ) -> list[WorkMetadata]:
         """Query API to retrieve and validate metadata for a given citation.
         Get work metadata, including dois, from unstructured info combining the
         first_authors of input_citation_metadata and keywords, with results filtered on
-        the year of input_citation_metadata and input_ISSNs. Number of results is capped
+        the year of input_citation_metadata and input_issns. Number of results is capped
         by get_limit. Works without authors are excluded.
         Warning: This method uses the crossref or openalex api, mostly based on article
         metadata and giving irrelevant dois if words of the work title are not in
-        keywords. The filter by valid input_ISSNs (issns of one or several journals)
+        keywords. The filter by valid input_issns (issns of one or several journals)
         is essential to circumvent that effect.
         """
-        if not input_ISSNs:
+        if not input_issns:
             raise ValueError(
-                "input_ISSN is an obligatory argument (valid issn of a journal)"
+                "input_issn is an obligatory argument (valid issn of a journal)"
             )
         input_first_authors_txt = input_citation_metadata.first_authors_txt
         input_year_and_suffix = input_citation_metadata.year_and_suffix
@@ -122,7 +119,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         items = self._call_work_api(
             input_first_authors_txt,
             year_int,
-            input_ISSNs,
+            input_issns,
             keywords,
             get_limit=get_limit,
         )
@@ -152,7 +149,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                     work_metadata = WorkMetadata(
                         input_first_authors_txt=input_first_authors_txt,
                         input_year_and_suffix=input_year_and_suffix,
-                        input_ISSNs=input_ISSNs,
+                        input_issns=input_issns,
                         DOI=doi,
                         type=self._get_type_from_api_item(item),
                     )
@@ -197,7 +194,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
     def _clean_metadata(
         self,
         metadata: dict,
-        work_blacklist_fields: dict[str],
+        work_blacklist_fields: list[str],
         author_key: str | None = None,
         author_blacklist_fields: list[str] | None = None,
     ) -> dict:
@@ -301,9 +298,9 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         """Update the metadata correct attribute and returns object."""
         raise NotImplementedError("Subclasses must implement set_metadata_attribute")
 
-    def update_all(self, ISSNs: list[str]) -> None:
+    def update_all(self, issns: list[str]) -> None:
         """Query API to find and commit DOIs for unpopulated works.
-        ISSNs filter API results. Previously queried ISSNs are ignored.
+        issns filter API results. Previously queried issns are ignored.
         """
         # 1. Identify templates needing info
         templates_to_process = [r for r in self.records if not r.DOI]
@@ -320,10 +317,10 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                 year_and_suffix=record.input_year_and_suffix,
             )
 
-            already_looked_up = record.looked_up_ISSNs or []
-            filtered_ISSNs = [issn for issn in ISSNs if issn not in already_looked_up]
+            already_looked_up = record.looked_up_issns or []
+            filtered_issns = [issn for issn in issns if issn not in already_looked_up]
 
-            if not filtered_ISSNs:
+            if not filtered_issns:
                 logger.warning(
                     (
                         "All provided ISSNs already searched for citation (%s, %s). "
@@ -335,7 +332,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                         "event": "skip_all_issns_already_searched",
                         "author": citation_info.first_authors_txt,
                         "year": citation_info.year_and_suffix,
-                        "looked_up_ISSNs": already_looked_up,
+                        "looked_up_issns": already_looked_up,
                     },
                 )
                 continue
@@ -347,33 +344,33 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                 ),
                 citation_info.first_authors_txt,
                 citation_info.year_and_suffix,
-                len(filtered_ISSNs),
+                len(filtered_issns),
                 extra={
                     "status": "OK",
                     "event": "api_work_query_start",
                     "first_authors_txt": citation_info.first_authors_txt,
                     "year_and_suffix": citation_info.year_and_suffix,
-                    "filtered_issns_count": len(filtered_ISSNs),
+                    "filtered_issns_count": len(filtered_issns),
                 },
             )
 
             found_for_this_record = False
             updated_lookups = list(already_looked_up)
 
-            groups_of_ISSNs = self._get_ISSNs_groups_for_api(filtered_ISSNs)
-            for grp_ISSNs in groups_of_ISSNs:
+            groups_of_issns = self._get_issns_groups_for_api(filtered_issns)
+            for grp_issns in groups_of_issns:
                 results = self.get_work_metadata(
-                    input_citation_metadata=citation_info, input_ISSNs=grp_ISSNs
+                    input_citation_metadata=citation_info, input_issns=grp_issns
                 )
 
                 if results:
                     new_rich_records.extend(results)
                     found_for_this_record = True
 
-            looked_up_ISSNs = sorted(set(already_looked_up + filtered_ISSNs))
-            record.looked_up_ISSNs = looked_up_ISSNs
+            looked_up_issns = sorted(set(already_looked_up + filtered_issns))
+            record.looked_up_issns = looked_up_issns
             for r in new_rich_records:
-                r.looked_up_ISSNs = looked_up_ISSNs
+                r.looked_up_issns = looked_up_issns
 
             if found_for_this_record:
                 processed_templates.append(record)
@@ -387,7 +384,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                         "event": "work_resolution_failed",
                         "author": citation_info.first_authors_txt,
                         "year": citation_info.year_and_suffix,
-                        "looked_up_ISSNs": updated_lookups,
+                        "looked_up_issns": updated_lookups,
                     },
                 )
 

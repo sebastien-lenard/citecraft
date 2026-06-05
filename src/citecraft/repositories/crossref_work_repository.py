@@ -28,26 +28,26 @@ class CrossrefWorkRepository(WorkRepository):
         self,
         input_first_authors_txt: str,
         year_int: int,
-        input_ISSNs: list[str],
+        input_issns: list[str],
         keywords: str = "",
         get_limit: int | None = None,
     ) -> list[dict] | None:
         """Return the list of items fetched by the api call."""
-        if not input_ISSNs:
+        if not input_issns:
             logger.warning(
                 "%s needs at least one ISSN.",
                 type(self).__qualname__,
                 extra={"event": "crossref_work_api_no_issn"},
             )
             return []
-        elif len(input_ISSNs) != 1:
+        if len(input_issns) != 1:
             logger.warning(
                 "%s only accepts one ISSN but several are provided: %s.",
                 type(self).__qualname__,
-                ", ".join(input_ISSNs),
+                ", ".join(input_issns),
                 extra={
                     "event": "crossref_work_api_several_issns",
-                    "ISSNs": ", ".join(input_ISSNs),
+                    "issns": ", ".join(input_issns),
                 },
             )
             return []
@@ -58,7 +58,7 @@ class CrossrefWorkRepository(WorkRepository):
             else self.config.crossref_api_works_get_limit
         )
 
-        issn_filter = input_ISSNs[0]
+        issn_filter = input_issns[0]
         filter_str = (
             f"from-pub-date:{year_int},until-pub-date:{year_int},issn:{issn_filter}"
         )
@@ -91,9 +91,9 @@ class CrossrefWorkRepository(WorkRepository):
         return item["DOI"] if "DOI" in item else None
 
     @override
-    def _get_ISSNs_groups_for_api(self, ISSNs: list[str]) -> list[list[str]]:
+    def _get_issns_groups_for_api(self, issns: list[str]) -> list[list[str]]:
         """Split ISSNs in groups that can be used as filters by API."""
-        return [[issn] for issn in ISSNs]
+        return [[issn] for issn in issns]
 
     @override
     def _get_type_from_api_item(self, item: dict) -> str | None:

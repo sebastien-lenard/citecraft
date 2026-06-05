@@ -65,9 +65,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return sorted(
             list(
                 {
-                    r.ISSN
+                    r.issn
                     for r in self.records
-                    if r.input_title == input_title and r.ISSN is not None
+                    if r.input_title == input_title and r.issn is not None
                 }
             )
         )
@@ -84,9 +84,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         unique_issns: set[str] = set()
 
         for record in self.records:
-            if record.ISSN:
+            if record.issn:
                 if self.normalize_title(record.input_title) in required_normalized:
-                    unique_issns.add(record.ISSN)
+                    unique_issns.add(record.issn)
 
         return sorted(list(unique_issns))
 
@@ -196,7 +196,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         for item in working_items:
             true_title = item.get("title", "")
             publisher = item.get("publisher", "")
-            issns = list(dict.fromkeys(item.get("ISSN", [])))  # remove duplicate ISSNs
+
+            # remove duplicate ISSNs, get MUST be on ISSN.
+            issns = list(dict.fromkeys(item.get("ISSN", [])))
             if not issns:
                 logger.warning(
                     "Journal %s found but contains no ISSN metadata.",
@@ -213,7 +215,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                         input_title=input_title,
                         true_title=true_title,
                         publisher=publisher,
-                        ISSN=None,
+                        issn=None,
                         start_year=None,
                         end_year=None,
                         similar_titles=similar_titles,
@@ -270,7 +272,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                         input_title=input_title,
                         true_title=true_title,
                         publisher=publisher,
-                        ISSN=issn,
+                        issn=issn,
                         start_year=dates["min_year"],
                         end_year=dates["max_year"],
                         similar_titles=similar_titles,
@@ -293,6 +295,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         url = self.config.crossref_api_journals_issn_url.replace(
             "{object_name}", str(issn)
         )
+
         response, _ = self.http_client_wrapper.get(
             url,
             params=params,

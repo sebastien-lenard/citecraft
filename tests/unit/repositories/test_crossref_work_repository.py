@@ -36,7 +36,7 @@ def test_call_work_api_success(repo: CrossrefWorkRepository) -> None:
         items = repo._call_work_api(
             input_first_authors_txt="Lenard",
             year_int=2020,
-            input_ISSNs=["1752-0894"],
+            input_issns=["1752-0894"],
         )
 
         assert items == [{"DOI": "10.1038/s41561-020-0585-2"}]
@@ -57,7 +57,7 @@ def test_call_work_api_multiple_issns_fails(
         items = repo._call_work_api(
             input_first_authors_txt="Lenard",
             year_int=2020,
-            input_ISSNs=["1111-1111", "2222-2222"],
+            input_issns=["1111-1111", "2222-2222"],
         )
 
         assert items == []
@@ -88,7 +88,7 @@ def test_get_doi_from_api_item(repo: CrossrefWorkRepository) -> None:
 
 def test_get_issns_groups_for_api(repo: CrossrefWorkRepository) -> None:
     """Verify that ISSNs are split into singleton lists for Crossref queries."""
-    assert repo._get_ISSNs_groups_for_api(["1111-1111", "2222-2222"]) == [
+    assert repo._get_issns_groups_for_api(["1111-1111", "2222-2222"]) == [
         ["1111-1111"],
         ["2222-2222"],
     ]

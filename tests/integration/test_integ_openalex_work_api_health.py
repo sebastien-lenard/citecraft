@@ -32,7 +32,7 @@ def test_integ_openalex_works_api_health(test_config: AppConfig) -> None:
             first_authors_txt=test_author,
             year_and_suffix=test_year,
         ),
-        input_ISSNs=test_issns,
+        input_issns=test_issns,
         keywords=test_keywords,
         get_limit=requested_limit,
     )
@@ -64,7 +64,7 @@ def test_integ_openalex_works_api_health(test_config: AppConfig) -> None:
             first_authors_txt=test_author_2,
             year_and_suffix=test_year_2,
         ),
-        input_ISSNs=[test_issn_2],
+        input_issns=[test_issn_2],
         keywords=test_keywords,
         get_limit=1,
     )
