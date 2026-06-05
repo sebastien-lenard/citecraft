@@ -118,9 +118,9 @@ class HTTPClientWrapper:
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
         max_retries: int | None = None,
-    ) -> tuple[httpx.Response | None, int]:
+    ) -> tuple[httpx.Response | None, str]:
         """Perform a retried GET request with status verification. Returns response
-        and predicted url character length.
+        and predicted url.
         Fatal errors (like 401, 403, 404) raise immediately.
         """
         target_url = str(url)
@@ -169,7 +169,7 @@ class HTTPClientWrapper:
                     "url": str(request.url),
                 },
             )
-            return (None, predicted_url_length)
+            return (None, str(request.url))
 
         def _execute_request() -> httpx.Response:
             resp = self.client.send(request)
@@ -188,7 +188,7 @@ class HTTPClientWrapper:
                     "status_code": response.status_code,
                 },
             )
-            return (response, predicted_url_length)
+            return (response, str(request.url))
 
         except httpx.HTTPStatusError as e:
             logger.error(

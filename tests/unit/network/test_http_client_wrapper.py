@@ -28,11 +28,11 @@ def test_get_success(wrapper: HTTPClientWrapper) -> None:
     mock_response.status_code = 200
 
     with patch.object(wrapper.client, "send", return_value=mock_response) as mock_send:
-        response, length = wrapper.get("https://api.test.com")
+        response, predicted_url = wrapper.get("https://api.test.com")
 
         assert response == mock_response
         assert mock_send.call_count == 1
-        assert length > 0
+        assert predicted_url.startswith("https://api.test.com")
 
 
 @pytest.mark.parametrize(
@@ -207,10 +207,10 @@ def test_get_max_url_length_exceeded(
     """Verify that exceeding the URL limit prevents the request and logs a warning."""
     wrapper.url_max_character_length = 10
 
-    response, length = wrapper.get("https://api.test.com/some/very/long/path")
+    response, predicted_url = wrapper.get("https://api.test.com/some/very/long/path")
 
     assert response is None
-    assert length > 10
+    assert len(predicted_url) > 10
     assert any("Request not sent" in record.message for record in caplog.records)
 
 

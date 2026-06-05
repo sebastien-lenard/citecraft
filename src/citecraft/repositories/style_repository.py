@@ -70,12 +70,17 @@ class StyleRepository:
         )
 
         try:
-            response, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            response, predicted_url = self.http_client_wrapper.get(
+                url, headers=self.headers
+            )
             if response is None:
                 logger.warning(
                     "No CSL response received from URL: %s",
-                    url,
-                    extra={"event": "no_csl_url_response", "url": url},
+                    predicted_url,
+                    extra={
+                        "event": "no_csl_url_response",
+                        "predicted_url": predicted_url,
+                    },
                 )
                 self.csl_content = None
                 return
@@ -131,9 +136,13 @@ class StyleRepository:
         # 1. Fetch remote Zotero styles index
         url = str(self.config.all_styles_repo_url)
         try:
-            response, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            response, predicted_url = self.http_client_wrapper.get(
+                url, headers=self.headers
+            )
             if response is None:
-                raise ValueError(f"Empty index response received from URL: {url}")
+                raise ValueError(
+                    f"Empty index response received from URL: {predicted_url}"
+                )
             response.raise_for_status()
             styles_list = response.json()
         except (httpx.HTTPError, ValueError) as e:
@@ -218,10 +227,12 @@ class StyleRepository:
 
         response = None
         try:
-            response_obj, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            response_obj, predicted_url = self.http_client_wrapper.get(
+                url, headers=self.headers
+            )
             if response_obj is None:
                 raise ValueError(
-                    f"No response payload returned from style endpoint: {url}"
+                    f"No response payload returned from style endpoint: {predicted_url}"
                 )
 
             response = response_obj
