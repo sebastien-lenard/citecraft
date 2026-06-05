@@ -2,6 +2,7 @@
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
+from urllib.parse import urlparse
 
 import httpx
 import pytest
@@ -32,7 +33,8 @@ def test_get_success(wrapper: HTTPClientWrapper) -> None:
 
         assert response == mock_response
         assert mock_send.call_count == 1
-        assert predicted_url.startswith("https://api.test.com")
+        host = urlparse(predicted_url).hostname
+        assert host == "api.test.com"
 
 
 @pytest.mark.parametrize(
