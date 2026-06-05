@@ -5,7 +5,7 @@ from .crossref_author import CrossrefAuthor
 from .csl_date import CSLDate
 from .csl_name import CSLName
 from .csl_reference import CSLReference
-from .doi_type import DOIType, check_standalone_doi
+from .doi_type import DoiType, check_standalone_doi
 from .issn_type import IssnType, check_standalone_issn
 from .journal_metadata import JournalMetadata
 from .types import HttpsUrlStr, UrlWithObjectName
@@ -18,7 +18,7 @@ __all__ = [
     "CSLReference",
     "CitationMetadata",
     "CrossrefAuthor",
-    "DOIType",
+    "DoiType",
     "HttpsUrlStr",
     "IssnType",
     "JournalMetadata",

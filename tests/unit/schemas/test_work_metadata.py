@@ -13,7 +13,7 @@ def test_work_metadata_instantiation_defaults() -> None:
     )
 
     assert work.input_issns == ["1752-0894"]
-    assert work.DOI is None
+    assert work.doi is None
     assert work.raw_reference is None
     assert work.reference is None
     assert work.style is None
@@ -28,7 +28,7 @@ def test_work_metadata_identity_key_with_none_doi() -> None:
         input_first_authors_txt="Smith",
         input_year_and_suffix="2022",
         input_issns=["1234-5678"],
-        DOI=None,
+        doi=None,
     )
 
     expected_key = ("Smith", "2022", None)
@@ -41,7 +41,7 @@ def test_work_metadata_identity_key_with_none_input_issn_and_doi() -> None:
         input_first_authors_txt="Smith",
         input_year_and_suffix="2022",
         input_issns=None,
-        DOI=None,
+        doi=None,
     )
 
     expected_key = ("Smith", "2022", None)
@@ -54,14 +54,14 @@ def test_work_metadata_identity_key_with_actual_doi() -> None:
         input_first_authors_txt="Guns and Vanacker",
         input_year_and_suffix="2021",
         input_issns=["0016-7606"],
-        DOI="10.1130/g49244.1",
+        doi="10.1130/g49244.1",
     )
 
     work_b = WorkMetadata(
         input_first_authors_txt="Guns and Vanacker",
         input_year_and_suffix="2021",
         input_issns=["0016-7606"],
-        DOI="10.1130/DIFFERENT_DOI",
+        doi="10.1130/DIFFERENT_DOI",
     )
 
     assert work_a.identity_key != work_b.identity_key
@@ -75,12 +75,12 @@ def test_work_metadata_to_dict_includes_none() -> None:
         input_first_authors_txt="Test",
         input_year_and_suffix="2024",
         input_issns=["0000-0000"],
-        DOI=None,
+        doi=None,
     )
 
     data = work.model_dump()
 
-    assert data["DOI"] is None
+    assert data["doi"] is None
 
 
 def test_work_metadata_doi_normalization() -> None:
@@ -88,10 +88,10 @@ def test_work_metadata_doi_normalization() -> None:
     work = WorkMetadata(
         input_first_authors_txt="Lenard",
         input_year_and_suffix="2020",
-        DOI="10.1038/NATURE123",
+        doi="10.1038/NATURE123",
     )
 
-    assert work.DOI == "10.1038/nature123"
+    assert work.doi == "10.1038/nature123"
     assert work.identity_key[2] == "10.1038/nature123"
 
 
@@ -111,7 +111,7 @@ def test_work_metadata_status_property(
     work = WorkMetadata(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020",
-        DOI=doi,
+        doi=doi,
         reference=reference,
     )
 

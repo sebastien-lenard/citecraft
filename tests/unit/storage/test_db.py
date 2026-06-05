@@ -126,7 +126,7 @@ def test_real_metadata_roundtrip(tmp_path: Path) -> None:
         raw_reference="Raw reference text",
         reference="Clean reference text",
         style="apa",
-        DOI="10.1038/s41561-020-0585-2",
+        doi="10.1038/s41561-020-0585-2",
         crossref_metadata={"indexed": {"date-parts": [[2020]]}},
         openalex_metadata={"id": "https://openalex.org/W1234"},
         type="journal-article",
@@ -143,7 +143,7 @@ def test_real_metadata_roundtrip(tmp_path: Path) -> None:
     assert loaded_journals[0].similar_titles == ["Nature Geosciences"]
 
     assert len(loaded_works) == 1
-    assert loaded_works[0].DOI == "10.1038/s41561-020-0585-2"
+    assert loaded_works[0].doi == "10.1038/s41561-020-0585-2"
     assert loaded_works[0].crossref_metadata == {"indexed": {"date-parts": [[2020]]}}
     assert loaded_works[0].openalex_metadata == {"id": "https://openalex.org/W1234"}
 

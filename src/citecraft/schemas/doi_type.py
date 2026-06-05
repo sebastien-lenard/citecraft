@@ -30,9 +30,9 @@ def validate_doi(doi: str) -> str:
     return doi
 
 
-DOIType = Annotated[str, AfterValidator(validate_doi)]
+DoiType = Annotated[str, AfterValidator(validate_doi)]
 
-doi_adapter = TypeAdapter(DOIType)
+doi_adapter = TypeAdapter(DoiType)
 
 
 def check_standalone_doi(doi: str) -> bool:

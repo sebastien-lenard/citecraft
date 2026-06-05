@@ -41,7 +41,11 @@ class DoiRepository:
             res.raise_for_status()
             csl_metadata = res.json()
 
-            if "id" not in csl_metadata and "DOI" not in csl_metadata:
+            if (
+                "id" not in csl_metadata
+                and "DOI" not in csl_metadata
+                and "doi" not in csl_metadata
+            ):
                 logger.debug(
                     "Invalid CSL-JSON content: %s",
                     json.dumps(csl_metadata, separators=(",", ":")),
@@ -53,7 +57,7 @@ class DoiRepository:
                 )
                 logger.warning(
                     (
-                        "CSL-JSON metadata invalid (missing 'id' and 'DOI' field) for"
+                        "CSL-JSON metadata invalid (missing 'id' and 'DOI'/'doi' field) for"
                         " DOI:%s"
                     ),
                     doi,

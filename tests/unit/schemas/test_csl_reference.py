@@ -33,7 +33,7 @@ def test_missing_id_fallback_to_doi() -> None:
     validated = CSLReference.model_validate(raw_data)
 
     assert validated.id == "10.1038/s41561-020-0585-2"
-    assert validated.DOI == "10.1038/s41561-020-0585-2"
+    assert validated.doi == "10.1038/s41561-020-0585-2"
 
 
 def test_validation_error_when_both_id_and_doi_missing() -> None:

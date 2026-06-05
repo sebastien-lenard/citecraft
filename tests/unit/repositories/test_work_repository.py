@@ -143,7 +143,7 @@ def test_get_work_metadata_parsing_scenarios(
 
     assert len(results) == expected_length
     if expected_length > 0:
-        assert expected_first_doi == results[0].DOI
+        assert expected_first_doi == results[0].doi
         assert results[0].type == expected_first_type
 
 
@@ -225,8 +225,8 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
         input_issns=["0361-0160"],
     )
     assert len(results) == 2
-    assert results[0].DOI == "10.1029/98jb00510"
-    assert results[1].DOI == "10.5194/gmd-13-3863-2020"
+    assert results[0].doi == "10.1029/98jb00510"
+    assert results[1].doi == "10.5194/gmd-13-3863-2020"
 
 
 @pytest.mark.parametrize(
@@ -329,7 +329,7 @@ def test_validate_first_authors_count(
                     input_first_authors_txt="Lenard et al.",
                     input_year_and_suffix="2020a",
                     input_issns=["1752-0894"],
-                    DOI="10.1038/s41561-020-0585-2",
+                    doi="10.1038/s41561-020-0585-2",
                 )
             ],
             [
@@ -365,7 +365,7 @@ def test_merge_new_works_scenarios(
 
     assert len(repo) == expected_final_count
     if expected_final_count > 0:
-        assert expected_first_doi == repo.records[0].DOI
+        assert expected_first_doi == repo.records[0].doi
         expected_issns = [expected_first_issn] if expected_first_issn else None
         assert repo.records[0].input_issns == expected_issns
 
@@ -383,7 +383,7 @@ def test_update_all_replaces_template_with_rich_record(
     existing_rich = WorkMetadata(
         input_first_authors_txt="Other Author",
         input_year_and_suffix="2021",
-        DOI="10.5194/esurf-8-447-2020",
+        doi="10.5194/esurf-8-447-2020",
     )
     repo.records = [template, existing_rich]
 
@@ -391,7 +391,7 @@ def test_update_all_replaces_template_with_rich_record(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
         input_issns=["1752-0894"],
-        DOI="10.5194/esurf-8-447-2020",
+        doi="10.5194/esurf-8-447-2020",
         type="journal-article",
     )
 
@@ -411,7 +411,7 @@ def test_update_all_replaces_template_with_rich_record(
         updated_record = next(
             r for r in repo.records if r.input_first_authors_txt == "Lenard et al."
         )
-        assert updated_record.DOI == "10.5194/esurf-8-447-2020"
+        assert updated_record.doi == "10.5194/esurf-8-447-2020"
         assert updated_record.input_issns == ["1752-0894"]
 
 
@@ -433,7 +433,7 @@ def test_update_all_skips_if_no_results_found(
         assert "No work found for Unknown, 2024." in caplog.text
         assert "Work resolution completed. Updated: 0, Failed: 1" in caplog.text
         assert len(repo.records) == 1
-        assert repo.records[0].DOI is None
+        assert repo.records[0].doi is None
 
 
 def test_update_all_filters_already_queried_issns(
@@ -455,7 +455,7 @@ def test_update_all_filters_already_queried_issns(
         input_first_authors_txt="Lenard et al.",
         input_year_and_suffix="2020a",
         input_issns=["2222-2222"],
-        DOI="10.1038/s41561-020-0585-2",
+        doi="10.1038/s41561-020-0585-2",
         type="journal-article",
     )
 

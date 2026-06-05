@@ -150,7 +150,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                         input_first_authors_txt=input_first_authors_txt,
                         input_year_and_suffix=input_year_and_suffix,
                         input_issns=input_issns,
-                        DOI=doi,
+                        doi=doi,
                         type=self._get_type_from_api_item(item),
                     )
 
@@ -303,7 +303,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         issns filter API results. Previously queried issns are ignored.
         """
         # 1. Identify templates needing info
-        templates_to_process = [r for r in self.records if not r.DOI]
+        templates_to_process = [r for r in self.records if not r.doi]
 
         new_rich_records: list[WorkMetadata] = []
         processed_templates: list[WorkMetadata] = []

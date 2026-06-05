@@ -66,7 +66,7 @@ class CSLReference(BaseModel):
     page: str | None = None
     page_first: str | None = Field(None, alias="page-first")
     edition: int | str | None = None
-    DOI: str | None = None
+    doi: str | None = Field(default=None, validation_alias=AliasChoices("DOI", "doi"))
     URL: str | None = None
     ISBN: str | None = None
     issn: str | None = Field(
@@ -93,6 +93,8 @@ class CSLReference(BaseModel):
         if isinstance(data, dict):
             if "id" not in data and "DOI" in data:
                 data["id"] = data["DOI"]
+            if "id" not in data and "doi" in data:
+                data["id"] = data["doi"]
         return data
 
     @model_validator(mode="before")
@@ -113,7 +115,9 @@ class CSLReference(BaseModel):
             allowed_types = set(config.work_csl_schema_types)
 
             if csl_type not in allowed_types:
-                ref_id = data.get("id") or data.get("DOI") or "unknown"
+                ref_id = (
+                    data.get("id") or data.get("DOI") or data.get("doi") or "unknown"
+                )
                 logger.warning(
                     "Unknown CSL reference type encountered: '%s' for ID: %s",
                     csl_type,

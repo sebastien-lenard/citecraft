@@ -28,19 +28,19 @@ from citecraft.utils import AppConfig
                 WorkMetadata(
                     input_first_authors_txt="Lenard et al.",
                     input_year_and_suffix="2020",
-                    DOI="10.1000/xyz.b",
+                    doi="10.1000/xyz.b",
                     reference="Lenard Ref B",
                 ),
                 WorkMetadata(
                     input_first_authors_txt="Lenard et al.",
                     input_year_and_suffix="2020",
-                    DOI="10.1000/xyz.a",
+                    doi="10.1000/xyz.a",
                     reference="Lenard Ref A",
                 ),
                 WorkMetadata(
                     input_first_authors_txt="Smith",
                     input_year_and_suffix="2021",
-                    DOI="10.1000/smith",
+                    doi="10.1000/smith",
                     reference="Smith Ref",
                 ),
             ],
@@ -87,13 +87,13 @@ from citecraft.utils import AppConfig
                 WorkMetadata(
                     input_first_authors_txt="MissingDOI",
                     input_year_and_suffix="2024",
-                    DOI=None,
+                    doi=None,
                     reference="Some orphan reference string",
                 ),
                 WorkMetadata(
                     input_first_authors_txt="MissingRef",
                     input_year_and_suffix="2025",
-                    DOI="10.1016/j.isprsjprs.2025.101",
+                    doi="10.1016/j.isprsjprs.2025.101",
                     reference=None,
                 ),
             ],
@@ -171,20 +171,20 @@ def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
-            DOI="10.1000/ref1",
+            doi="10.1000/ref1",
             reference="Lenard Ref B",
         ),
         WorkMetadata(
             input_first_authors_txt="Lenard et al.",
             input_year_and_suffix="2020",
-            DOI="10.1000/ref2",
+            doi="10.1000/ref2",
             reference="Lenard Ref A",
         ),
         # Unique (OK)
         WorkMetadata(
             input_first_authors_txt="Smith",
             input_year_and_suffix="2021",
-            DOI="10.1000/smith",
+            doi="10.1000/smith",
             reference="Smith Ref",
         ),
         # Alpha without corresponding record (Warning: No doi or reference...)
@@ -237,7 +237,7 @@ def test_export_to_csv_strips_only_preserved_tags(
         WorkMetadata(
             input_first_authors_txt="Test",
             input_year_and_suffix="2026",
-            DOI="10.1000/tags-test",
+            doi="10.1000/tags-test",
             reference=(
                 "Analysis of CO<sub>2</sub> within <unsupported-tag>text"
                 "</unsupported-tag>."

@@ -64,7 +64,7 @@ class ReferenceService:
         records_to_process = [
             r
             for r in records
-            if r.DOI and (r.reference is None or r.style != target_style)
+            if r.doi and (r.reference is None or r.style != target_style)
         ]
         logger.info(
             "Starting generating %s references...",
@@ -80,10 +80,10 @@ class ReferenceService:
 
         for record in records_to_process:
             if not record.crossref_metadata:
-                record.crossref_metadata = doi_repo.get_metadata(record.DOI)
+                record.crossref_metadata = doi_repo.get_metadata(record.doi)
 
             raw_reference = self.get_reference(
-                record.crossref_metadata, csl_style_content, record.DOI
+                record.crossref_metadata, csl_style_content, record.doi
             )
 
             cleaned_reference = html_cleaner.clean_to_plain_text(raw_reference)

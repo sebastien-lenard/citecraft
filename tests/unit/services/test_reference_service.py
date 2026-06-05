@@ -34,7 +34,7 @@ def mock_doi_repo() -> MagicMock:
     """Mock DoiRepository to return standard valid CSL-JSON metadata."""
     repo = MagicMock()
     repo.get_metadata.return_value = {
-        "DOI": "10.1038/s41561-020-0585-2",
+        "doi": "10.1038/s41561-020-0585-2",
         "id": "10.1038/s41561-020-0585-2",
         "author": [
             {"family": "Lenard", "given": "Sebastien J. P.", "sequence": "first"},
@@ -66,20 +66,20 @@ def test_fill_missing_references_success(
         WorkMetadata(
             input_first_authors_txt="A",
             input_year_and_suffix="2023",
-            DOI="10.1000/182",
+            doi="10.1000/182",
             reference=None,
         ),
         WorkMetadata(
             input_first_authors_txt="B",
             input_year_and_suffix="2021",
-            DOI="10.1000/183",
+            doi="10.1000/183",
             reference="Old",
             style="bibtex",
         ),
         WorkMetadata(
             input_first_authors_txt="C",
             input_year_and_suffix="2021",
-            DOI=None,
+            doi=None,
             reference=None,
             style=None,
         ),
@@ -130,7 +130,7 @@ def test_fill_missing_references_raises_on_repository_error(
         WorkMetadata(
             input_first_authors_txt="A",
             input_year_and_suffix="2020",
-            DOI="10.5194/esurf-8-447-2020",
+            doi="10.5194/esurf-8-447-2020",
             reference=None,
         )
     ]
@@ -153,7 +153,7 @@ def test_fill_missing_references_raises_on_repository_error(
         # Happy path: Complete, valid CSL-JSON metadata
         (
             {
-                "DOI": "10.1000/182",
+                "doi": "10.1000/182",
                 "id": "10.1000/182",
                 "type": "article-journal",
                 "title": "Title of the Paper",
@@ -184,7 +184,7 @@ def test_fill_missing_references_raises_on_repository_error(
         # Special Unicode characters (accents, em-dashes)
         (
             {
-                "DOI": "10.1038/s41561-020-0585-2",
+                "doi": "10.1038/s41561-020-0585-2",
                 "id": "10.1038/s41561-020-0585-2",
                 "type": "article-journal",
                 "title": "Steady erosion — Himalayas.",
