@@ -13,6 +13,16 @@ class JournalParser:
         self._journals_marker_regex = re.compile(r"^Journals\s*$", re.MULTILINE)
         self._double_newline_regex = re.compile(r"\n\s*\n")
 
+    @classmethod
+    def normalize_title(cls, title: str) -> str:
+        """Normalize title for fuzzy matching (case, plurals, and delimiters)."""
+        if not title:
+            return ""
+        t = title.strip().lower()
+        t = t.replace("-", " ").replace(":", " ").replace(",", " ")
+        words = [w[:-1] if w.endswith("s") else w for w in t.split()]
+        return " ".join(words)
+
     def extract_all(self, text: str) -> list[str]:
         """Extract journal titles listed below the single-line marker 'Journals'."""
         matches = list(self._journals_marker_regex.finditer(text))

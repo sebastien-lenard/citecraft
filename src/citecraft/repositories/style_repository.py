@@ -11,8 +11,8 @@ from citecraft.network import (
     HTTPClientWrapper,
     get_http_client_registry,
 )
-from citecraft.repositories.journal_repository import (
-    JournalRepository,
+from citecraft.parsers import (
+    JournalParser,
 )
 from citecraft.utils import AppConfig, get_config
 
@@ -131,7 +131,7 @@ class StyleRepository:
             return None
 
         logger.info("Initiating CSL style lookup for journal: '%s'", journal_title)
-        normalized_target = JournalRepository.normalize_title(journal_title)
+        normalized_target = JournalParser.normalize_title(journal_title)
 
         # 1. Fetch remote Zotero styles index
         url = str(self.config.all_styles_repo_url)
@@ -204,8 +204,8 @@ class StyleRepository:
                 continue
 
             # Normalize remote values to ensure reliable matching
-            norm_title = JournalRepository.normalize_title(title)
-            norm_name = JournalRepository.normalize_title(style_name)
+            norm_title = JournalParser.normalize_title(title)
+            norm_name = JournalParser.normalize_title(style_name)
 
             if normalized_target in norm_title or normalized_target in norm_name:
                 is_dependent = bool(style.get("dependent", False))
