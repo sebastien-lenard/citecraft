@@ -1,4 +1,6 @@
 # src/citecraft/schemas/base_schema.py
+from collections.abc import Hashable
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -10,7 +12,7 @@ class BaseSchema(BaseModel):
     )
 
     @property
-    def identity_key(self) -> str:
+    def identity_key(self) -> Hashable:
         """Return a unique identifier for deduplication."""
         raise NotImplementedError("Subclasses must implement identity_key")
 

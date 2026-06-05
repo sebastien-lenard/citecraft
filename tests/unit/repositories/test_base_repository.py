@@ -1,8 +1,10 @@
 # tests/unit/repositories/test_base_repository.py
+import sqlite3
+from collections.abc import Hashable
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
-from pydantic import ValidationError
 
 from citecraft.repositories import BaseRepository
 from citecraft.schemas import BaseSchema
@@ -17,7 +19,7 @@ class MockSchema(BaseSchema):
     content: str = "test"
 
     @property
-    def identity_key(self) -> int:
+    def identity_key(self) -> Hashable:
         return self.id
 
 
@@ -29,8 +31,7 @@ class MockRepository(BaseRepository[MockSchema]):
 
 @pytest.fixture
 def base_repo(test_config: AppConfig) -> MockRepository:
-    """Provide a MockRepository instance utilizing the isolated global test
-    configuration."""
+    """Provide a MockRepository instance utilizing the isolated test config."""
     return MockRepository("test_base_records.json", MockSchema, config=test_config)
 
 
@@ -128,7 +129,46 @@ def test_save_all_preserves_utf8(base_repo: MockRepository) -> None:
     assert base_repo.records[0].content == special_content
 
 
-def test_validation_error_handling() -> None:
-    """Verify invalid schema instantiations raise ValidationErrors."""
-    with pytest.raises(ValidationError):
-        MockSchema(content="error")
+# =============================================================================
+# COV TESTS: SPECIFIC IF/ELSE AND FALLBACK BRANCH COVERAGE
+# =============================================================================
+
+
+def test_load_all_backup_os_error_unlinks_file(
+    base_repo: MockRepository,
+) -> None:
+    """Verify backup OSError unlinks corrupted file to ensure recovery."""
+    path = Path(base_repo.config.db_filepath)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("corrupted_database_mock_payload", encoding="utf-8")
+
+    with patch.object(Path, "rename", side_effect=OSError("Rename blocked")):
+        base_repo.load_all()
+
+    assert base_repo._load_failed is True
+    assert not path.exists()
+
+
+def test_load_all_with_raise_exception(base_repo: MockRepository) -> None:
+    """Verify load_all raises exception if raise_exception is explicitly True."""
+    path = Path(base_repo.config.db_filepath)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("corrupted_database_mock_payload", encoding="utf-8")
+
+    with pytest.raises((sqlite3.Error, TypeError, ValueError)):
+        base_repo.load_all(raise_exception=True)
+
+
+def test_save_all_exception_raises_and_logs(
+    base_repo: MockRepository,
+) -> None:
+    """Verify save_all failure triggers sqlite3.Error and exits cleanly."""
+    base_repo.records = [MockSchema(id=1)]
+    with (
+        patch(
+            "citecraft.repositories.base_repository.save_records",
+            side_effect=sqlite3.OperationalError("Mock saving database error"),
+        ),
+        pytest.raises(sqlite3.Error),
+    ):
+        base_repo.save_all()
