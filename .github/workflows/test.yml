@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+permissions:
+  contents: read
 jobs:
   test:
     name: Test on ${{ matrix.os }}
@@ -42,7 +44,6 @@ jobs:
       # This step runs on Windows and Mac, skipping the virtual screen wrapper
       if: matrix.os != 'ubuntu-latest'
       run: uv run pytest -m unit
-
 
 
     # Upload report
