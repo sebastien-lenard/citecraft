@@ -27,11 +27,15 @@ class ReferenceService:
     ) -> None:
         self.config: AppConfig = config or get_config()
 
-    @staticmethod
-    def _log_heartbeat_if_needed(processed: int, total: int, last_time: float) -> float:
+    def _log_heartbeat_if_needed(
+        self, processed: int, total: int, last_time: float
+    ) -> float:
         """Log batch resolution progress every 10 seconds of processing time."""
         current_time = time.time()
-        if current_time - last_time > 10.0:
+        if (
+            current_time - last_time
+            > self.config.default_logging_frequency_for_batch_updates
+        ):
             remaining = total - processed
             logger.info(
                 "Batch update status: %d updates remaining out of %d",
@@ -61,29 +65,37 @@ class ReferenceService:
         will stop to ensure the error is handled and analyzed.
         """
         html_cleaner = HtmlCleaner(config=self.config)
-        records_to_process = [
-            r
+        total_targets = sum(
+            1
             for r in records
             if r.doi and (r.reference is None or r.style != target_style)
-        ]
+        )
         logger.info(
             "Starting generating %s references...",
-            len(records_to_process),
+            total_targets,
             extra={
                 "status": "OK",
                 "event": "reference_generation_start",
-                "records_to_process_count": len(records_to_process),
+                "records_to_process_count": total_targets,
             },
         )
         processed_record_count = 0
         last_display_time = time.time()
 
-        for record in records_to_process:
+        for record in records:
+            doi = record.doi
+            if doi is None:
+                continue
+
+            # Skip already up-to-date entries
+            if record.reference is not None and record.style == target_style:
+                continue
+
             if not record.crossref_metadata:
-                record.crossref_metadata = doi_repo.get_metadata(record.doi)
+                record.crossref_metadata = doi_repo.get_metadata(doi)
 
             raw_reference = self.get_reference(
-                record.crossref_metadata, csl_style_content, record.doi
+                record.crossref_metadata, csl_style_content, doi
             )
 
             cleaned_reference = html_cleaner.clean_to_plain_text(raw_reference)
@@ -94,7 +106,7 @@ class ReferenceService:
             processed_record_count += 1
             last_display_time = self._log_heartbeat_if_needed(
                 processed_record_count,
-                len(records_to_process),
+                total_targets,
                 last_display_time,
             )
 
@@ -133,9 +145,7 @@ class ReferenceService:
             logger.warning(
                 "CSL-JSON metadata validation failed for DOI: %s. Details: %s",
                 doi,
-                str(
-                    e.errors(include_url=False)
-                ),  # Donne un résumé propre des champs en faute
+                str(e.errors(include_url=False)),
                 extra={
                     "status": "KO",
                     "event": "reference_generation_failed_invalid_structure",
@@ -150,25 +160,24 @@ class ReferenceService:
 
         if not bib_source or err_msg:
             return f"Reference unavailable in doi.org. {err_msg}"
+
         bib_style, err_msg = CiteprocAdapter.parse_csl_style(csl_style_content, doi=doi)
         if not bib_style or err_msg:
             return f"Reference unavailable in doi.org. {err_msg}"
+
         render_output, err_msg = CiteprocAdapter.render_bibliography(
             bib_style, bib_source, item_id=validated_csl.id, doi=doi
         )
         if not render_output or err_msg:
             return f"Reference unavailable in doi.org. {err_msg}"
 
-        if render_output:
-            logger.debug(
-                "Successfully resolved bibliography reference generation for DOI: %s",
-                doi,
-                extra={
-                    "status": "OK",
-                    "event": "doi_local_resolution_success",
-                    "doi": doi,
-                },
-            )
-            return render_output
-
-        return "Reference unavailable in doi.org."
+        logger.debug(
+            "Successfully resolved bibliography reference generation for DOI: %s",
+            doi,
+            extra={
+                "status": "OK",
+                "event": "doi_local_resolution_success",
+                "doi": doi,
+            },
+        )
+        return render_output

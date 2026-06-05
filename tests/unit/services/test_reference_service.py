@@ -83,6 +83,13 @@ def test_fill_missing_references_success(
             reference=None,
             style=None,
         ),
+        WorkMetadata(
+            input_first_authors_txt="D",
+            input_year_and_suffix="2022",
+            doi="10.1000/184",
+            reference="Pre-existing Clean Reference",
+            style="apa",
+        ),
     ]
 
     expected_reference = (
@@ -117,6 +124,8 @@ def test_fill_missing_references_success(
     assert records[1].style == "apa"
     assert records[1].reference == expected_reference
     assert records[2].reference is None
+    assert records[3].reference == "Pre-existing Clean Reference"
+    assert records[3].style == "apa"
     assert mock_doi_repo.get_metadata.call_count == 2
 
 
@@ -232,3 +241,84 @@ def test_get_reference_scenarios(
         )
 
         assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "source_ret, style_ret, render_ret, expected_substr",
+    [
+        (
+            (None, "Source error"),
+            (MagicMock(), None),
+            ("Rendered", None),
+            "Source error",
+        ),
+        (
+            (MagicMock(), "Source msg"),
+            (MagicMock(), None),
+            ("Rendered", None),
+            "Source msg",
+        ),
+        (
+            (MagicMock(), None),
+            (None, "Style error"),
+            ("Rendered", None),
+            "Style error",
+        ),
+        (
+            (MagicMock(), None),
+            (MagicMock(), "Style msg"),
+            ("Rendered", None),
+            "Style msg",
+        ),
+        (
+            (MagicMock(), None),
+            (MagicMock(), None),
+            (None, "Render error"),
+            "Render error",
+        ),
+        (
+            (MagicMock(), None),
+            (MagicMock(), None),
+            (MagicMock(), "Render msg"),
+            "Render msg",
+        ),
+    ],
+)
+def test_get_reference_adapter_failures(
+    test_config: AppConfig,
+    sample_csl_style: str,
+    source_ret: tuple[Any, Any],
+    style_ret: tuple[Any, Any],
+    render_ret: tuple[Any, Any],
+    expected_substr: str,
+) -> None:
+    """Verify that get_reference handles all inner adapter failures gracefully."""
+    reference_service = ReferenceService(config=test_config)
+    csl_metadata = {
+        "doi": "10.1000/182",
+        "id": "10.1000/182",
+        "type": "article-journal",
+        "title": "Title",
+        "issued": {"date-parts": [[2023]]},
+    }
+
+    with (
+        patch(
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
+        ) as mock_src,
+        patch(
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
+        ) as mock_style,
+        patch(
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
+        ) as mock_render,
+    ):
+        mock_src.return_value = source_ret
+        mock_style.return_value = style_ret
+        mock_render.return_value = render_ret
+
+        result = reference_service.get_reference(
+            csl_metadata, sample_csl_style, doi="10.1000/182"
+        )
+
+        assert expected_substr in result
