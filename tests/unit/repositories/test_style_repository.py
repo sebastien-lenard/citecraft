@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
+from defusedxml import ElementTree
 
 from citecraft.repositories import StyleRepository
 from citecraft.utils import AppConfig
@@ -231,19 +232,21 @@ def test_resolve_parent_missing_xml_namespace(test_config: AppConfig) -> None:
     malformed_xml = (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<style version="1.0">\n'
-        '  <info><link rel="independent-parent" href="http://example.com/parent"/></info>\n'
+        '  <info><link rel="independent-parent" href="http://example.com"/></info>\n'
         "</style>"
     )
     mock_res_xml = MagicMock()
     mock_res_xml.content = malformed_xml.encode("utf-8")
 
-    with patch.object(
-        repo.http_client_wrapper,
-        "get",
-        side_effect=[(mock_res_index, None), (mock_res_xml, None)],
+    with (
+        patch.object(
+            repo.http_client_wrapper,
+            "get",
+            side_effect=[(mock_res_index, None), (mock_res_xml, None)],
+        ),
+        pytest.raises(ValueError, match="does not define a namespace"),
     ):
-        with pytest.raises(ValueError, match="does not define a namespace"):
-            repo.get_style("Dependent J")
+        repo.get_style("Dependent J")
 
 
 def test_resolve_parent_empty_parent_href(
@@ -312,3 +315,189 @@ def test_validate_favored_style_scenarios(
     repo.validate_favored_style()
 
     assert repo.favored_style_is_valid is expected_validity
+
+
+# =============================================================================
+# COV TESTS: SPECIFIC IF/ELSE AND FALLBACK BRANCH COVERAGE
+# =============================================================================
+
+
+def test_fetch_style_metadata_response_none(test_config: AppConfig) -> None:
+    """Cover L62 in fetch_style_metadata(): response is None."""
+    repo = StyleRepository(favored_style="apa", config=test_config)
+    with patch.object(repo.http_client_wrapper, "get", return_value=(None, 0)):
+        repo.fetch_style_metadata()
+        assert repo.csl_content is None
+
+
+def test_fetch_style_metadata_raises_unexpected_http_error(
+    test_config: AppConfig,
+) -> None:
+    """Cover L85 in fetch_style_metadata(): raise unexpected http status error."""
+    repo = StyleRepository(favored_style="apa", config=test_config)
+    mock_request = httpx.Request("GET", "https://raw.githubusercontent.com/invalid")
+    mock_response = httpx.Response(status_code=500, request=mock_request)
+    error = httpx.HTTPStatusError(
+        "500 Server Error", request=mock_request, response=mock_response
+    )
+    with (
+        patch.object(repo.http_client_wrapper, "get", side_effect=error),
+        pytest.raises(httpx.HTTPStatusError),
+    ):
+        repo.fetch_style_metadata()
+
+
+def test_get_style_empty_title_returns_none(test_config: AppConfig) -> None:
+    """Cover L91 in get_style(): empty journal_title returns None."""
+    repo = StyleRepository(config=test_config)
+    assert repo.get_style("") is None
+
+
+def test_get_style_response_none_raises_value_error(
+    test_config: AppConfig,
+) -> None:
+    """Cover L101 in get_style(): response is None raises ValueError."""
+    repo = StyleRepository(config=test_config)
+    with (
+        patch.object(repo.http_client_wrapper, "get", return_value=(None, 0)),
+        pytest.raises(ValueError, match="Empty index response received"),
+    ):
+        repo.get_style("Nature")
+
+
+def test_get_style_no_match_returns_none(test_config: AppConfig) -> None:
+    """Cover L134 in get_style(): fuzzy match fails and returns None."""
+    repo = StyleRepository(config=test_config)
+    mock_res = MagicMock()
+    mock_res.json.return_value = [{"title": "Nature", "name": "nature"}]
+    with patch.object(repo.http_client_wrapper, "get", return_value=(mock_res, 0)):
+        assert repo.get_style("Nonexistent Journal") is None
+
+
+def test_fuzzy_match_skips_non_dict_elements(test_config: AppConfig) -> None:
+    """Cover L149 in _fuzzy_match_style(): skip if style is not a dict."""
+    repo = StyleRepository(config=test_config)
+    mock_res = MagicMock()
+    mock_res.json.return_value = [
+        "corrupted_list_element",
+        {"title": "Nature", "name": "nature"},
+    ]
+    with patch.object(repo.http_client_wrapper, "get", return_value=(mock_res, 0)):
+        assert repo.get_style("Nature") == "nature"
+
+
+def test_fuzzy_match_skips_incomplete_elements(test_config: AppConfig) -> None:
+    """Cover L154 in _fuzzy_match_style(): skip if title or style_name is empty."""
+    repo = StyleRepository(config=test_config)
+    mock_res = MagicMock()
+    mock_res.json.return_value = [
+        {"title": "", "name": "nature"},
+        {"title": "Nature", "name": ""},
+        {"title": "Nature", "name": "nature"},
+    ]
+    with patch.object(repo.http_client_wrapper, "get", return_value=(mock_res, 0)):
+        assert repo.get_style("Nature") == "nature"
+
+
+def test_resolve_parent_response_none_raises_value_error(
+    test_config: AppConfig,
+) -> None:
+    """Cover L184 in _resolve_independent_parent(): response is None."""
+    repo = StyleRepository(config=test_config)
+    mock_index = [{"title": "Dep J", "name": "dep-j", "dependent": True}]
+    mock_res_index = MagicMock()
+    mock_res_index.json.return_value = mock_index
+    with (
+        patch.object(
+            repo.http_client_wrapper,
+            "get",
+            side_effect=[(mock_res_index, 0), (None, 0)],
+        ),
+        pytest.raises(ValueError, match="No response payload returned"),
+    ):
+        repo.get_style("Dep J")
+
+
+def test_resolve_parent_status_error_raises(test_config: AppConfig) -> None:
+    """Cover L193 in _resolve_independent_parent(): httpx.HTTPStatusError raises."""
+    repo = StyleRepository(config=test_config)
+    mock_index = [{"title": "Dep J", "name": "dep-j", "dependent": True}]
+    mock_res_index = MagicMock()
+    mock_res_index.json.return_value = mock_index
+
+    mock_req = httpx.Request("GET", "https://raw.githubusercontent.com/invalid")
+    mock_res_xml = httpx.Response(status_code=500, request=mock_req)
+    status_err = httpx.HTTPStatusError(
+        "500 Server Error", request=mock_req, response=mock_res_xml
+    )
+
+    with (
+        patch.object(
+            repo.http_client_wrapper,
+            "get",
+            side_effect=[(mock_res_index, 0), status_err],
+        ),
+        pytest.raises(httpx.HTTPStatusError),
+    ):
+        repo.get_style("Dep J")
+
+
+def test_resolve_parent_xml_parse_error_raises(test_config: AppConfig) -> None:
+    """Cover L208 in _resolve_independent_parent(): ElementTree.ParseError raises."""
+    repo = StyleRepository(config=test_config)
+    mock_index = [{"title": "Dep J", "name": "dep-j", "dependent": True}]
+    mock_res_index = MagicMock()
+    mock_res_index.json.return_value = mock_index
+
+    mock_res_xml = MagicMock()
+    mock_res_xml.text = "corrupted xml formatting"
+    mock_res_xml.content = b"corrupted xml formatting"
+
+    with (
+        patch.object(
+            repo.http_client_wrapper,
+            "get",
+            side_effect=[(mock_res_index, 0), (mock_res_xml, 0)],
+        ),
+        pytest.raises(ElementTree.ParseError),
+    ):
+        repo.get_style("Dep J")
+
+
+def test_resolve_parent_unrecognized_namespace_raises_value_error(
+    test_config: AppConfig,
+) -> None:
+    """Cover L241 in _resolve_independent_parent(): unrecognized prefix namespace."""
+    repo = StyleRepository(config=test_config)
+    mock_index = [{"title": "Dep J", "name": "dep-j", "dependent": True}]
+    mock_res_index = MagicMock()
+    mock_res_index.json.return_value = mock_index
+
+    unrecognized_ns_xml = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<style xmlns="http://unrecognized.namespace.org/" version="1.0">\n'
+        "  <info>\n"
+        '    <link rel="independent-parent" href="http://example.com"/>\n'
+        "  </info>\n"
+        "</style>"
+    )
+    mock_res_xml = MagicMock()
+    mock_res_xml.content = unrecognized_ns_xml.encode("utf-8")
+
+    with (
+        patch.object(
+            repo.http_client_wrapper,
+            "get",
+            side_effect=[(mock_res_index, 0), (mock_res_xml, 0)],
+        ),
+        pytest.raises(ValueError, match="Unrecognized CSL namespace"),
+    ):
+        repo.get_style("Dep J")
+
+
+def test_validate_favored_style_empty_content(test_config: AppConfig) -> None:
+    """Cover L268 in validate_favored_style(): if not self.csl_content."""
+    repo = StyleRepository(favored_style="apa", config=test_config)
+    repo.csl_content = None
+    repo.validate_favored_style()
+    assert repo.favored_style_is_valid is False

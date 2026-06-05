@@ -1,6 +1,7 @@
 # src/citecraft/repositories/base_repository.py
 import logging
 import sqlite3
+from contextlib import suppress
 from datetime import datetime
 from pathlib import Path
 from typing import TypeVar
@@ -106,10 +107,8 @@ class BaseRepository[T: BaseSchema]:
                         str(backup_err),
                         exc_info=True,
                     )
-                    try:
+                    with suppress(OSError):
                         path.unlink(missing_ok=True)
-                    except OSError:
-                        pass
 
             self.records = []
             self._load_failed = True

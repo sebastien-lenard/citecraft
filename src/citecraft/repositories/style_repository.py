@@ -1,9 +1,10 @@
 # src/citecraft/repositories/style_repository.py
 import logging
-import xml.etree.ElementTree as ET
 from http import HTTPStatus
+from typing import Any
 
 import httpx
+from defusedxml import ElementTree
 
 from citecraft.network import (
     HTTPClientRegistry,
@@ -58,7 +59,10 @@ class StyleRepository:
                 self.favored_journal_title,
             )
         if not self.favored_style:
-            logger.warning("No favored style determined. Aborting metadata fetch.")
+            logger.warning(
+                "No favored style determined. Aborting metadata fetch.",
+                extra={"event": "no_favored_style_for_fetch_metadata"},
+            )
             return
 
         url = self.config.style_repo_url.replace(
@@ -67,6 +71,14 @@ class StyleRepository:
 
         try:
             response, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            if response is None:
+                logger.warning(
+                    "No CSL response received from URL: %s",
+                    url,
+                    extra={"event": "no_csl_url_response", "url": url},
+                )
+                self.csl_content = None
+                return
             response.raise_for_status()
             self.csl_content = response.text
             logger.debug(
@@ -100,7 +112,7 @@ class StyleRepository:
 
         # the valid namespaces are stored in the dict self.config.csl_xml_namespaces
         # the string
-        # "https://raw.githubusercontent.com/citation-style-language/styles/master/{object_name}.csl"
+        # "https://raw.githubusercontent.com/citation-style-language/styles/master/{object_name}.csl" # noqa ERA001
         # is stored in self.config.style_repo_url
         # the string "https://www.zotero.org/styles-files/styles.json" is stored in
         # self.config.all_styles_repo_url
@@ -120,6 +132,8 @@ class StyleRepository:
         url = str(self.config.all_styles_repo_url)
         try:
             response, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            if response is None:
+                raise ValueError(f"Empty index response received from URL: {url}")
             response.raise_for_status()
             styles_list = response.json()
         except (httpx.HTTPError, ValueError) as e:
@@ -145,10 +159,31 @@ class StyleRepository:
                 f"{type(styles_list).__name__}"
             )
 
-        # 2. Perform fuzzy lookup on the index
-        matched_style_name: str | None = None
-        is_dependent = False
+        matched_style_name, is_dependent = self._fuzzy_match_style(
+            styles_list, normalized_target
+        )
 
+        if not matched_style_name:
+            logger.warning(
+                "No CSL styles matched the query: '%s'",
+                journal_title,
+                extra={"event": "no_csl_match_query", "journal_title": journal_title},
+            )
+            return None
+
+        if is_dependent:
+            logger.info(
+                "Style '%s' is dependent. Resolving independent parent...",
+                matched_style_name,
+            )
+            return self._resolve_independent_parent(matched_style_name)
+
+        return matched_style_name
+
+    def _fuzzy_match_style(
+        self, styles_list: list[Any], normalized_target: str
+    ) -> tuple[str | None, bool]:
+        """Perform fuzzy search on style list and extract match metadata."""
         for style in styles_list:
             if not isinstance(style, dict):
                 continue
@@ -164,7 +199,6 @@ class StyleRepository:
             norm_name = JournalRepository.normalize_title(style_name)
 
             if normalized_target in norm_title or normalized_target in norm_name:
-                matched_style_name = style_name
                 is_dependent = bool(style.get("dependent", False))
                 logger.debug(
                     "Match found: '%s' maps to style code '%s' (Dependent: %s)",
@@ -172,21 +206,9 @@ class StyleRepository:
                     style_name,
                     is_dependent,
                 )
-                break
+                return style_name, is_dependent
 
-        if not matched_style_name:
-            logger.warning("No CSL styles matched the query: '%s'", journal_title)
-            return None
-
-        # 3. Resolve parent if the matched style is dependent
-        if is_dependent:
-            logger.info(
-                "Style '%s' is dependent. Resolving independent parent...",
-                matched_style_name,
-            )
-            return self._resolve_independent_parent(matched_style_name)
-
-        return matched_style_name
+        return None, False
 
     def _resolve_independent_parent(self, child_style_name: str) -> str | None:
         """Parse a dependent CSL file and extract its parent layout slug identifier."""
@@ -194,10 +216,19 @@ class StyleRepository:
             "{object_name}", child_style_name
         )
 
+        response = None
         try:
-            response, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            response_obj, _ = self.http_client_wrapper.get(url, headers=self.headers)
+            if response_obj is None:
+                raise ValueError(
+                    f"No response payload returned from style endpoint: {url}"
+                )
+
+            response = response_obj
             response.raise_for_status()
-            root = ET.fromstring(response.content)
+
+            # Secure XML parsing: defusedxml prevents XXE/entity expansion attacks
+            root = ElementTree.fromstring(response.content)
         except httpx.HTTPStatusError as e:
             logger.error(
                 "Dependent CSL metadata endpoint returned status %d for URL: %s",
@@ -211,8 +242,12 @@ class StyleRepository:
                 },
             )
             raise e
-        except ET.ParseError as e:
-            snippet = response.text[:200] if response.text else "Empty content"
+        except ElementTree.ParseError as e:
+            snippet = (
+                response.text[:200]
+                if response is not None and response.text
+                else "Empty content"
+            )
             logger.debug("Failed XML parsing content snippet: %s", snippet)
             logger.critical(
                 "Failed to parse dependent CSL XML for: %s",
@@ -277,7 +312,12 @@ class StyleRepository:
         if not self.csl_content:
             self.favored_style_is_valid = False
             logger.warning(
-                "Cannot validate style %s: No CSL content loaded.", self.favored_style
+                "Cannot validate style %s: No CSL content loaded.",
+                self.favored_style,
+                extra={
+                    "event": "no_csl_loaded_for_favored_style",
+                    "favored_style": self.favored_style,
+                },
             )
             return
 
