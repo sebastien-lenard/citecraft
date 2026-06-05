@@ -20,7 +20,7 @@ class AppConfig(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         frozen=True,
-        json_inner_max_depth=2,  # Force to parse complex strings from .env
+        env_nested_delimiter="__",
     )
 
     # -------------------------------------------- #
@@ -132,7 +132,7 @@ class AppConfig(BaseSettings):
         self.output_dir_path.resolve().mkdir(parents=True, exist_ok=True)
 
 
-def create_config(**kwargs: Any) -> AppConfig:
+def create_config(**kwargs: Any) -> AppConfig:  # noqa: ANN401
     """Instantiate a fresh configuration payload for runtime or isolation testing."""
     return AppConfig(**kwargs)
 

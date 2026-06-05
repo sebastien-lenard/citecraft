@@ -2,7 +2,7 @@
 import logging
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
+from typing import NoReturn
 from unittest.mock import patch
 
 import pytest
@@ -13,7 +13,9 @@ from citecraft.network.http_client_registry import (
 from citecraft.utils import AppConfig, create_config, get_config
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
     """Assign 'unit' marker to any test without 'e2e' or 'integration' markers."""
     for item in items:
         has_other_marker = any(
@@ -28,7 +30,7 @@ def pytest_collection_modifyitems(config, items):
 def block_network_calls(monkeypatch: pytest.MonkeyPatch) -> None:
     """Guard rails to prevent any outbound network requests during testing."""
 
-    def raised_error(*args: Any, **kwargs: Any) -> Any:
+    def raised_error(*args: object, **kwargs: object) -> NoReturn:
         raise RuntimeError(
             "Network call attempted during isolated unit test execution."
         )

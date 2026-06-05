@@ -47,7 +47,7 @@ class TestColorFormatter:
         )
 
     def test_color_formatter_applies_ansi_and_truncates_name(
-        self, basic_record
+        self, basic_record: logging.LogRecord
     ) -> None:
         """Verify ANSI escapes are injected and package prefixes are truncated."""
         formatter = ColorFormatter(fmt="%(name)s: %(message)s")
@@ -63,17 +63,19 @@ class TestColorFormatter:
         assert basic_record.name == "citecraft.core.engine"  # Verify restoration
 
     def test_color_formatter_restores_name_on_formatting_exception(
-        self, basic_record
+        self, basic_record: logging.LogRecord
     ) -> None:
         """Edge Case: Ensure record.name restoration even if rendering throws error."""
         formatter = ColorFormatter(fmt="%(name)s: %(message)s")
 
         # Force an exception during formatting by mocking super().format
-        with patch(
-            "logging.Formatter.format", side_effect=ValueError("Formatting failed")
+        with (
+            patch(
+                "logging.Formatter.format", side_effect=ValueError("Formatting failed")
+            ),
+            pytest.raises(ValueError, match="Formatting failed"),
         ):
-            with pytest.raises(ValueError, match="Formatting failed"):
-                formatter.format(basic_record)
+            formatter.format(basic_record)
 
         # The try...finally block must have recovered the original namespace name
         assert basic_record.name == "citecraft.core.engine"
@@ -106,7 +108,9 @@ class TestSetupLoggingLifecycles:
     # patch MUST point directly to the module consuming the function
     @patch("citecraft.logging_config.get_safe_dir")
     @patch("logging.config.dictConfig")
-    def test_setup_logging_success(self, mock_dict_config, mock_get_dir) -> None:
+    def test_setup_logging_success(
+        self, mock_dict_config: MagicMock, mock_get_dir: MagicMock
+    ) -> None:
         """Verify successful initialization loop with proper 3-tuple path unpacking."""
         mock_path = Path("/mock/safe/dir")
         mock_get_dir.return_value = (mock_path, mock_path, False)
@@ -122,7 +126,10 @@ class TestSetupLoggingLifecycles:
     @patch("logging.config.dictConfig")
     @patch("logging.basicConfig")
     def test_setup_logging_failure_fallback(
-        self, mock_basic_config, mock_dict_config, mock_get_dir
+        self,
+        mock_basic_config: MagicMock,
+        mock_dict_config: MagicMock,
+        mock_get_dir: MagicMock,
     ) -> None:
         """Edge Case: Verify hard crashes in dictConfig trigger stderr reports and
         basicConfig."""
@@ -131,9 +138,7 @@ class TestSetupLoggingLifecycles:
 
         # Simulate a component initialization failure (e.g., package missing or bad
         # structure)
-        mock_dict_config.side_effect = RuntimeError(
-            "Invalid handler class configuration"
-        )
+        mock_dict_config.side_effect = ValueError("Invalid handler class configuration")
 
         with patch("sys.stderr.write"), patch("traceback.print_exc") as mock_traceback:
             log_dir, _, is_fallback = setup_logging(verbose_level=0)
@@ -178,5 +183,5 @@ class TestStructuredJsonOutput:
         assert parsed_json["run_id"] == "ca6e29ed"
         assert parsed_json["message"] == "HTTP request sent"
 
-        for key in parsed_json.keys():
+        for key in parsed_json:
             assert "%(" not in key, f"Detected unsolved placeholder in JSON key: {key}"

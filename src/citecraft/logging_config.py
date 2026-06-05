@@ -64,7 +64,7 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
     match verbose_level:
         case 1:
             console_level = "INFO"
-        case lvl if lvl >= 2:
+        case lvl if lvl >= 2:  # noqa: PLR2004
             console_level = "DEBUG"
         case _:
             console_level = "WARNING"
@@ -129,7 +129,7 @@ def setup_logging(verbose_level: int = 0) -> tuple[Path, Path, bool]:
     try:
         config = get_logging_config(log_dir, verbose_level=verbose_level)
         logging.config.dictConfig(config)
-    except Exception as e:
+    except (ValueError, KeyError, ImportError, OSError) as e:
         # Fallback to standard error console if directory is locked or unwritable
         print(
             f"CRITICAL: Failed to initialize logging system configuration: {e}",
