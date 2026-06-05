@@ -187,8 +187,6 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         Example: 'Lénárd' becomes 'lenard', 'Łukasiewicz' becomes 'lukasiewicz'.
         Warning: ü becomes u and not ue (as sometimes found in bibliographies)
         """
-        if not text:
-            return ""
         return unidecode(text).lower().strip()
 
     def _clean_metadata(

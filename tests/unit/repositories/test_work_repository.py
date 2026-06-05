@@ -25,9 +25,106 @@ def repo(test_config: AppConfig) -> WorkRepository:
     return WorkRepository(config=test_config)
 
 
+def test_abstract_methods_raise_not_implemented(repo: WorkRepository) -> None:
+    """Verify that all abstract hook methods raise NotImplementedError."""
+    with pytest.raises(NotImplementedError):
+        repo._call_work_api("Author", 2020, [])
+    with pytest.raises(NotImplementedError):
+        repo._get_authors_from_api_item({})
+    with pytest.raises(NotImplementedError):
+        repo._get_doi_from_api_item({})
+    with pytest.raises(NotImplementedError):
+        repo._get_issns_groups_for_api([])
+    with pytest.raises(NotImplementedError):
+        repo._get_type_from_api_item({})
+    with pytest.raises(NotImplementedError):
+        repo._set_metadata_attribute(MagicMock(), {})
+
+
+def test_get_input_first_authors_empty_input(repo: WorkRepository) -> None:
+    """Verify empty first authors string returns (None, False)."""
+    assert repo._get_input_first_authors_and_et_al("") == (None, False)
+
+
+def test_get_work_metadata_raises_on_missing_issns(repo: WorkRepository) -> None:
+    """Verify get_work_metadata raises ValueError if input_issns is empty."""
+    with pytest.raises(ValueError, match="input_issn is an obligatory argument"):
+        repo.get_work_metadata(
+            CitationMetadata(first_authors_txt="Lenard", year_and_suffix="2020"),
+            input_issns=[],
+        )
+
+
+@pytest.mark.parametrize("year", ["1799", "2101"])
+def test_get_work_metadata_raises_on_invalid_year_range(
+    repo: WorkRepository, year: str
+) -> None:
+    """Verify get_work_metadata raises ValueError if year is out of range."""
+    with pytest.raises(ValueError, match="must be in the"):
+        repo.get_work_metadata(
+            CitationMetadata(first_authors_txt="Lenard", year_and_suffix=year),
+            input_issns=["1752-0894"],
+        )
+
+
+def test_get_work_metadata_skips_invalid_candidates(repo: WorkRepository) -> None:
+    """Verify candidates with empty authors or failed validations are skipped."""
+    items = [
+        # Candidate 1: No api authors
+        {"DOI": "10.1000/1", "type": "journal-article"},
+        # Candidate 2: Authors validation fail
+        {
+            "DOI": "10.1000/2",
+            "type": "journal-article",
+            "author": [{"family": "Smith"}],
+        },
+    ]
+
+    repo._call_work_api = MagicMock(return_value=items)
+    repo._get_authors_from_api_item = MagicMock(
+        side_effect=lambda item: item.get("author")
+    )
+    repo._get_doi_from_api_item = MagicMock(side_effect=lambda item: item.get("DOI"))
+    repo._get_type_from_api_item = MagicMock(side_effect=lambda item: item.get("type"))
+    repo._validate_first_authors_count = MagicMock(return_value=True)
+    repo._validate_first_authors = MagicMock(return_value=False)
+
+    results = repo.get_work_metadata(
+        CitationMetadata(first_authors_txt="Lenard", year_and_suffix="2020"),
+        input_issns=["1752-0894"],
+    )
+    assert len(results) == 0
+
+
+@pytest.mark.parametrize(
+    "inputs, apis",
+    [
+        ([], [{"family": "Lenard"}]),
+        (["Lenard"], []),
+        ([], []),
+    ],
+)
+def test_validate_first_authors_empty_boundaries(
+    repo: WorkRepository, inputs: list[str], apis: list[dict]
+) -> None:
+    """Verify that _validate_first_authors returns False if either array is empty."""
+    assert repo._validate_first_authors(inputs, apis) is False
+
+
+def test_validate_first_authors_mismatched_api_authors_length(
+    repo: WorkRepository,
+) -> None:
+    """Verify returns False if input count matches limit but api results lack."""
+    repo._validate_author = MagicMock(return_value=True)
+
+    input_first_authors = ["Guns", "Vanacker"]
+    api_authors = [{"family": "Guns"}]  # Only 1 author in API results
+
+    assert repo._validate_first_authors(input_first_authors, api_authors) is False
+
+
 def test_clean_metadata(repo: WorkRepository) -> None:
-    """Verify that _clean_metadata filters blacklisted fields from work and author
-    levels."""
+    """Verify that _clean_metadata filters blacklisted fields."""
     raw_metadata = {
         "title": "A Great Study",
         "indexed": "2026-05-31",
@@ -76,11 +173,10 @@ def test_clean_metadata(repo: WorkRepository) -> None:
         ("Peña", "pena"),
         ("Erdős", "erdos"),
         ("  Spaces  ", "spaces"),
-        (None, ""),
     ],
 )
 def test_normalize_string(
-    repo: WorkRepository, input_str: str | None, expected_str: str
+    repo: WorkRepository, input_str: str, expected_str: str
 ) -> None:
     """Verify string transliteration and casing normalization."""
     assert repo._normalize_string(input_str) == expected_str
