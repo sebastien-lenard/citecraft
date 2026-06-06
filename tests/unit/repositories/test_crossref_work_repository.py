@@ -1,5 +1,4 @@
 # tests/unit/repositories/test_crossref_work_repository.py
-# filepath: tests/test_crossref_work_repository.py
 import logging
 from unittest.mock import MagicMock, patch
 

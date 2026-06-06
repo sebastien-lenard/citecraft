@@ -44,7 +44,7 @@ class DataLoader:
         if not self.file_path.is_file():
             return None
         try:
-            doc = Document(self.file_path)
+            doc = Document(str(self.file_path))  # python-docx don't support Path yet
             return "\n".join(p.text for p in doc.paragraphs)
         except (PackageNotFoundError, BadZipFile):
             if self.raise_exception:
@@ -85,23 +85,23 @@ class DataLoader:
         if data is None:
             return None
 
-        if validator and isinstance(data, list):
-            if not all(validator(item) for item in data):
-                msg = (
-                    f"Schema validation failed for one or more items in: "
-                    f"{self.file_path}"
-                )
-                if self.raise_exception:
-                    raise ValueError(msg)
-                logger.warning(
-                    "Schema validation failed for item in: %s",
-                    str(self.file_path),
-                    extra={
-                        "status": "KO",
-                        "event": "json_schema_validation_failed",
-                        "filepath": str(self.file_path),
-                    },
-                )
-                return None
+        if (
+            validator
+            and isinstance(data, list)
+            and not all(validator(item) for item in data)
+        ):
+            msg = f"Schema validation failed for one or more items in: {self.file_path}"
+            if self.raise_exception:
+                raise ValueError(msg)
+            logger.warning(
+                "Schema validation failed for item in: %s",
+                str(self.file_path),
+                extra={
+                    "status": "KO",
+                    "event": "json_schema_validation_failed",
+                    "filepath": str(self.file_path),
+                },
+            )
+            return None
 
         return data

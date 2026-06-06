@@ -58,8 +58,8 @@ extend-exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "PLR2004", "UP", "RUF"]
-ignore = ["E501"]
+select = ["E", "F", "I", "B", "A", "ARG", "C4", "C90", "ERA", "FLY", "N", "PERF", "PL", "RET", "RUF", "SIM", "UP", "T10", "YTT"]
+ignore = []
 fixable = ["ALL"]
 unfixable = []
 allowed-confusables = ["ℹ"]

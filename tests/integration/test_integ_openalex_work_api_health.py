@@ -1,5 +1,4 @@
 # tests/integration/test_integ_openalex_work_api_health.py
-# filepath: tests/integration/test_integ_openalex_work_api_health.py
 import _socket
 
 import pytest

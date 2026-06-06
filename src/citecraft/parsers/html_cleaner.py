@@ -2,6 +2,7 @@
 import html
 import re
 from html.parser import HTMLParser
+from typing import override
 
 from citecraft.utils import AppConfig, get_config
 
@@ -27,6 +28,7 @@ class HtmlCleaner(HTMLParser):
             self._start_tag_space_regex = re.compile(f"<({tags_pattern})>\\s?")
             self._end_tag_space_regex = re.compile(f"\\s?</({tags_pattern})>")
 
+    @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         """Inject preserved opening tags into the result stream."""
         if tag in self._preserved_tags:

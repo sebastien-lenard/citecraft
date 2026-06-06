@@ -109,18 +109,17 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setattr(sys, "stderr", fake_stderr)
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
-    with pytest.raises(ValueError, match="Pipeline Failure"):
-        with ctx:
-            ctx.update(
-                ProgressStep(
-                    step_name="parsing",
-                    current=0,
-                    total=4,
-                    message="Crashing step",
-                    status="started",
-                )
+    with pytest.raises(ValueError, match="Pipeline Failure"), ctx:
+        ctx.update(
+            ProgressStep(
+                step_name="parsing",
+                current=0,
+                total=4,
+                message="Crashing step",
+                status="started",
             )
-            raise ValueError("Pipeline Failure")
+        )
+        raise ValueError("Pipeline Failure")
 
     output = fake_stderr.getvalue()
     assert "Completed." not in output
@@ -144,7 +143,7 @@ def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> Non
 
         with ctx:
             # Force an explicit line draw to establish the terminal state
-            # ("Initializing...")
+            # "Initializing..."
             ctx._draw_line()
 
             # Emit a warning log midway through execution
@@ -182,13 +181,12 @@ def test_logging_handlers_are_cleaned_on_exception() -> None:
 
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
-    with pytest.raises(RuntimeError, match="Forced pipeline crash"):
-        with ctx:
-            # Verify when executing: LogInterceptor present in active handlers
-            assert any(
-                x.__class__.__name__ == "LogInterceptor" for x in root_logger.handlers
-            )
-            raise RuntimeError("Forced pipeline crash")
+    with pytest.raises(RuntimeError, match="Forced pipeline crash"), ctx:
+        # Verify when executing: LogInterceptor present in active handlers
+        assert any(
+            x.__class__.__name__ == "LogInterceptor" for x in root_logger.handlers
+        )
+        raise RuntimeError("Forced pipeline crash")
 
     # After-crash verification: initial state must be restored.
     assert root_logger.handlers == initial_handlers

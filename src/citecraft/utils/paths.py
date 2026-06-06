@@ -26,12 +26,11 @@ def get_app_base_dir() -> Path:
         local_app_data = _ENV.get("LOCALAPPDATA")
         base = Path(local_app_data) if local_app_data else home / "AppData" / "Local"
         return base / get_app_name()
-    elif system == "Darwin":
+    if system == "Darwin":
         return home / "Library" / get_app_name()
-    else:
-        xdg_state = _ENV.get("XDG_STATE_HOME")
-        base = Path(xdg_state) if xdg_state else home / ".local" / "state"
-        return base / get_app_name()
+    xdg_state = _ENV.get("XDG_STATE_HOME")
+    base = Path(xdg_state) if xdg_state else home / ".local" / "state"
+    return base / get_app_name()
 
 
 def get_safe_dir(subfolder: str) -> tuple[Path, Path, bool]:

@@ -1,5 +1,4 @@
 # tests/unit/repositories/test_openalex_work_repository.py
-# filepath: tests/test_openalex_work_repository.py
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -121,7 +120,7 @@ def test_get_issns_groups_for_api(repo: OpenAlexWorkRepository) -> None:
             },
             "journal-article",
         ),
-        # Case 2: Fallback to top-level type when primary_location or raw_type is missing
+        # Case 2: Fallback to top-level type when missing primary_location or raw_type
         (
             {"primary_location": {}, "type": "dataset"},
             "dataset",

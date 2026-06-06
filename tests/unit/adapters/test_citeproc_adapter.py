@@ -8,6 +8,9 @@ import pytest
 from citecraft.adapters import CiteprocAdapter
 
 # Minimalist valid XML CSL style mock derived from nature.csl for testing execution flow
+# ruff: disable[E501]
+# Not possible to cut this xml string.
+# TODO: this xml should be in a dedicated ancillary tracked  test file?
 MOCK_CSL_STYLE = """<?xml version="1.0" encoding="utf-8"?>
 <style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" demote-non-dropping-particle="sort-only" default-locale="en-GB">
   <info>
@@ -142,12 +145,13 @@ MOCK_CSL_STYLE = """<?xml version="1.0" encoding="utf-8"?>
     </layout>
   </bibliography>
 </style>"""
+# ruff: enable[E501]
 
 
 def test_create_json_source_success_with_unsupported_warning(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Verify clean instantiation redirects citeproc internal warnings onto local debug logs."""
+    """Verify instantiation redirects citeproc internal warnings onto local logs."""
     csl_dict = {
         "id": "10.1000/xyz123",
         "type": "article-journal",
@@ -268,14 +272,16 @@ def test_render_bibliography_corrupted_github_style_handles_attribute_error(
     assert source is not None
     assert style is not None
 
-    with patch(
-        "citeproc.CitationStylesBibliography.bibliography",
-        side_effect=AttributeError("'NoneType' object has no attribute 'render'"),
+    with (
+        patch(
+            "citeproc.CitationStylesBibliography.bibliography",
+            side_effect=AttributeError("'NoneType' object has no attribute 'render'"),
+        ),
+        caplog.at_level(logging.WARNING),
     ):
-        with caplog.at_level(logging.WARNING):
-            rendered_text, err = CiteprocAdapter.render_bibliography(
-                style, source, item_id=doi_key, doi=doi_key
-            )
+        rendered_text, err = CiteprocAdapter.render_bibliography(
+            style, source, item_id=doi_key, doi=doi_key
+        )
 
     assert rendered_text is None
     assert err is not None

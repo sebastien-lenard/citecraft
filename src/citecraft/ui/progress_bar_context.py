@@ -11,7 +11,7 @@ from citecraft.core import ProgressStep
 
 
 class LogInterceptor(logging.Handler):
-    """Handler that intercepts log records and redirects them cleanly above the progress bar."""
+    """Handler that intercepts and redirects logs above the progress bar."""
 
     def __init__(self, draw_callback: Callable[[], None]) -> None:
         super().__init__()
@@ -37,12 +37,6 @@ class ProgressBarContext:
 
     If verbose_level > 0, the context remains passive and does not alter
     the standard output stream.
-
-    New:
-    Gestionnaire de contexte pour le cycle de vie de la barre de progression CLI.
-
-    Gère un thread d'arrière-plan à 1 Hz pour éviter le gel du terminal
-    pendant les requêtes réseaux (Crossref API). Active uniquement si verbose_level == 0.
     """
 
     def __init__(self, verbose_level: int = 0, bar_width: int = 30) -> None:
@@ -152,7 +146,7 @@ class ProgressBarContext:
             self._draw_line()
 
     def generate_bar_string(self, current: int, total: int, elapsed_time: float) -> str:
-        """Compute and return the progress bar visual format and remaining time estimation."""
+        """Compute the progress bar visual format and remaining time estimation."""
         percent = int((current / total) * 100) if total > 0 else 0
         filled_length = int(self.bar_width * current // total) if total > 0 else 0
 
@@ -203,7 +197,7 @@ class ProgressBarContext:
         minutes, seconds = divmod(elapsed_int, 60)
         time_str = f"[{minutes:02d}:{seconds:02d}]"
 
-        # Correction de la séquence d'effacement \r\033[K pour rester sur une ligne unique stable
+        # Stay on a unique stable line
         line = f"\r\033[K{time_str} {msg:<55} {bar_component}"
         sys.stderr.write(line)
         sys.stderr.flush()

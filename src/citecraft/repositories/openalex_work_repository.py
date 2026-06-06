@@ -31,10 +31,9 @@ class OpenAlexWorkRepository(WorkRepository):
             return None
         match len(authors):
             case 1 | 2:
-                author_filter = ",".join(
+                return ",".join(
                     f'raw_author_name.search:"{author}"' for author in authors
                 )
-                return author_filter
 
     @override
     def _call_work_api(
@@ -113,13 +112,12 @@ class OpenAlexWorkRepository(WorkRepository):
         response.raise_for_status()
         data = response.json()
 
-        items = data.get("results", [])
-        return items
+        return data.get("results", [])
 
     @override
     def _get_authors_from_api_item(self, item: dict) -> list[dict] | None:
         """Get authors of an item returned by the api"""
-        return item["authorships"] if "authorships" in item else None
+        return item.get("authorships")
 
     @override
     def _get_doi_from_api_item(self, item: dict) -> str | None:
@@ -163,7 +161,7 @@ class OpenAlexWorkRepository(WorkRepository):
         """Get type of an item returned by the api"""
         if "primary_location" in item and "raw_type" in item["primary_location"]:
             return item["primary_location"]["raw_type"]
-        return item["type"] if "type" in item else None
+        return item.get("type")
 
     @override
     def _set_metadata_attribute(

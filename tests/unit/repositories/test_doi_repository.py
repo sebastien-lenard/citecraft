@@ -110,9 +110,11 @@ def test_get_metadata_server_error_500_bubbles_up(repo: DoiRepository) -> None:
         "500 Internal Server Error", request=mock_request, response=mock_response
     )
 
-    with patch.object(repo.http_client_wrapper, "get", side_effect=error):
-        with pytest.raises(httpx.HTTPStatusError):
-            repo.get_metadata("10.1000/broken")
+    with (
+        patch.object(repo.http_client_wrapper, "get", side_effect=error),
+        pytest.raises(httpx.HTTPStatusError),
+    ):
+        repo.get_metadata("10.1000/broken")
 
 
 def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) -> None:

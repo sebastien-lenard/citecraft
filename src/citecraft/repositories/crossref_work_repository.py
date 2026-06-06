@@ -77,18 +77,17 @@ class CrossrefWorkRepository(WorkRepository):
         response.raise_for_status()
         data = response.json()
 
-        items = data["message"].get("items", [])
-        return items
+        return data["message"].get("items", [])
 
     @override
     def _get_authors_from_api_item(self, item: dict) -> list[dict] | None:
         """Get authors of an item returned by the api"""
-        return item["author"] if "author" in item else None
+        return item.get("author")
 
     @override
     def _get_doi_from_api_item(self, item: dict) -> str | None:
         """Get doi of an item returned by the api"""
-        return item["DOI"] if "DOI" in item else None
+        return item.get("DOI")
 
     @override
     def _get_issns_groups_for_api(self, issns: list[str]) -> list[list[str]]:
@@ -98,7 +97,7 @@ class CrossrefWorkRepository(WorkRepository):
     @override
     def _get_type_from_api_item(self, item: dict) -> str | None:
         """Get type of an item returned by the api"""
-        return item["type"] if "type" in item else None
+        return item.get("type")
 
     @override
     def _set_metadata_attribute(

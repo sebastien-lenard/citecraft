@@ -58,8 +58,8 @@ class DoiRepository:
                 )
                 logger.warning(
                     (
-                        "CSL-JSON metadata invalid (missing 'id' and 'DOI'/'doi' field) for"
-                        " DOI:%s"
+                        "CSL-JSON metadata invalid (missing 'id' and 'DOI'/'doi' "
+                        "field) for DOI:%s"
                     ),
                     doi,
                     extra={

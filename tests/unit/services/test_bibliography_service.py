@@ -180,7 +180,7 @@ def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
             doi="10.1000/ref2",
             reference="Lenard Ref A",
         ),
-        # Unique (OK)
+        # Unique (are OK)
         WorkMetadata(
             input_first_authors_txt="Smith",
             input_year_and_suffix="2021",
