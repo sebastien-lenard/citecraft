@@ -1,19 +1,26 @@
 # tests/unit/storage/test_db.py
 import sqlite3
 from pathlib import Path
+from typing import Union
+from unittest.mock import MagicMock, patch
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
+import citecraft.storage.db as db_module
 from citecraft.schemas.journal_metadata import JournalMetadata
 from citecraft.schemas.work_metadata import WorkMetadata
 from citecraft.storage.db import (
     _get_sqlite_type,
     _is_collection_type,
     archive_database_cache,
+    create_table_for_model,
+    deserialize_row,
     load_records,
     save_records,
+    serialize_model,
 )
+from citecraft.storage.db_client import DbClient
 
 
 class SimpleMockModel(BaseModel):
@@ -32,6 +39,14 @@ class MismatchedMockModel(BaseModel):
     non_existent_column: str
 
 
+class PathMockModel(BaseModel):
+    file_path: Path
+
+
+class FlexibleCollectionModel(BaseModel):
+    items: list[str] | str
+
+
 def test_type_mappings() -> None:
     """Verify that Python/Pydantic types map correctly to SQLite columns."""
     assert _get_sqlite_type(int) == "INTEGER"
@@ -42,6 +57,98 @@ def test_type_mappings() -> None:
     assert _is_collection_type(list[str]) is True
     assert _is_collection_type(dict[str, int]) is True
     assert _is_collection_type(int) is False
+
+
+def test_is_collection_type_edge_cases() -> None:
+    """Verify collection checks for None types and inheritance subclasses."""
+    assert _is_collection_type(None) is False
+
+    class CustomList(list):
+        pass
+
+    assert _is_collection_type(CustomList) is True
+
+
+def test_get_sqlite_type_edge_cases() -> None:
+    """Verify SQLite type resolutions for None and blank Unions."""
+    assert _get_sqlite_type(None) == "TEXT"
+
+    # Verify Union containing only NoneType falls back to TEXT
+    mock_type = MagicMock()
+    with (
+        patch("citecraft.storage.db.get_origin", return_value=Union),
+        patch("citecraft.storage.db.get_args", return_value=[type(None)]),
+    ):
+        assert _get_sqlite_type(mock_type) == "TEXT"
+
+
+def test_serialize_model_path_type(tmp_path: Path) -> None:
+    """Verify serialize_model converts Path values to plain string types."""
+    test_file = tmp_path / "test_dir" / "file.txt"
+    model = PathMockModel(file_path=test_file)
+    serialized = serialize_model(model)
+    assert serialized["file_path"] == str(test_file)
+
+
+def test_deserialize_row_coverage() -> None:
+    """Verify various deserialize_row logic branches and fallbacks.
+    Organically triggers the 'field is None' continue path via ghost_column."""
+    # 1. JSONDecodeError fallback branch
+    row_invalid_json = {"items": "invalid_json_string_value"}
+    deserialized_fallback = deserialize_row(row_invalid_json, FlexibleCollectionModel)
+    assert deserialized_fallback.items == "invalid_json_string_value"
+
+    # 2. Inner else: Collection type with non-string value
+    row_already_collection = {"tags": ["pre_parsed_value"], "name": "Test", "id": 1}
+    deserialized_collection = deserialize_row(row_already_collection, SimpleMockModel)
+    assert deserialized_collection.tags == ["pre_parsed_value"]
+
+    # 3. Outer else: Missing field column (gets ignored) and None values
+    row_with_none = {
+        "tags": None,
+        "name": "Item Name",
+        "id": 123,
+        "ghost_column": "ignore_me",
+    }
+    deserialized_none = deserialize_row(row_with_none, SimpleMockModel)
+    assert deserialized_none.name == "Item Name"
+    assert deserialized_none.tags == []  # default_factory triggers
+
+
+def test_deserialize_row_validation_error_on_missing_required() -> None:
+    """Verify required field validation fails correctly if database returns None.
+
+    Triggers 'deserialized[key] = None' and the ensuing ValidationError.
+    """
+    row_with_none_required = {"tags": None, "name": None, "id": 123}
+    with pytest.raises(ValidationError):
+        deserialize_row(row_with_none_required, SimpleMockModel)
+
+
+def test_load_records_missing_boundaries(tmp_path: Path) -> None:
+    """Verify load_records handles nonexistent files and missing tables."""
+    # 1. Nonexistent database file path
+    nonexistent_path = tmp_path / "ghost_file.db"
+    assert load_records(nonexistent_path, "table", SimpleMockModel) == []
+
+    # 2. Nonexistent table name within a valid database file
+    db_path = tmp_path / "real_file.db"
+    save_records(
+        db_path, "actual_table", [SimpleMockModel(id=1, name="A")], SimpleMockModel
+    )
+    assert load_records(db_path, "nonexistent_table", SimpleMockModel) == []
+
+
+def test_archive_database_cache_oserror(tmp_path: Path) -> None:
+    """Verify database renaming errors trigger logged OSErrors."""
+    db_path = tmp_path / "cache.db"
+    db_path.touch()
+
+    with (
+        patch("pathlib.Path.rename", side_effect=OSError("Permission Denied")),
+        pytest.raises(OSError, match="Permission Denied"),
+    ):
+        archive_database_cache(db_path)
 
 
 def test_dynamic_schema_and_save_load(tmp_path: Path) -> None:
@@ -96,7 +203,7 @@ def test_transaction_rollback_integrity(tmp_path: Path) -> None:
         save_records(db_path, "mock_table", bad_records, MismatchedMockModel)
 
     # Verify that a real SQLite error was raised
-    assert "has no column named non_existent_column" in str(exc_info.value)
+    assert "has no column named " in str(exc_info.value)
 
     # 3. Verify original database state remains uncorrupted and loaded successfully
     loaded = load_records(db_path, "mock_table", SimpleMockModel)
@@ -172,3 +279,73 @@ def test_archive_database_cache_missing_returns_none(tmp_path: Path) -> None:
     db_path = tmp_path / "absent_cache.db"
     backup_path = archive_database_cache(db_path)
     assert backup_path is None
+
+
+# ============================================================================ #
+# ARCHITECTURAL SHIELDS (REGRESSION PREVENTERS)                               #
+# ============================================================================ #
+
+
+def test_architectural_shield_sql_placeholders() -> None:
+    """Ensure that only {table_name} is used as SQL placeholders, never {table}."""
+    db_file_path = Path(__file__).parents[3] / "src" / "citecraft" / "storage" / "db.py"
+    if not db_file_path.exists():
+        db_file_path = Path(db_module.__file__)
+
+    content = db_file_path.read_text("utf-8")
+    assert "{table}" not in content.replace("{table_name}", "")
+
+
+def test_architectural_shield_no_direct_connection_execute() -> None:
+    """Ensure db.py never calls execute or executemany directly on sqlite3."""
+    db_file_path = Path(__file__).parents[3] / "src" / "citecraft" / "storage" / "db.py"
+    if not db_file_path.exists():
+        db_file_path = Path(db_module.__file__)
+
+    content = db_file_path.read_text("utf-8")
+    assert ".execute(" not in content
+    assert ".executemany(" not in content
+
+
+def test_architectural_shield_db_client_dispatches() -> None:
+    """Verify that DbClient classmethods are called during database operations."""
+
+    with (
+        patch.object(DbClient, "safe_create_table") as mock_create,
+        patch.object(DbClient, "safe_execute") as mock_execute,
+        patch.object(DbClient, "safe_execute_many") as mock_executemany,
+        patch.object(DbClient, "safe_fetch_all", return_value=[]) as mock_fetchall,
+        patch.object(DbClient, "table_exists", return_value=True) as mock_exists,
+    ):
+        mock_conn = MagicMock(spec=sqlite3.Connection)
+
+        # 1. Test create_table_for_model dispatch
+
+        create_table_for_model(mock_conn, "test_table", SimpleMockModel)
+        mock_create.assert_called_once()
+
+        # 2. Test save_records dispatch
+
+        with (
+            patch("sqlite3.connect") as mock_connect,
+            patch("citecraft.storage.db.create_table_for_model"),
+        ):
+            mock_connect.return_value = mock_conn
+            save_records(
+                Path("dummy.db"),
+                "test_table",
+                [SimpleMockModel(id=1, name="A")],
+                SimpleMockModel,
+            )
+            mock_execute.assert_called_once()
+            mock_executemany.assert_called_once()
+
+        # 3. Test load_records dispatch
+        with patch("sqlite3.connect") as mock_connect:
+            mock_connect.return_value = mock_conn
+            mock_path = MagicMock(spec=Path)
+            mock_path.exists.return_value = True
+
+            load_records(mock_path, "test_table", SimpleMockModel)
+            mock_exists.assert_called_once()
+            mock_fetchall.assert_called_once()

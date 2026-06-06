@@ -86,7 +86,7 @@ class DbClient:
     ) -> list[sqlite3.Row]:
         """Formats table identifier safely into a read query and fetches all rows."""
         safe_table = cls.quote_identifier(table_name)
-        query = sql_template.format(table=safe_table)
+        query = sql_template.format(table_name=safe_table)
         parameters: tuple[object, ...] | dict[str, object] = kwargs if kwargs else args
         cursor = conn.execute(query, parameters)
         return cursor.fetchall()

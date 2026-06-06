@@ -10,10 +10,12 @@ from typing import Any, Union, get_args, get_origin
 
 from pydantic import BaseModel
 
+from .db_client import DbClient
+
 logger = logging.getLogger(__name__)
 
 
-def _is_collection_type(type_annotation: Any) -> bool:
+def _is_collection_type(type_annotation: object) -> bool:
     """Determine if a type annotation represents a list, dict, or set."""
     if type_annotation is None:
         return False
@@ -22,47 +24,42 @@ def _is_collection_type(type_annotation: Any) -> bool:
         return True
     if origin in (Union, UnionType):
         return any(_is_collection_type(arg) for arg in get_args(type_annotation))
-    try:
-        if issubclass(type_annotation, list | dict | set):
-            return True
-    except TypeError:
-        pass
-    return False
+
+    return isinstance(type_annotation, type) and issubclass(
+        type_annotation, list | dict | set
+    )
 
 
-def _get_sqlite_type(type_annotation: Any) -> str:
+def _get_sqlite_type(type_annotation: object) -> str:
     """Map Python and Pydantic types to SQLite equivalents."""
     if type_annotation is None:
         return "TEXT"
+
     origin = get_origin(type_annotation)
     if origin in (Union, UnionType):
         args = [arg for arg in get_args(type_annotation) if arg is not type(None)]
-        if args:
-            return _get_sqlite_type(args[0])
-        return "TEXT"
-    try:
-        if issubclass(type_annotation, bool):
-            return "INTEGER"
-        if issubclass(type_annotation, int):
-            return "INTEGER"
-        if issubclass(type_annotation, float):
-            return "REAL"
-    except TypeError:
-        pass
-    return "TEXT"
+        return _get_sqlite_type(args[0]) if args else "TEXT"
+
+    result = "TEXT"
+    if isinstance(type_annotation, type):
+        if issubclass(type_annotation, bool | int):
+            result = "INTEGER"
+        elif issubclass(type_annotation, float):
+            result = "REAL"
+
+    return result
 
 
 def create_table_for_model(
     conn: sqlite3.Connection, table_name: str, model_class: type[BaseModel]
 ) -> None:
     """Create a table dynamically based on Pydantic model fields."""
-    columns = []
-    for name, field in model_class.model_fields.items():
-        sql_type = _get_sqlite_type(field.annotation)
-        columns.append(f'"{name}" {sql_type}')
+    column_definitions = [
+        (name, _get_sqlite_type(field.annotation))
+        for name, field in model_class.model_fields.items()
+    ]
 
-    query = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(columns)});"
-    conn.execute(query)
+    DbClient.safe_create_table(conn, table_name, column_definitions)
 
 
 def serialize_model(record: BaseModel) -> dict[str, Any]:
@@ -81,16 +78,17 @@ def deserialize_row[T: BaseModel](row_dict: dict[str, Any], model_class: type[T]
     deserialized: dict[str, Any] = {}
     for key, val in row_dict.items():
         field = model_class.model_fields.get(key)
-        if field is not None and val is not None:
-            if _is_collection_type(field.annotation):
-                if isinstance(val, str):
-                    try:
-                        deserialized[key] = json.loads(val)
-                    except json.JSONDecodeError:
-                        deserialized[key] = val
-                else:
-                    deserialized[key] = val
-            else:
+        if field is None:
+            continue
+
+        if val is None:
+            if not field.is_required():
+                continue
+            deserialized[key] = None
+        elif _is_collection_type(field.annotation) and isinstance(val, str):
+            try:
+                deserialized[key] = json.loads(val)
+            except json.JSONDecodeError:
                 deserialized[key] = val
         else:
             deserialized[key] = val
@@ -107,25 +105,15 @@ def save_records[T: BaseModel](
             with conn:
                 conn.row_factory = sqlite3.Row
                 create_table_for_model(conn, table_name, model_class)
+                DbClient.safe_execute(conn, "DELETE FROM {table_name};", table_name)
 
-                conn.execute(f"DELETE FROM {table_name};")
                 if records:
                     fields = list(model_class.model_fields.keys())
-                    escaped_fields = [f'"{field}"' for field in fields]
-                    placeholders = ", ".join("?" for _ in fields)
-                    query = (
-                        f"INSERT INTO {table_name} ({', '.join(escaped_fields)}) "
-                        f"VALUES ({placeholders});"
-                    )
-
-                    rows_to_insert = []
-                    for rec in records:
-                        serialized = serialize_model(rec)
-                        rows_to_insert.append(
-                            tuple(serialized[field] for field in fields)
-                        )
-
-                    conn.executemany(query, rows_to_insert)
+                    rows_to_insert = [
+                        tuple(serialize_model(rec)[field] for field in fields)
+                        for rec in records
+                    ]
+                    DbClient.safe_execute_many(conn, table_name, fields, rows_to_insert)
 
         except sqlite3.Error as e:
             logger.error(
@@ -146,22 +134,14 @@ def load_records[T: BaseModel](
 
     with closing(sqlite3.connect(db_path)) as conn:
         conn.row_factory = sqlite3.Row
-        cursor = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
-            (table_name,),
-        )
-        if not cursor.fetchone():
+        if not DbClient.table_exists(conn, table_name):
             return []
-
-        cursor = conn.execute(f"SELECT * FROM {table_name};")
-        rows = cursor.fetchall()
-
+        rows = DbClient.safe_fetch_all(conn, "SELECT * FROM {table_name};", table_name)
         return [deserialize_row(dict(row), model_class) for row in rows]
 
 
 def archive_database_cache(db_path: Path) -> Path | None:
-    """Safely archive the local database cache by renaming it with a timestamp
-    suffix."""
+    """Safely archive local database cache by renaming it with timestamp suffix."""
     if not db_path.is_file():
         logger.warning(
             "Database cache file not found for archiving: %s",
