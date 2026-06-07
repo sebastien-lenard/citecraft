@@ -42,7 +42,7 @@ jobs:
     - name: Run Pytest with Coverage (Linux)
       # This step only runs on the Ubuntu machine
       if: matrix.os == 'ubuntu-latest'
-      run: xvfb-run uv run --with pytest-cov pytest -m unit --cov=src/ --cov-branch --cov-report=xml
+      run: xvfb-run uv run --with pytest-cov --with coverage pytest -m unit --cov=src/ --cov-branch --cov-report=xml
       
 
     - name: Run Pytest (Windows & macOS)
