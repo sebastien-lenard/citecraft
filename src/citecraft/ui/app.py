@@ -5,10 +5,11 @@ import _tkinter
 import contextlib
 import logging
 import sys
+import threading
 
 import customtkinter as ctk
 
-from citecraft.core import PipelineOptions
+from citecraft.core import PipelineOptions, run
 from citecraft.utils.config import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class TextRedirector:
     def write(self, text: str) -> None:
         """Thread-safe write scheduler that pushes insertion to Tkinter queue."""
         if text:  # pragma: no branch
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(_tkinter.TclError, RuntimeError, AttributeError):
                 self.textbox.after(0, self._safe_write, text)
 
     def _safe_write(self, text: str) -> None:
@@ -261,7 +262,7 @@ class MainFrame(ctk.CTkFrame):
             logger.info("Output bibliography path registered: %s", selected_path)
 
     def _on_run_pipeline(self) -> None:
-        """Validate active state inputs and report execution readiness."""
+        """Validate inputs, lock layout controls, and spawn background processing."""
         self._reset_validation_highlights()
 
         try:
@@ -274,12 +275,65 @@ class MainFrame(ctk.CTkFrame):
                 f"  • Destination: {options.output_filepath}\n"
                 f"  • Style      : {options.style}\n"
                 f"  • API Engine : {options.api}\n"
-                f"Starting pipeline processing...\n"
+                f"Starting background pipeline thread...\n"
             )
+
+            # Disable controls to prevent concurrent pipeline launches
+            self._set_controls_state("disabled")
+
+            # Spawn synchronous backend execution in isolated daemon thread
+            thread = threading.Thread(
+                target=self._run_pipeline_worker, args=(options,), daemon=True
+            )
+            thread.start()
+
         except ValueError as e:
             error_msg = str(e)
             self.write_console(f"⚠ Input Validation Error: {error_msg}\n")
             self._apply_validation_highlights(error_msg)
+
+    def _run_pipeline_worker(self, options: PipelineOptions) -> None:
+        """Run synchronous bibliography process inside daemon thread context."""
+        try:
+            anomalous_journals, export_metadata = run(options)
+            self.after(
+                0,
+                self._on_pipeline_completed,
+                anomalous_journals,
+                export_metadata,
+                None,
+            )
+        except Exception as e:  # noqa BLE001
+            # Safely marshal error back onto main UI thread
+            self.after(0, self._on_pipeline_completed, [], None, e)
+
+    def _on_pipeline_completed(
+        self,
+        anomalous_journals: list,
+        export_metadata: object,
+        error: Exception | None,
+    ) -> None:
+        """Re-enable visual inputs and write processing results to console."""
+        self._set_controls_state("normal")
+
+        if error:
+            self.write_console(f"❌ Execution Failure: {error}\n")
+            logger.error("Core processing pipeline failed.", exc_info=error)
+            return
+
+        self.write_console("✓ Processing Completed Successfully.\n")
+        if export_metadata:  # pragma: no branch
+            total = getattr(export_metadata, "total_rows", 0)
+            path = getattr(export_metadata, "output_filepath", "")
+            self.write_console(
+                f"  • Total references processed: {total}\n"
+                f"  • Output CSV saved to: {path}\n"
+            )
+        if anomalous_journals:  # pragma: no branch
+            self.write_console(
+                f"  • Warning: {len(anomalous_journals)} journals had ISSN conflicts"
+                " or were missing. Check log files for trace details.\n"
+            )
 
     def write_console(self, text: str) -> None:
         """Insert a logging line into the read-only console output panel."""
@@ -287,6 +341,21 @@ class MainFrame(ctk.CTkFrame):
         self.txt_console.insert("end", text)
         self.txt_console.configure(state="disabled")
         self.txt_console.see("end")
+
+    def _set_controls_state(self, state: str) -> None:
+        """Update interactive state configurations of all controls globally."""
+        self.btn_input.configure(state=state)
+        self.btn_output.configure(state=state)
+        self.btn_run.configure(state=state)
+
+        master = getattr(self, "master", None)
+        sidebar = getattr(master, "sidebar", None) if master else None
+        if sidebar:  # pragma: no branch
+            sidebar.cmb_api.configure(state=state)
+            sidebar.ent_journal.configure(state=state)
+            sidebar.ent_style.configure(state=state)
+            sidebar.switch_skip_journal.configure(state=state)
+            sidebar.switch_skip_work.configure(state=state)
 
     def _apply_validation_highlights(self, error_msg: str) -> None:
         """Apply warning color schemes to inputs failing validation checks."""

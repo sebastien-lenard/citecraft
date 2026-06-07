@@ -21,7 +21,12 @@ from citecraft.utils.config import AppConfig
 class StubStringVar:
     """A display-less replacement for ctk.StringVar for safe headless testing."""
 
-    def __init__(self, master: object = None, value: str = "") -> None:  # type: ignore[assignment]
+    def __init__(
+        self,
+        master: object = None,
+        value: str = "",
+        name: str = None,  # type: ignore[assignment]
+    ) -> None:
         self._value = str(value)
 
     def get(self) -> str:
@@ -34,7 +39,12 @@ class StubStringVar:
 class StubBooleanVar:
     """A display-less replacement for ctk.BooleanVar for safe headless testing."""
 
-    def __init__(self, master: object = None, value: bool = False) -> None:  # type: ignore[assignment]
+    def __init__(
+        self,
+        master: object = None,
+        value: bool = False,
+        name: str = None,  # type: ignore[assignment]
+    ) -> None:  # type: ignore[assignment]
         self._value = bool(value)
 
     def get(self) -> bool:
@@ -287,11 +297,18 @@ def test_ui_state_serialization_validation_errors(test_config: AppConfig) -> Non
 
 def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
     """Validate run event writes success to console log on valid state inputs."""
+
+    def mock_after(
+        self: object, delay: int, func: typing.Callable, *args: object
+    ) -> None:
+        func(*args)
+
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
         patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
         patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.after", mock_after),
         patch("customtkinter.CTkFrame.grid_columnconfigure"),
         patch("customtkinter.CTkFrame.grid_rowconfigure"),
         patch("customtkinter.CTkLabel"),
@@ -316,12 +333,30 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
         mock_textbox = MagicMock()
         main_frame.txt_console = mock_textbox
 
-        with patch("citecraft.ui.app.get_config", return_value=test_config):
+        # Mock thread to run synchronously inside unit testing context safely
+        def mock_thread_init(
+            target: typing.Callable, args: tuple = (), **kwargs: object
+        ) -> MagicMock:  # type: ignore[type-arg]
+            target(*args)
+            return MagicMock()
+
+        mock_run = MagicMock(
+            return_value=(
+                [],
+                MagicMock(total_rows=10, output_filepath="C:/output.csv"),
+            )
+        )
+
+        with (
+            patch("citecraft.ui.app.run", mock_run),
+            patch("threading.Thread", side_effect=mock_thread_init),
+            patch("citecraft.ui.app.get_config", return_value=test_config),
+        ):
             main_frame._on_run_pipeline()
 
         # Verify normal state was set to write, and written value exists
         mock_textbox.configure.assert_any_call(state="normal")
-        write_args = mock_textbox.insert.call_args[0][1]
+        write_args = mock_textbox.insert.call_args_list[0][0][1]
         assert "Inputs Validated" in write_args
         assert "apa" in write_args
 
@@ -507,3 +542,130 @@ def test_queue_log_handler_error_handling() -> None:
 
     # Confirm fallback handleError was executed
     handler.handleError.assert_called_once_with(record)
+
+
+def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None:
+    """Verify background run thread disables and restores controls on success."""
+
+    def mock_after(
+        self: object, delay: int, func: typing.Callable, *args: object
+    ) -> None:
+        func(*args)  # Emulate main-thread callback dispatcher instantly
+
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.after", mock_after),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton"),
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+    ):
+        mock_frame_init.return_value = None
+        mock_master = MagicMock()
+        mock_state = UIState(mock_master)
+
+        mock_state.api.set("OpenAlex")
+        mock_state.style.set("apa")
+        mock_state.input_file_path.set("C:/doc/manuscript.docx")
+        mock_state.output_file_path.set("C:/doc/output.csv")
+
+        main_frame = MainFrame(mock_master, mock_state)
+        main_frame.master = mock_master
+        main_frame.txt_console = MagicMock()
+
+        # Mock core.run to return mock success data with simulated anomalous_journals
+        mock_run = MagicMock(
+            return_value=(
+                [MagicMock(input_title="Anomalous Journal")],
+                MagicMock(total_rows=10, output_filepath="C:/output.csv"),
+            )
+        )
+
+        with (
+            patch("citecraft.ui.app.run", mock_run),
+            patch("citecraft.ui.app.get_config", return_value=test_config),
+        ):
+
+            def mock_thread_init(
+                target: typing.Callable, args: tuple = (), **kwargs: object
+            ) -> MagicMock:
+                # Force synchronous execution inside mock thread to test flow
+                target(*args)
+                return MagicMock()
+
+            with patch("threading.Thread", side_effect=mock_thread_init):
+                main_frame._on_run_pipeline()
+
+        # Verify core.run was called
+        mock_run.assert_called_once()
+        # Verify controls were re-enabled back to normal
+        assert typing.cast(MagicMock, main_frame.btn_run.configure).call_count > 0
+
+        # Assert coverage branch for anomalous_journals was executed and logged
+        main_frame.txt_console.insert.assert_any_call(
+            "end",
+            "  • Warning: 1 journals had ISSN conflicts or were missing. "
+            "Check log files for trace details.\n",
+        )
+
+
+def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
+    """Verify background run thread captures and handles backend errors gracefully."""
+
+    def mock_after(
+        self: object, delay: int, func: typing.Callable, *args: object
+    ) -> None:
+        func(*args)
+
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.after", mock_after),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton"),
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+    ):
+        mock_frame_init.return_value = None
+        mock_master = MagicMock()
+        mock_state = UIState(mock_master)
+
+        mock_state.api.set("OpenAlex")
+        mock_state.style.set("apa")
+        mock_state.input_file_path.set("C:/doc/manuscript.docx")
+        mock_state.output_file_path.set("C:/doc/output.csv")
+
+        main_frame = MainFrame(mock_master, mock_state)
+        main_frame.master = mock_master
+        main_frame.txt_console = MagicMock()
+
+        # Force backend execution to raise RuntimeError
+        mock_run = MagicMock(side_effect=RuntimeError("API failure"))
+
+        with (
+            patch("citecraft.ui.app.run", mock_run),
+            patch("citecraft.ui.app.get_config", return_value=test_config),
+        ):
+
+            def mock_thread_init(
+                target: typing.Callable, args: tuple = (), **kwargs: object
+            ) -> MagicMock:
+                target(*args)
+                return MagicMock()
+
+            with patch("threading.Thread", side_effect=mock_thread_init):
+                main_frame._on_run_pipeline()
+
+        # Verify text console printed error log
+        main_frame.txt_console.insert.assert_any_call(
+            "end", "❌ Execution Failure: API failure\n"
+        )
