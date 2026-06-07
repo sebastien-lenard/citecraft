@@ -5,6 +5,9 @@ import logging
 
 import customtkinter as ctk
 
+from citecraft.core import PipelineOptions
+from citecraft.utils.config import AppConfig
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,6 +22,36 @@ class UIState:
         self.skip_work_update = ctk.BooleanVar(value=False)
         self.input_file_path = ctk.StringVar(value="No manuscript file selected")
         self.output_file_path = ctk.StringVar(value="No output CSV path selected")
+
+    def to_pipeline_options(self, config: AppConfig) -> PipelineOptions:
+        """Validate and serialize active state to strict PipelineOptions."""
+        api_val = self.api.get().strip()
+        style_val = self.style.get().strip()
+        journal_val = self.journal_title.get().strip() or None
+
+        in_path = self.input_file_path.get().strip()
+        if in_path == "No manuscript file selected" or not in_path:
+            raise ValueError("Manuscript file must be selected before processing.")
+
+        out_path = self.output_file_path.get().strip()
+        if out_path == "No output CSV path selected" or not out_path:
+            raise ValueError("Output CSV destination path must be selected.")
+
+        if not style_val:
+            raise ValueError("Reference Style cannot be empty.")
+
+        return PipelineOptions(
+            api=api_val,
+            input_file_path=in_path,
+            input_text="",  # GUI interacts directly with local files
+            output_filepath=out_path,
+            config=config,
+            style=style_val,
+            journal_title=journal_val,
+            progress_callback=None,
+            skip_journal_update=self.skip_journal_update.get(),
+            skip_work_update=self.skip_work_update.get(),
+        )
 
 
 class SidebarFrame(ctk.CTkFrame):

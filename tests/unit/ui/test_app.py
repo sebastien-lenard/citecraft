@@ -3,7 +3,44 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from citecraft.ui.app import CiteCraftApp, MainFrame, SidebarFrame, UIState
+from citecraft.utils.config import AppConfig
+
+
+class StubStringVar:
+    """A display-less replacement for ctk.StringVar for safe headless testing."""
+
+    def __init__(
+        self,
+        master: object = None,
+        value: str = "",
+    ) -> None:  # type: ignore[assignment]
+        self._value = str(value)
+
+    def get(self) -> str:
+        return self._value
+
+    def set(self, val: str) -> None:
+        self._value = str(val)
+
+
+class StubBooleanVar:
+    """A display-less replacement for ctk.BooleanVar for safe headless testing."""
+
+    def __init__(
+        self,
+        master: object = None,
+        value: bool = False,
+    ) -> None:  # type: ignore[assignment]
+        self._value = bool(value)
+
+    def get(self) -> bool:
+        return self._value
+
+    def set(self, val: bool) -> None:
+        self._value = bool(val)
 
 
 def test_app_scaffolding_initialization() -> None:
@@ -113,18 +150,17 @@ def test_main_frame_creation() -> None:
 def test_ui_state_initialization() -> None:
     """Validate default fallback properties are correctly loaded into state variables."""
     with (
-        patch("customtkinter.StringVar") as mock_str_var,
-        patch("customtkinter.BooleanVar") as mock_bool_var,
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
     ):
         mock_master = MagicMock()
         state = UIState(mock_master)
 
-        # Check mock setup bindings values mapped inside reactive UI state
-        mock_str_var.assert_any_call(value="OpenAlex")
-        mock_str_var.assert_any_call(value="apa")
-        mock_str_var.assert_any_call(value="No manuscript file selected")
-        mock_str_var.assert_any_call(value="No output CSV path selected")
-        mock_bool_var.assert_any_call(value=False)
+        assert state.api.get() == "OpenAlex"
+        assert state.style.get() == "apa"
+        assert state.input_file_path.get() == "No manuscript file selected"
+        assert state.output_file_path.get() == "No output CSV path selected"
+        assert state.skip_journal_update.get() is False
 
 
 def test_select_input_file_updates_state() -> None:
@@ -183,3 +219,66 @@ def test_select_output_file_updates_state() -> None:
             filetypes=[("CSV Files", "*.csv")],
         )
         mock_state.output_file_path.set.assert_called_once_with("C:/mock/output.csv")
+
+
+def test_ui_state_serialization_success(test_config: AppConfig) -> None:
+    """Validate UIState translates cleanly to strong typed PipelineOptions."""
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+    ):
+        mock_master = MagicMock()
+        state = UIState(mock_master)
+
+        # Inject real values into Stub classes safely
+        state.api.set("OpenAlex")
+        state.journal_title.set("Geomorphology")
+        state.style.set("apa")
+        state.skip_journal_update.set(False)
+        state.skip_work_update.set(True)
+        state.input_file_path.set("C:/doc/manuscript.docx")
+        state.output_file_path.set("C:/doc/output.csv")
+
+        options = state.to_pipeline_options(test_config)
+
+        assert options.api == "OpenAlex"
+        assert options.input_file_path == "C:/doc/manuscript.docx"
+        assert options.output_filepath == "C:/doc/output.csv"
+        assert options.style == "apa"
+        assert options.journal_title == "Geomorphology"
+        assert options.skip_journal_update is False
+        assert options.skip_work_update is True
+
+
+def test_ui_state_serialization_validation_errors(test_config: AppConfig) -> None:
+    """Validate validation checks raise descriptive ValueError exceptions."""
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+    ):
+        mock_master = MagicMock()
+        state = UIState(mock_master)
+
+        state.api.set("OpenAlex")
+        state.journal_title.set("")
+        state.style.set("apa")
+        state.skip_journal_update.set(False)
+        state.skip_work_update.set(False)
+
+        # Case 1: Unselected manuscript (Placeholder state value)
+        state.input_file_path.set("No manuscript file selected")
+        state.output_file_path.set("C:/output.csv")
+        with pytest.raises(ValueError, match="Manuscript file must be selected"):
+            state.to_pipeline_options(test_config)
+
+        # Case 2: Unselected Output Path (Placeholder state value)
+        state.input_file_path.set("C:/manuscript.docx")
+        state.output_file_path.set("No output CSV path selected")
+        with pytest.raises(ValueError, match="Output CSV destination path"):
+            state.to_pipeline_options(test_config)
+
+        # Case 3: Empty citation format style
+        state.output_file_path.set("C:/output.csv")
+        state.style.set("")
+        with pytest.raises(ValueError, match="Reference Style cannot be empty"):
+            state.to_pipeline_options(test_config)
