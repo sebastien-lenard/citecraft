@@ -26,8 +26,6 @@ class MockSchema(BaseSchema):
 class MockRepository(BaseRepository[MockSchema]):
     """Concrete repository implementation mapping MockSchema elements."""
 
-    pass
-
 
 @pytest.fixture
 def base_repo(test_config: AppConfig) -> MockRepository:
