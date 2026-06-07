@@ -165,27 +165,46 @@ import mkdocs_gen_files
 
 src_root = Path("src/citecraft")
 
+print(f"[generate_docs] Starting automated API reference mapping from: {src_root}")
+
 # Walk through the source code repository systematically
 for path in sorted(src_root.rglob("*.py")):
-    if path.name in ("__init__.py", "__main__.py"):
+    if path.name == "__main__.py":
+        print(f"[generate_docs] Skipping excluded system asset: {path.relative_to(src_root.parent)}")
         # Skip package markers and specific front-end GUI assets if desired
         continue
 
     relative_path = path.relative_to(src_root)
-    module_path = relative_path.with_suffix("")
-    doc_path = relative_path.with_suffix(".md")
-    full_doc_path = Path("reference", doc_path)
 
-    # Force the root package name onto the import path string parts
-    importable_module = ".".join(("citecraft", *module_path.parts))
+    # If it's a package marker, route its documentation to the directory's index file
+    if path.name == "__init__.py":
+        module_path = relative_path.parent
+        doc_path = relative_path.parent / "index.md"
+        # Force the root package name onto the import path string parts
+        importable_module = ".".join(("citecraft", *module_path.parts))
+    else:
+        module_path = relative_path.with_suffix("")
+        doc_path = relative_path.with_suffix(".md")
+        # Force the root package name onto the import path string parts
+        importable_module = ".".join(("citecraft", *module_path.parts))
+
+    # Handle top-level bare module edge-cases (like an __init__.py in the package root)
+    if not importable_module or importable_module == "citecraft.":
+        importable_module = "citecraft"
+
+    full_doc_path = Path("reference", doc_path)
 
     # Open a virtual file stream inside the transient MkDocs build engine
     with mkdocs_gen_files.open(full_doc_path, "w") as active_file:
-        active_file.write(f"# {module_path.parts[-1]}\n\n")
+        heading = module_path.parts[-1] if module_path.parts else "citecraft"
+        active_file.write(f"# {heading}\n\n")
         active_file.write(f"::: {importable_module}\n")
+
+    print(f"[generate_docs] Mapped virtual route: {importable_module} -> {full_doc_path}")
 
     mkdocs_gen_files.set_edit_path(full_doc_path, path)
 
+print("[generate_docs] Documentation structure generation phase completed successfully.")
 ```
 
 
@@ -237,19 +256,25 @@ Write a unit test inside the `tests/` directory that programmatically invokes th
 ```python
 """Verification harness ensuring automated documentation build execution succeeds."""
 
+import logging
+from pathlib import Path
 import pytest
 from mkdocs.commands.build import build
 from mkdocs.config import load_config
 
+logger = logging.getLogger(__name__)
+
 @pytest.mark.integration
-def test_documentation_build_succeeds() -> None:
+def test_documentation_build_succeeds(tmp_path: Path) -> None:
     """Verify the MkDocs compiler runs and generates the API site without crashing."""
+    config = load_config("mkdocs.yml")
+    config["site_dir"] = str(tmp_path / "site")
+
     try:
-        # Verify configuration parses cleanly and execution engine succeeds
-        config = load_config("mkdocs.yml")
         build(config)
     except Exception as err:
-        pytest.fail(f"Documentation compilation failed unexpectedly: {err}")
+        logger.exception("MkDocs internal compiler execution encountered a fault.")
+        pytest.fail(f"Documentation compilation failed dynamically: {err}")
 ```
 
 
@@ -295,6 +320,9 @@ jobs:
         run: uv run mkdocs build --strict
 
       - name: Deploy Production Documentation to GitHub Pages
-        run: uv run mkdocs gh-deploy --force
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          uv run mkdocs gh-deploy --force
 
 ```
