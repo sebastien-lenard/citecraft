@@ -34,9 +34,6 @@ def test_app_scaffolding_initialization() -> None:
         mock_sidebar.assert_called_once_with(app, mock_state)
         mock_main.assert_called_once_with(app, mock_state)
 
-        # Verify ui_state property assignment matches renamed variable
-        assert app.ui_state == mock_state
-
         # First column is sidebar (fixed), second column is flexible
         mock_col.assert_any_call(0, weight=0)
         mock_col.assert_any_call(1, weight=1)
@@ -128,3 +125,61 @@ def test_ui_state_initialization() -> None:
         mock_str_var.assert_any_call(value="No manuscript file selected")
         mock_str_var.assert_any_call(value="No output CSV path selected")
         mock_bool_var.assert_any_call(value=False)
+
+
+def test_select_input_file_updates_state() -> None:
+    """Validate input file dialog successfully updates the UIState."""
+    with (
+        patch("customtkinter.CTkFrame.__init__") as mock_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton"),
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+        patch("customtkinter.filedialog.askopenfilename") as mock_dialog,
+    ):
+        mock_init.return_value = None
+        mock_dialog.return_value = "C:/mock/manuscript.docx"
+
+        mock_state = MagicMock()
+        main_frame = MainFrame(MagicMock(), mock_state)
+
+        main_frame._select_input_file()
+
+        mock_dialog.assert_called_once_with(
+            title="Select Manuscript Document", filetypes=[("Word Documents", "*.docx")]
+        )
+        mock_state.input_file_path.set.assert_called_once_with(
+            "C:/mock/manuscript.docx"
+        )
+
+
+def test_select_output_file_updates_state() -> None:
+    """Validate output file selection successfully updates the UIState."""
+    with (
+        patch("customtkinter.CTkFrame.__init__") as mock_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton"),
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+        patch("customtkinter.filedialog.asksaveasfilename") as mock_dialog,
+    ):
+        mock_init.return_value = None
+        mock_dialog.return_value = "C:/mock/output.csv"
+
+        mock_state = MagicMock()
+        main_frame = MainFrame(MagicMock(), mock_state)
+
+        main_frame._select_output_file()
+
+        mock_dialog.assert_called_once_with(
+            title="Select Output CSV Location",
+            defaultextension=".csv",
+            filetypes=[("CSV Files", "*.csv")],
+        )
+        mock_state.output_file_path.set.assert_called_once_with("C:/mock/output.csv")

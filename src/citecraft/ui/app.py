@@ -88,6 +88,7 @@ class MainFrame(ctk.CTkFrame):
         super().__init__(master, fg_color="transparent")
         self.state = state
         self._create_widgets()
+        self._bind_events()
 
     def _create_widgets(self) -> None:
         """Assemble main layout frames and logging textbox controls."""
@@ -136,6 +137,32 @@ class MainFrame(ctk.CTkFrame):
             self, text="Run Processing Pipeline", font=sec_font, height=40
         )
         self.btn_run.grid(row=3, column=0, padx=20, pady=(0, 20), sticky="ew")
+
+    def _bind_events(self) -> None:
+        """Bind interactive component triggers to specific internal handlers."""
+        self.btn_input.configure(command=self._select_input_file)
+        self.btn_output.configure(command=self._select_output_file)
+
+    def _select_input_file(self) -> None:
+        """Open standard file dialog to retrieve input docx filepath."""
+        selected_path = ctk.filedialog.askopenfilename(
+            title="Select Manuscript Document",
+            filetypes=[("Word Documents", "*.docx")],
+        )
+        if selected_path:
+            self.state.input_file_path.set(selected_path)
+            logger.info("Input manuscript filepath registered: %s", selected_path)
+
+    def _select_output_file(self) -> None:
+        """Open file dialog to retrieve output destination csv path."""
+        selected_path = ctk.filedialog.asksaveasfilename(
+            title="Select Output CSV Location",
+            defaultextension=".csv",
+            filetypes=[("CSV Files", "*.csv")],
+        )
+        if selected_path:
+            self.state.output_file_path.set(selected_path)
+            logger.info("Output bibliography path registered: %s", selected_path)
 
 
 class CiteCraftApp(ctk.CTk):
