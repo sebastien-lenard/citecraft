@@ -6,7 +6,7 @@ import logging
 import customtkinter as ctk
 
 from citecraft.core import PipelineOptions
-from citecraft.utils.config import AppConfig
+from citecraft.utils.config import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +175,7 @@ class MainFrame(ctk.CTkFrame):
         """Bind interactive component triggers to specific internal handlers."""
         self.btn_input.configure(command=self._select_input_file)
         self.btn_output.configure(command=self._select_output_file)
+        self.btn_run.configure(command=self._on_run_pipeline)
 
     def _select_input_file(self) -> None:
         """Open standard file dialog to retrieve input docx filepath."""
@@ -196,6 +197,56 @@ class MainFrame(ctk.CTkFrame):
         if selected_path:
             self.state.output_file_path.set(selected_path)
             logger.info("Output bibliography path registered: %s", selected_path)
+
+    def _on_run_pipeline(self) -> None:
+        """Validate active state inputs and report execution readiness."""
+        self._reset_validation_highlights()
+
+        try:
+            config = get_config()
+            options = self.state.to_pipeline_options(config)
+
+            self.write_console(
+                f"✓ Inputs Validated.\n"
+                f"  • Manuscript : {options.input_file_path}\n"
+                f"  • Destination: {options.output_filepath}\n"
+                f"  • Style      : {options.style}\n"
+                f"  • API Engine : {options.api}\n"
+                f"Starting pipeline processing...\n"
+            )
+        except ValueError as e:
+            error_msg = str(e)
+            self.write_console(f"⚠ Input Validation Error: {error_msg}\n")
+            self._apply_validation_highlights(error_msg)
+
+    def write_console(self, text: str) -> None:
+        """Insert a logging line into the read-only console output panel."""
+        self.txt_console.configure(state="normal")
+        self.txt_console.insert("end", text)
+        self.txt_console.configure(state="disabled")
+        self.txt_console.see("end")
+
+    def _apply_validation_highlights(self, error_msg: str) -> None:
+        """Apply warning color schemes to inputs failing validation checks."""
+        if "Manuscript file" in error_msg:
+            self.btn_input.configure(border_color="red", border_width=2)
+        elif "Output CSV" in error_msg:
+            self.btn_output.configure(border_color="red", border_width=2)
+        elif "Reference Style" in error_msg:
+            master = getattr(self, "master", None)
+            sidebar = getattr(master, "sidebar", None) if master else None
+            if sidebar:
+                sidebar.ent_style.configure(border_color="red")
+
+    def _reset_validation_highlights(self) -> None:
+        """Revert custom warning highlights across all config components."""
+        self.btn_input.configure(border_width=0)
+        self.btn_output.configure(border_width=0)
+        master = getattr(self, "master", None)
+        sidebar = getattr(master, "sidebar", None) if master else None
+        if sidebar:
+            # Revert border_color to standard theme defaults for CTkEntry
+            sidebar.ent_style.configure(border_color=["#979da2", "#565b5e"])
 
 
 class CiteCraftApp(ctk.CTk):

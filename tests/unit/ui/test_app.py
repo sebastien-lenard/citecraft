@@ -1,6 +1,7 @@
 # tests/unit/ui/test_app.py
 """Unit tests for verification of the window layout scaffolding."""
 
+import typing
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,7 +17,7 @@ class StubStringVar:
         self,
         master: object = None,
         value: str = "",
-    ) -> None:  # type: ignore[assignment]
+    ) -> None:
         self._value = str(value)
 
     def get(self) -> str:
@@ -33,7 +34,7 @@ class StubBooleanVar:
         self,
         master: object = None,
         value: bool = False,
-    ) -> None:  # type: ignore[assignment]
+    ) -> None:
         self._value = bool(value)
 
     def get(self) -> bool:
@@ -282,3 +283,163 @@ def test_ui_state_serialization_validation_errors(test_config: AppConfig) -> Non
         state.style.set("")
         with pytest.raises(ValueError, match="Reference Style cannot be empty"):
             state.to_pipeline_options(test_config)
+
+
+def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
+    """Validate run event writes success to console log on valid state inputs."""
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton"),
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+    ):
+        mock_frame_init.return_value = None
+        mock_master = MagicMock()
+        mock_state = UIState(mock_master)
+
+        # Set valid variables
+        mock_state.api.set("OpenAlex")
+        mock_state.style.set("apa")
+        mock_state.input_file_path.set("C:/doc/manuscript.docx")
+        mock_state.output_file_path.set("C:/doc/output.csv")
+
+        main_frame = MainFrame(mock_master, mock_state)
+        main_frame.master = mock_master  # Bind mock master safely
+
+        # Setup console stub mock to verify console output writes
+        mock_textbox = MagicMock()
+        main_frame.txt_console = mock_textbox
+
+        with patch("citecraft.ui.app.get_config", return_value=test_config):
+            main_frame._on_run_pipeline()
+
+        # Verify normal state was set to write, and written value exists
+        mock_textbox.configure.assert_any_call(state="normal")
+        write_args = mock_textbox.insert.call_args[0][1]
+        assert "Inputs Validated" in write_args
+        assert "apa" in write_args
+
+
+def test_on_run_pipeline_validation_failure(test_config: AppConfig) -> None:
+    """Validate run event highlights widgets on validation value failures."""
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton"),
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+    ):
+        mock_frame_init.return_value = None
+        mock_master = MagicMock()
+        mock_sidebar = MagicMock()
+        mock_master.sidebar = mock_sidebar
+
+        mock_state = UIState(mock_master)
+
+        # Empty style to trigger validation error
+        mock_state.api.set("OpenAlex")
+        mock_state.style.set("")
+        mock_state.input_file_path.set("C:/doc/manuscript.docx")
+        mock_state.output_file_path.set("C:/doc/output.csv")
+
+        main_frame = MainFrame(mock_master, mock_state)
+        main_frame.master = mock_master  # Bind mock master safely
+
+        mock_textbox = MagicMock()
+        main_frame.txt_console = mock_textbox
+
+        with patch("citecraft.ui.app.get_config", return_value=test_config):
+            main_frame._on_run_pipeline()
+
+        # Text box should log validation error message
+        error_log = mock_textbox.insert.call_args[0][1]
+        assert "Input Validation Error" in error_log
+        assert "Reference Style cannot be empty" in error_log
+
+        # Sidebar style entry should be configured to red border color
+        mock_sidebar.ent_style.configure.assert_any_call(border_color="red")
+
+
+def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
+    """Validate manuscript path validation failure highlights btn_input."""
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton") as mock_button_cls,
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+    ):
+        mock_frame_init.return_value = None
+        mock_master = MagicMock()
+        mock_state = UIState(mock_master)
+
+        # Trigger manuscript validation error
+        mock_state.api.set("OpenAlex")
+        mock_state.style.set("apa")
+        mock_state.input_file_path.set("No manuscript file selected")
+        mock_state.output_file_path.set("C:/doc/output.csv")
+
+        main_frame = MainFrame(mock_master, mock_state)
+        main_frame.master = mock_master
+        main_frame.txt_console = MagicMock()
+
+        with patch("citecraft.ui.app.get_config", return_value=test_config):
+            main_frame._on_run_pipeline()
+
+        # Ensure btn_input configure border_color was highlighted
+        typing.cast(MagicMock, main_frame.btn_input.configure).assert_called_with(
+            border_color="red", border_width=2
+        )
+
+
+def test_on_run_pipeline_output_failure(test_config: AppConfig) -> None:
+    """Validate output path validation failure highlights btn_output."""
+    with (
+        patch("customtkinter.StringVar", StubStringVar),
+        patch("customtkinter.BooleanVar", StubBooleanVar),
+        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
+        patch("customtkinter.CTkFrame.grid"),
+        patch("customtkinter.CTkFrame.grid_columnconfigure"),
+        patch("customtkinter.CTkFrame.grid_rowconfigure"),
+        patch("customtkinter.CTkLabel"),
+        patch("customtkinter.CTkButton") as mock_button_cls,
+        patch("customtkinter.CTkTextbox"),
+        patch("customtkinter.CTkFont"),
+    ):
+        mock_frame_init.return_value = None
+        mock_master = MagicMock()
+        mock_state = UIState(mock_master)
+
+        # Trigger output destination validation error
+        mock_state.api.set("OpenAlex")
+        mock_state.style.set("apa")
+        mock_state.input_file_path.set("C:/doc/manuscript.docx")
+        mock_state.output_file_path.set("No output CSV path selected")
+
+        main_frame = MainFrame(mock_master, mock_state)
+        main_frame.master = mock_master
+        main_frame.txt_console = MagicMock()
+
+        with patch("citecraft.ui.app.get_config", return_value=test_config):
+            main_frame._on_run_pipeline()
+
+        # Ensure btn_output configure border_color was highlighted
+        typing.cast(MagicMock, main_frame.btn_output.configure).assert_called_with(
+            border_color="red", border_width=2
+        )
