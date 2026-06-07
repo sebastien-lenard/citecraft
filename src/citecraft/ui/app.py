@@ -8,11 +8,25 @@ import customtkinter as ctk
 logger = logging.getLogger(__name__)
 
 
+class UIState:
+    """Holds and isolates current UI interactive variables and states."""
+
+    def __init__(self, master: ctk.CTk) -> None:
+        self.api = ctk.StringVar(value="OpenAlex")
+        self.journal_title = ctk.StringVar(value="")
+        self.style = ctk.StringVar(value="apa")
+        self.skip_journal_update = ctk.BooleanVar(value=False)
+        self.skip_work_update = ctk.BooleanVar(value=False)
+        self.input_file_path = ctk.StringVar(value="No manuscript file selected")
+        self.output_file_path = ctk.StringVar(value="No output CSV path selected")
+
+
 class SidebarFrame(ctk.CTkFrame):
     """Sidebar frame containing configuration selectors and input switches."""
 
-    def __init__(self, master: ctk.CTk) -> None:
+    def __init__(self, master: ctk.CTk, state: UIState) -> None:
         super().__init__(master, width=280, corner_radius=0)
+        self.state = state
         self._create_widgets()
 
     def _create_widgets(self) -> None:
@@ -30,7 +44,9 @@ class SidebarFrame(ctk.CTkFrame):
         # API Selection Controls
         self.lbl_api = ctk.CTkLabel(self, text="API Provider", font=sec_font)
         self.lbl_api.grid(row=1, column=0, padx=20, pady=(10, 5), sticky="w")
-        self.cmb_api = ctk.CTkComboBox(self, values=["OpenAlex", "Crossref"])
+        self.cmb_api = ctk.CTkComboBox(
+            self, values=["OpenAlex", "Crossref"], variable=self.state.api
+        )
         self.cmb_api.grid(row=2, column=0, padx=20, pady=(0, 15), sticky="ew")
 
         # Target Journal Controls
@@ -38,28 +54,39 @@ class SidebarFrame(ctk.CTkFrame):
             self, text="Target Journal (Optional)", font=sec_font
         )
         self.lbl_journal.grid(row=3, column=0, padx=20, pady=(10, 5), sticky="w")
-        self.ent_journal = ctk.CTkEntry(self, placeholder_text="e.g. Geomorphology")
+        self.ent_journal = ctk.CTkEntry(
+            self,
+            placeholder_text="e.g. Geomorphology",
+            textvariable=self.state.journal_title,
+        )
         self.ent_journal.grid(row=4, column=0, padx=20, pady=(0, 15), sticky="ew")
 
         # Reference Style Controls
         self.lbl_style = ctk.CTkLabel(self, text="Reference Style", font=sec_font)
         self.lbl_style.grid(row=5, column=0, padx=20, pady=(10, 5), sticky="w")
-        self.ent_style = ctk.CTkEntry(self, placeholder_text="e.g. apa")
+        self.ent_style = ctk.CTkEntry(
+            self, placeholder_text="e.g. apa", textvariable=self.state.style
+        )
         self.ent_style.grid(row=6, column=0, padx=20, pady=(0, 20), sticky="ew")
 
         # Boolean Skip Switches
-        self.switch_skip_journal = ctk.CTkSwitch(self, text="Skip Journal Update")
+        self.switch_skip_journal = ctk.CTkSwitch(
+            self, text="Skip Journal Update", variable=self.state.skip_journal_update
+        )
         self.switch_skip_journal.grid(row=7, column=0, padx=20, pady=10, sticky="w")
 
-        self.switch_skip_work = ctk.CTkSwitch(self, text="Skip Work Update")
+        self.switch_skip_work = ctk.CTkSwitch(
+            self, text="Skip Work Update", variable=self.state.skip_work_update
+        )
         self.switch_skip_work.grid(row=8, column=0, padx=20, pady=10, sticky="w")
 
 
 class MainFrame(ctk.CTkFrame):
     """Main content frame housing file picker buttons and the logging console."""
 
-    def __init__(self, master: ctk.CTk) -> None:
+    def __init__(self, master: ctk.CTk, state: UIState) -> None:
         super().__init__(master, fg_color="transparent")
+        self.state = state
         self._create_widgets()
 
     def _create_widgets(self) -> None:
@@ -81,7 +108,7 @@ class MainFrame(ctk.CTkFrame):
         self.btn_input.grid(row=0, column=0, padx=15, pady=15, sticky="w")
 
         self.lbl_input_path = ctk.CTkLabel(
-            self.io_frame, text="No manuscript file selected", anchor="w"
+            self.io_frame, textvariable=self.state.input_file_path, anchor="w"
         )
         self.lbl_input_path.grid(row=0, column=1, padx=15, pady=15, sticky="ew")
 
@@ -92,7 +119,7 @@ class MainFrame(ctk.CTkFrame):
         self.btn_output.grid(row=1, column=0, padx=15, pady=(0, 15), sticky="w")
 
         self.lbl_output_path = ctk.CTkLabel(
-            self.io_frame, text="No output CSV path selected", anchor="w"
+            self.io_frame, textvariable=self.state.output_file_path, anchor="w"
         )
         self.lbl_output_path.grid(row=1, column=1, padx=15, pady=(0, 15), sticky="ew")
 
@@ -119,12 +146,15 @@ class CiteCraftApp(ctk.CTk):
         self._setup_window()
         self._setup_grid()
 
+        # Initialize Shared Local Reactive State
+        self.ui_state = UIState(self)
+
         # Mount Sidebar Left Frame
-        self.sidebar = SidebarFrame(self)
+        self.sidebar = SidebarFrame(self, self.ui_state)
         self.sidebar.grid(row=0, column=0, sticky="nsew")
 
         # Mount Main Work Frame (Column 1)
-        self.main_content = MainFrame(self)
+        self.main_content = MainFrame(self, self.ui_state)
         self.main_content.grid(row=0, column=1, sticky="nsew")
 
         logger.info("CiteCraft desktop interface structural scaffolding initialized.")
@@ -142,8 +172,3 @@ class CiteCraftApp(ctk.CTk):
         self.grid_columnconfigure(0, weight=0)  # Sidebar kept static width
         self.grid_columnconfigure(1, weight=1)  # Main pane gets flexible width
         self.grid_rowconfigure(0, weight=1)
-
-
-if __name__ == "__main__":
-    app = CiteCraftApp()
-    app.mainloop()
