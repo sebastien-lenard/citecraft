@@ -43,6 +43,7 @@ citecraft = "citecraft.cli:cli"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+addopts = "-m unit"
 markers = [
     "e2e: end to end tests (slower)",
     "integration: integration and api tests (slower)",
