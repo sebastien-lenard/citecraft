@@ -9,6 +9,8 @@ packages = ["src/citecraft"]
 [project]
 name = "citecraft"
 version = "0.1.0"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 description = "Generates bibliography of manuscripts"
 readme = "README.md"
 requires-python = ">=3.12.9"
