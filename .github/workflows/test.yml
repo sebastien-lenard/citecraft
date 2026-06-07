@@ -1,3 +1,4 @@
+# .github/workflows/test.yml
 name: Run Unit Tests
 
 on:
@@ -8,6 +9,7 @@ on:
 
 permissions:
   contents: read
+
 jobs:
   test:
     name: Test on ${{ matrix.os }}
@@ -17,14 +19,17 @@ jobs:
         # This triggers 3 parallel jobs: Ubuntu (Linux), Windows, and macOS
         os: [ubuntu-latest, windows-latest, macos-latest]
 
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
       with:
         fetch-depth: 2 # Crucial for Codecov to track the commit git parent context
 
     - name: Install uv and Python
-      uses: astral-sh/setup-uv@v5
+      uses: astral-sh/setup-uv@v5.3.0
       with:
         # This automatically installs Python 3.12.9
         python-version: "3.12.9"
