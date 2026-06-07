@@ -43,7 +43,7 @@ class ColorFormatter(logging.Formatter):
             logging.WARNING: YELLOW,
             logging.ERROR: RED,
             logging.CRITICAL: BOLD_RED,
-        }
+        },
     )  # immutable wrapper
 
     def format(self, record: logging.LogRecord) -> str:
@@ -75,7 +75,7 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
         "filters": {
             "run_id_filter": {
                 "()": RunIdFilter,
-            }
+            },
         },
         "formatters": {
             "human": {
