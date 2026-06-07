@@ -1,23 +1,27 @@
 # tests/unit/ui/test_app.py
 """Unit tests for verification of the window layout scaffolding."""
 
+import logging
 import typing
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from citecraft.ui.app import CiteCraftApp, MainFrame, SidebarFrame, UIState
+from citecraft.ui.app import (
+    CiteCraftApp,
+    MainFrame,
+    QueueLogHandler,
+    SidebarFrame,
+    TextRedirector,
+    UIState,
+)
 from citecraft.utils.config import AppConfig
 
 
 class StubStringVar:
     """A display-less replacement for ctk.StringVar for safe headless testing."""
 
-    def __init__(
-        self,
-        master: object = None,
-        value: str = "",
-    ) -> None:
+    def __init__(self, master: object = None, value: str = "") -> None:  # type: ignore[assignment]
         self._value = str(value)
 
     def get(self) -> str:
@@ -30,11 +34,7 @@ class StubStringVar:
 class StubBooleanVar:
     """A display-less replacement for ctk.BooleanVar for safe headless testing."""
 
-    def __init__(
-        self,
-        master: object = None,
-        value: bool = False,
-    ) -> None:
+    def __init__(self, master: object = None, value: bool = False) -> None:  # type: ignore[assignment]
         self._value = bool(value)
 
     def get(self) -> bool:
@@ -149,7 +149,7 @@ def test_main_frame_creation() -> None:
 
 
 def test_ui_state_initialization() -> None:
-    """Validate default fallback properties are correctly loaded into state variables."""
+    """Validate default fallback properties are loaded into state variables."""
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
@@ -404,7 +404,7 @@ def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
 
         # Ensure btn_input configure border_color was highlighted
         typing.cast(MagicMock, main_frame.btn_input.configure).assert_called_with(
-            border_color="red", border_width=2
+            border_width=2, border_color="red"
         )
 
 
@@ -441,5 +441,69 @@ def test_on_run_pipeline_output_failure(test_config: AppConfig) -> None:
 
         # Ensure btn_output configure border_color was highlighted
         typing.cast(MagicMock, main_frame.btn_output.configure).assert_called_with(
-            border_color="red", border_width=2
+            border_width=2, border_color="red"
         )
+
+
+def test_text_redirector_safe_write() -> None:
+    """Validate TextRedirector thread-safely schedules write operations."""
+    mock_textbox = MagicMock()
+    redirector = TextRedirector(mock_textbox)
+
+    redirector.write("Hello Log")
+
+    # Verify that textbox.after was called to schedule on main thread
+    mock_textbox.after.assert_called_once()
+    callback_func = mock_textbox.after.call_args[0][1]
+
+    # Run the scheduled callback
+    callback_func("Hello Log")
+    mock_textbox.configure.assert_any_call(state="normal")
+    mock_textbox.insert.assert_called_with("end", "Hello Log")
+    mock_textbox.configure.assert_any_call(state="disabled")
+    mock_textbox.see.assert_called_with("end")
+
+
+def test_queue_log_handler_redirection() -> None:
+    """Validate QueueLogHandler successfully directs python logging to redirector."""
+    mock_textbox = MagicMock()
+    handler = QueueLogHandler(mock_textbox)
+
+    # Build standard mock log record
+    record = logging.LogRecord(
+        name="citecraft.test",
+        level=logging.INFO,
+        pathname="test.py",
+        lineno=10,
+        msg="Test Log Message Entry",
+        args=(),
+        exc_info=None,
+    )
+
+    handler.emit(record)
+
+    # Verify that after was scheduled via text redirector
+    mock_textbox.after.assert_called_once()
+
+
+def test_text_redirector_flush() -> None:
+    """Ensure flush serves as a valid no-op stream compatibility method."""
+    mock_textbox = MagicMock()
+    redirector = TextRedirector(mock_textbox)
+    assert redirector.flush() is None  # Executes without error
+
+
+def test_queue_log_handler_error_handling() -> None:
+    """Verify that exceptions in emit invoke the standard handleError pipeline."""
+    mock_textbox = MagicMock()
+    handler = QueueLogHandler(mock_textbox)
+
+    # Force format() to raise an exception
+    handler.format = MagicMock(side_effect=Exception("Formatting failed"))
+    handler.handleError = MagicMock()
+
+    record = logging.LogRecord("test", logging.INFO, "", 0, "Msg", (), None)
+    handler.emit(record)
+
+    # Confirm fallback handleError was executed
+    handler.handleError.assert_called_once_with(record)
