@@ -25,7 +25,7 @@ def coerce_and_enforce_https(v: str) -> str:
         possible_scheme = scheme_match.group(1).lower()
         if possible_scheme in ("ftp", "sftp", "gopher", "ws", "wss"):
             raise ValueError(
-                f"URL must use 'https://' scheme. Got unsupported: '{possible_scheme}'"
+                f"URL must use 'https://' scheme. Got unsupported: '{possible_scheme}'",
             )
 
     # Strip any corrupt leading protocols/colons/slashes cleanly
@@ -46,5 +46,5 @@ def verify_object_name_placeholder(v: str) -> str:
 
 HttpsUrlStr = Annotated[str, BeforeValidator(coerce_and_enforce_https)]
 UrlWithObjectName = Annotated[
-    HttpsUrlStr, AfterValidator(verify_object_name_placeholder)
+    HttpsUrlStr, AfterValidator(verify_object_name_placeholder),
 ]

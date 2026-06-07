@@ -123,13 +123,13 @@ class SidebarFrame(ctk.CTkFrame):
         self.lbl_api = ctk.CTkLabel(self, text="API Provider", font=sec_font)
         self.lbl_api.grid(row=1, column=0, padx=20, pady=(10, 5), sticky="w")
         self.cmb_api = ctk.CTkComboBox(
-            self, values=["OpenAlex", "Crossref"], variable=self.state.api
+            self, values=["OpenAlex", "Crossref"], variable=self.state.api,
         )
         self.cmb_api.grid(row=2, column=0, padx=20, pady=(0, 15), sticky="ew")
 
         # Target Journal Controls
         self.lbl_journal = ctk.CTkLabel(
-            self, text="Target Journal (Optional)", font=sec_font
+            self, text="Target Journal (Optional)", font=sec_font,
         )
         self.lbl_journal.grid(row=3, column=0, padx=20, pady=(10, 5), sticky="w")
         self.ent_journal = ctk.CTkEntry(
@@ -143,18 +143,18 @@ class SidebarFrame(ctk.CTkFrame):
         self.lbl_style = ctk.CTkLabel(self, text="Reference Style", font=sec_font)
         self.lbl_style.grid(row=5, column=0, padx=20, pady=(10, 5), sticky="w")
         self.ent_style = ctk.CTkEntry(
-            self, placeholder_text="e.g. apa", textvariable=self.state.style
+            self, placeholder_text="e.g. apa", textvariable=self.state.style,
         )
         self.ent_style.grid(row=6, column=0, padx=20, pady=(0, 20), sticky="ew")
 
         # Boolean Skip Switches
         self.switch_skip_journal = ctk.CTkSwitch(
-            self, text="Skip Journal Update", variable=self.state.skip_journal_update
+            self, text="Skip Journal Update", variable=self.state.skip_journal_update,
         )
         self.switch_skip_journal.grid(row=7, column=0, padx=20, pady=10, sticky="w")
 
         self.switch_skip_work = ctk.CTkSwitch(
-            self, text="Skip Work Update", variable=self.state.skip_work_update
+            self, text="Skip Work Update", variable=self.state.skip_work_update,
         )
         self.switch_skip_work.grid(row=8, column=0, padx=20, pady=10, sticky="w")
 
@@ -183,23 +183,23 @@ class MainFrame(ctk.CTkFrame):
 
         # Manuscript Selection Controls
         self.btn_input = ctk.CTkButton(
-            self.io_frame, text="Select Manuscript (.docx)", width=180
+            self.io_frame, text="Select Manuscript (.docx)", width=180,
         )
         self.btn_input.grid(row=0, column=0, padx=15, pady=15, sticky="w")
 
         self.lbl_input_path = ctk.CTkLabel(
-            self.io_frame, textvariable=self.state.input_file_path, anchor="w"
+            self.io_frame, textvariable=self.state.input_file_path, anchor="w",
         )
         self.lbl_input_path.grid(row=0, column=1, padx=15, pady=15, sticky="ew")
 
         # Output Selection Controls
         self.btn_output = ctk.CTkButton(
-            self.io_frame, text="Choose Output CSV", width=180
+            self.io_frame, text="Choose Output CSV", width=180,
         )
         self.btn_output.grid(row=1, column=0, padx=15, pady=(0, 15), sticky="w")
 
         self.lbl_output_path = ctk.CTkLabel(
-            self.io_frame, textvariable=self.state.output_file_path, anchor="w"
+            self.io_frame, textvariable=self.state.output_file_path, anchor="w",
         )
         self.lbl_output_path.grid(row=1, column=1, padx=15, pady=(0, 15), sticky="ew")
 
@@ -213,7 +213,7 @@ class MainFrame(ctk.CTkFrame):
 
         # --- Sequential Pipeline Trigger Button ---
         self.btn_run = ctk.CTkButton(
-            self, text="Run Processing Pipeline", font=sec_font, height=40
+            self, text="Run Processing Pipeline", font=sec_font, height=40,
         )
         self.btn_run.grid(row=3, column=0, padx=20, pady=(0, 20), sticky="ew")
 
@@ -228,7 +228,7 @@ class MainFrame(ctk.CTkFrame):
         # 1. Thread-safe log handler setup
         self.log_handler = QueueLogHandler(self.txt_console)
         self.log_handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S")
+            logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S"),
         )
         self.log_handler.setLevel(logging.INFO)
 
@@ -275,7 +275,7 @@ class MainFrame(ctk.CTkFrame):
                 f"  • Destination: {options.output_filepath}\n"
                 f"  • Style      : {options.style}\n"
                 f"  • API Engine : {options.api}\n"
-                f"Starting background pipeline thread...\n"
+                f"Starting background pipeline thread...\n",
             )
 
             # Disable controls to prevent concurrent pipeline launches
@@ -283,7 +283,7 @@ class MainFrame(ctk.CTkFrame):
 
             # Spawn synchronous backend execution in isolated daemon thread
             thread = threading.Thread(
-                target=self._run_pipeline_worker, args=(options,), daemon=True
+                target=self._run_pipeline_worker, args=(options,), daemon=True,
             )
             thread.start()
 
@@ -327,12 +327,12 @@ class MainFrame(ctk.CTkFrame):
             path = getattr(export_metadata, "output_filepath", "")
             self.write_console(
                 f"  • Total references processed: {total}\n"
-                f"  • Output CSV saved to: {path}\n"
+                f"  • Output CSV saved to: {path}\n",
             )
         if anomalous_journals:  # pragma: no branch
             self.write_console(
                 f"  • Warning: {len(anomalous_journals)} journals had ISSN conflicts"
-                " or were missing. Check log files for trace details.\n"
+                " or were missing. Check log files for trace details.\n",
             )
 
     def write_console(self, text: str) -> None:

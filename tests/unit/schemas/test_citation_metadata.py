@@ -5,7 +5,7 @@ from citecraft.schemas.citation_metadata import CitationMetadata
 def test_citation_metadata_instantiation() -> None:
     """Verify initialization defaults of CitationMetadata entities."""
     citation = CitationMetadata(
-        first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+        first_authors_txt="Lenard et al.", year_and_suffix="2020a",
     )
 
     assert citation.first_authors_txt == "Lenard et al."
@@ -28,10 +28,10 @@ def test_citation_metadata_identity_key() -> None:
 def test_citation_metadata_deduplication_logic() -> None:
     """Ensure signature key generation is independent of citation layout style."""
     cit1 = CitationMetadata(
-        first_authors_txt="Lenard et al.", year_and_suffix="2020", type="narrative"
+        first_authors_txt="Lenard et al.", year_and_suffix="2020", type="narrative",
     )
     cit2 = CitationMetadata(
-        first_authors_txt="Lenard et al.", year_and_suffix="2020", type="parenthetical"
+        first_authors_txt="Lenard et al.", year_and_suffix="2020", type="parenthetical",
     )
 
     assert cit1.identity_key == cit2.identity_key

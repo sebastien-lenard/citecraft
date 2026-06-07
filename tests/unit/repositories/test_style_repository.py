@@ -48,7 +48,7 @@ def test_init_fallback_rules(
 
 
 def test_fetch_style_metadata_success(
-    test_config: AppConfig, valid_csl_content: str
+    test_config: AppConfig, valid_csl_content: str,
 ) -> None:
     """Verify CSL content is successfully downloaded and stored."""
     repo = StyleRepository(favored_style="apa", config=test_config)
@@ -57,7 +57,7 @@ def test_fetch_style_metadata_success(
     mock_response.text = valid_csl_content
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, None)
+        repo.http_client_wrapper, "get", return_value=(mock_response, None),
     ) as mock_get:
         repo.fetch_style_metadata()
 
@@ -71,7 +71,7 @@ def test_fetch_style_metadata_not_found(test_config: AppConfig) -> None:
     mock_request = httpx.Request("GET", "https://raw.githubusercontent.com/invalid")
     mock_response = httpx.Response(status_code=404, request=mock_request)
     error = httpx.HTTPStatusError(
-        message="404 Not Found", request=mock_request, response=mock_response
+        message="404 Not Found", request=mock_request, response=mock_response,
     )
 
     with patch.object(repo.http_client_wrapper, "get", side_effect=error):
@@ -102,7 +102,7 @@ def test_fetch_style_metadata_resolves_journal_late(test_config: AppConfig) -> N
 
 
 def test_fetch_style_metadata_abort_when_no_style_resolved(
-    test_config: AppConfig, caplog: pytest.LogCaptureFixture
+    test_config: AppConfig, caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify clean interruption if no style can be resolved."""
     repo = StyleRepository(favored_journal_title="Unknown Journal", config=test_config)
@@ -139,7 +139,7 @@ def test_get_style_success_dependent(test_config: AppConfig) -> None:
             "title": "Journal of Geophysical Research: Solid Earth",
             "name": "jgr-solid-earth",
             "dependent": True,
-        }
+        },
     ]
     mock_res_index = MagicMock()
     mock_res_index.json.return_value = mock_index
@@ -175,7 +175,7 @@ def test_get_style_success_dependent(test_config: AppConfig) -> None:
                     "500 Internal Error",
                     request=httpx.Request("GET", "https://example.com"),
                     response=httpx.Response(500),
-                )
+                ),
             ),
             httpx.HTTPStatusError,
             "500 Internal Error",
@@ -185,10 +185,10 @@ def test_get_style_success_dependent(test_config: AppConfig) -> None:
             lambda m: m.configure_mock(
                 return_value=(
                     MagicMock(
-                        json=MagicMock(side_effect=ValueError("Expecting value"))
+                        json=MagicMock(side_effect=ValueError("Expecting value")),
                     ),
                     None,
-                )
+                ),
             ),
             ValueError,
             "Expecting value",
@@ -199,7 +199,7 @@ def test_get_style_success_dependent(test_config: AppConfig) -> None:
                 return_value=(
                     MagicMock(json=MagicMock(return_value={"error": "not a list"})),
                     None,
-                )
+                ),
             ),
             TypeError,
             None,
@@ -250,7 +250,7 @@ def test_resolve_parent_missing_xml_namespace(test_config: AppConfig) -> None:
 
 
 def test_resolve_parent_empty_parent_href(
-    test_config: AppConfig, caplog: pytest.LogCaptureFixture
+    test_config: AppConfig, caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify clean fallback warning when parent href is empty."""
     repo = StyleRepository(config=test_config)
@@ -306,7 +306,7 @@ def test_resolve_parent_empty_parent_href(
     ],
 )
 def test_validate_favored_style_scenarios(
-    test_config: AppConfig, csl_payload: str, expected_validity: bool
+    test_config: AppConfig, csl_payload: str, expected_validity: bool,
 ) -> None:
     """Verify structural XML validation flags matching specifications."""
     repo = StyleRepository(favored_style="apa", config=test_config)
@@ -338,7 +338,7 @@ def test_fetch_style_metadata_raises_unexpected_http_error(
     mock_request = httpx.Request("GET", "https://raw.githubusercontent.com/invalid")
     mock_response = httpx.Response(status_code=500, request=mock_request)
     error = httpx.HTTPStatusError(
-        "500 Server Error", request=mock_request, response=mock_response
+        "500 Server Error", request=mock_request, response=mock_response,
     )
     with (
         patch.object(repo.http_client_wrapper, "get", side_effect=error),
@@ -428,7 +428,7 @@ def test_resolve_parent_status_error_raises(test_config: AppConfig) -> None:
     mock_req = httpx.Request("GET", "https://raw.githubusercontent.com/invalid")
     mock_res_xml = httpx.Response(status_code=500, request=mock_req)
     status_err = httpx.HTTPStatusError(
-        "500 Server Error", request=mock_req, response=mock_res_xml
+        "500 Server Error", request=mock_req, response=mock_res_xml,
     )
 
     with (

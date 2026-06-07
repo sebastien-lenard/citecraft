@@ -14,7 +14,7 @@ from citecraft.utils import AppConfig, create_config, get_config
 
 
 def pytest_collection_modifyitems(
-    config: pytest.Config, items: list[pytest.Item]
+    config: pytest.Config, items: list[pytest.Item],
 ) -> None:
     """Assign 'unit' marker to any test without 'e2e' or 'integration' markers."""
     for item in items:
@@ -32,7 +32,7 @@ def block_network_calls(monkeypatch: pytest.MonkeyPatch) -> None:
 
     def raised_error(*args: object, **kwargs: object) -> NoReturn:
         raise RuntimeError(
-            "Network call attempted during isolated unit test execution."
+            "Network call attempted during isolated unit test execution.",
         )
 
     monkeypatch.setattr("socket.socket.connect", raised_error)
@@ -70,7 +70,7 @@ def assert_logging_integrity(
             "CRITICAL: This test broke the global logging propagation! "
             "This usually happens when `setup_logging()` or `logging.basicConfig()` "
             "is called by the production code without being mocked. "
-            "Please ensure you apply a proper patch/mock in this test script."
+            "Please ensure you apply a proper patch/mock in this test script.",
         )
 
 
@@ -84,7 +84,7 @@ def test_config(tmp_path: Path) -> Generator[AppConfig, None, None]:
             "log_dir_path": tmp_path,
             "output_dir_path": tmp_path,
             "db_filepath": tmp_path / config_instance.db_filename,
-        }
+        },
     )
 
     with patch(

@@ -59,7 +59,7 @@ def mock_doi_repo() -> MagicMock:
 
 
 def test_fill_missing_references_success(
-    mock_doi_repo: MagicMock, test_config: AppConfig, sample_csl_style: str
+    mock_doi_repo: MagicMock, test_config: AppConfig, sample_csl_style: str,
 ) -> None:
     """Verify that records are updated correctly on successful reference formatting."""
     records = [
@@ -99,13 +99,13 @@ def test_fill_missing_references_success(
 
     with (
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source",
         ) as mock_src,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style",
         ) as mock_style,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography",
         ) as mock_render,
     ):
         mock_src.return_value = (MagicMock(), None)
@@ -130,7 +130,7 @@ def test_fill_missing_references_success(
 
 
 def test_fill_missing_references_raises_on_repository_error(
-    mock_doi_repo: MagicMock, test_config: AppConfig, sample_csl_style: str
+    mock_doi_repo: MagicMock, test_config: AppConfig, sample_csl_style: str,
 ) -> None:
     """Verify that an exception in the repository metadata collection stops the
     service."""
@@ -141,7 +141,7 @@ def test_fill_missing_references_raises_on_repository_error(
             input_year_and_suffix="2020",
             doi="10.5194/esurf-8-447-2020",
             reference=None,
-        )
+        ),
     ]
     reference_service = ReferenceService(config=test_config)
 
@@ -219,13 +219,13 @@ def test_get_reference_scenarios(
 
     with (
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source",
         ) as mock_src,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style",
         ) as mock_style,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography",
         ) as mock_render,
     ):
         if should_mock_success:
@@ -237,7 +237,7 @@ def test_get_reference_scenarios(
             mock_src.return_value = (None, "Should not be reached")
 
         result = reference_service.get_reference(
-            csl_metadata, sample_csl_style, doi=doi
+            csl_metadata, sample_csl_style, doi=doi,
         )
 
         assert result == expected_result
@@ -304,13 +304,13 @@ def test_get_reference_adapter_failures(
 
     with (
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source",
         ) as mock_src,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style",
         ) as mock_style,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography",
         ) as mock_render,
     ):
         mock_src.return_value = source_ret
@@ -318,7 +318,7 @@ def test_get_reference_adapter_failures(
         mock_render.return_value = render_ret
 
         result = reference_service.get_reference(
-            csl_metadata, sample_csl_style, doi="10.1000/182"
+            csl_metadata, sample_csl_style, doi="10.1000/182",
         )
 
         assert expected_substr in result

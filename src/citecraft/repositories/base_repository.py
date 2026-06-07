@@ -38,7 +38,7 @@ class BaseRepository[T: BaseSchema]:
         self.http_client_wrapper = registry.get_client(api)
         self.headers: dict[str, str] = {
             "User-Agent": f"ManuscriptRefLister/1.0 (mailto:"
-            f"{self.http_client_wrapper.email})"
+            f"{self.http_client_wrapper.email})",
         }
         self.local_filename: str = local_filename
         self.table_name: str = Path(local_filename).stem

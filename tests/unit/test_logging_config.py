@@ -47,7 +47,8 @@ class TestColorFormatter:
         )
 
     def test_color_formatter_applies_ansi_and_truncates_name(
-        self, basic_record: logging.LogRecord
+        self,
+        basic_record: logging.LogRecord,
     ) -> None:
         """Verify ANSI escapes are injected and package prefixes are truncated."""
         formatter = ColorFormatter(fmt="%(name)s: %(message)s")
@@ -63,7 +64,8 @@ class TestColorFormatter:
         assert basic_record.name == "citecraft.core.engine"  # Verify restoration
 
     def test_color_formatter_restores_name_on_formatting_exception(
-        self, basic_record: logging.LogRecord
+        self,
+        basic_record: logging.LogRecord,
     ) -> None:
         """Edge Case: Ensure record.name restoration even if rendering throws error."""
         formatter = ColorFormatter(fmt="%(name)s: %(message)s")
@@ -71,7 +73,8 @@ class TestColorFormatter:
         # Force an exception during formatting by mocking super().format
         with (
             patch(
-                "logging.Formatter.format", side_effect=ValueError("Formatting failed")
+                "logging.Formatter.format",
+                side_effect=ValueError("Formatting failed"),
             ),
             pytest.raises(ValueError, match="Formatting failed"),
         ):
@@ -92,7 +95,9 @@ class TestLoggingConfigMatrix:
         ],
     )
     def test_get_logging_config_levels(
-        self, verbose_level: int, expected_console_level: str
+        self,
+        verbose_level: int,
+        expected_console_level: str,
     ) -> None:
         """Verify that the console log level scales correctly with verbosity."""
         dummy_path = Path("/dummy/path")
@@ -100,7 +105,7 @@ class TestLoggingConfigMatrix:
 
         assert config["handlers"]["console"]["level"] == expected_console_level
         assert config["handlers"]["file"]["filename"] == str(
-            dummy_path / "app.json.log"
+            dummy_path / "app.json.log",
         )
 
 
@@ -109,7 +114,9 @@ class TestSetupLoggingLifecycles:
     @patch("citecraft.logging_config.get_safe_dir")
     @patch("logging.config.dictConfig")
     def test_setup_logging_success(
-        self, mock_dict_config: MagicMock, mock_get_dir: MagicMock
+        self,
+        mock_dict_config: MagicMock,
+        mock_get_dir: MagicMock,
     ) -> None:
         """Verify successful initialization loop with proper 3-tuple path unpacking."""
         mock_path = Path("/mock/safe/dir")
@@ -132,7 +139,8 @@ class TestSetupLoggingLifecycles:
         mock_get_dir: MagicMock,
     ) -> None:
         """Edge Case: Verify hard crashes in dictConfig trigger stderr reports and
-        basicConfig."""
+        basicConfig.
+        """
         mock_path = Path("/mock/safe/dir")
         mock_get_dir.return_value = (mock_path, mock_path, True)
 
@@ -149,7 +157,8 @@ class TestSetupLoggingLifecycles:
             assert log_dir == mock_path
             mock_traceback.assert_called_once_with(file=sys.stderr)
             mock_basic_config.assert_called_once_with(
-                level=logging.WARNING, stream=sys.stderr
+                level=logging.WARNING,
+                stream=sys.stderr,
             )
 
 
@@ -161,7 +170,8 @@ class TestStructuredJsonOutput:
         formatter_spec = config["formatters"]["json"]
 
         formatter = JsonFormatter(
-            fmt=formatter_spec["fmt"], rename_fields=formatter_spec["rename_fields"]
+            fmt=formatter_spec["fmt"],
+            rename_fields=formatter_spec["rename_fields"],
         )
         record = logging.LogRecord(
             name="citecraft.http",

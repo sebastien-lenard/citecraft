@@ -19,7 +19,7 @@ class RunIdFilter(logging.Filter):
     """Filter that automatically injects a unique run_id into logging records."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        record.run_id = RUN_ID  # type: ignore[attr-defined]
+        record.run_id = RUN_ID
         return True
 
 
@@ -122,8 +122,11 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
 
 
 def setup_logging(verbose_level: int = 0) -> tuple[Path, Path, bool]:
-    """Set up system loggers and return log directory path, original intended path,
-    and a boolean = True if it had to resort to a temp directory."""
+    """Set up system loggers.
+
+    Return log directory path, original intended path,
+    and a boolean = True if it had to resort to a temp directory.
+    """
     log_dir, intended_dir, is_fallback = get_safe_dir("logs")
 
     try:

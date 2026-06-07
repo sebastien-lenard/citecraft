@@ -34,12 +34,12 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         api: str = "crossref",
     ) -> None:
         super().__init__(
-            local_filename, model_class=JournalMetadata, config=config, api=api
+            local_filename, model_class=JournalMetadata, config=config, api=api,
         )
         self.has_pending_updates: bool = False
 
     def _log_heartbeat_if_needed(
-        self, processed: int, total: int, last_time: float
+        self, processed: int, total: int, last_time: float,
     ) -> float:
         """Log update batch progress status every 10 seconds of processing time."""
         current_time = time.time()
@@ -69,7 +69,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                 r.issn
                 for r in self.records
                 if r.input_title == input_title and r.issn is not None
-            }
+            },
         )
 
     def get_unique_issns_for_titles(self, titles: list[str]) -> list[str]:
@@ -123,7 +123,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return response.json().get("message", {}).get("items", [])
 
     def _filter_matches(
-        self, input_title: str, items: list[dict[str, Any]]
+        self, input_title: str, items: list[dict[str, Any]],
     ) -> tuple[list[dict[str, Any]], list[str] | None]:
         """Classify Crossref items into exact matches or similar matches."""
         # Filter exact title representations
@@ -219,7 +219,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                         start_year=None,
                         end_year=None,
                         similar_titles=similar_titles,
-                    )
+                    ),
                 )
                 continue
 
@@ -271,7 +271,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                         start_year=start_year,
                         end_year=end_year,
                         similar_titles=similar_titles,
-                    )
+                    ),
                 )
 
         return journal_records
@@ -317,7 +317,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return self._build_metadata_records(input_title, working_items, similar_titles)
 
     def get_issn_year_endpoint(
-        self, issn: str, order: Literal["asc", "desc"]
+        self, issn: str, order: Literal["asc", "desc"],
     ) -> int | None:
         """Get publication endpoints based on print/online works for the ISSN.
         asc: oldest / desc: youngest.
@@ -329,7 +329,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             "mailto": self.config.user_email,
         }
         url = self.config.crossref_api_journals_issn_url.replace(
-            "{object_name}", str(issn)
+            "{object_name}", str(issn),
         )
 
         response, predicted_url = self.http_client_wrapper.get(
@@ -393,7 +393,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         }
 
     def _partition_records(
-        self, expiration_date: date
+        self, expiration_date: date,
     ) -> tuple[list[JournalMetadata], list[JournalMetadata], list[JournalMetadata]]:
         """Partition local records into missing, expired, and valid categories."""
         missing: list[JournalMetadata] = []
@@ -432,7 +432,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
             state.processed += 1
             state.last_heartbeat = self._log_heartbeat_if_needed(
-                state.processed, state.total, state.last_heartbeat
+                state.processed, state.total, state.last_heartbeat,
             )
 
     def update_all(self) -> None:
@@ -453,7 +453,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         )
 
         missing, expired, valid = self._partition_records(
-            expiration_date
+            expiration_date,
         )  # missing = missing metadata
 
         logger.info(

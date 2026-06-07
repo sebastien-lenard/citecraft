@@ -43,6 +43,6 @@ def test_base_schema_identity_key_requirement() -> None:
     obj = BrokenSchema(name="Fail")
 
     with pytest.raises(
-        NotImplementedError, match="Subclasses must implement identity_key"
+        NotImplementedError, match="Subclasses must implement identity_key",
     ):
         _ = obj.identity_key

@@ -12,7 +12,7 @@ class CitationMetadata(BaseSchema):
     model_config = ConfigDict(frozen=True)
 
     first_authors_txt: str = Field(
-        min_length=1
+        min_length=1,
     )  # e.g. Lenard et al., Guns and Vanacker
     year_and_suffix: str = Field(pattern=r"^\d{4}[a-z]?$")  # e.g. 2020a
     type: Literal["narrative", "parenthetical"] = "narrative"

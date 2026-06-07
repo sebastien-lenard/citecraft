@@ -66,12 +66,12 @@ class StyleRepository:
             return
 
         url = self.config.style_repo_url.replace(
-            "{object_name}", str(self.favored_style)
+            "{object_name}", str(self.favored_style),
         )
 
         try:
             response, predicted_url = self.http_client_wrapper.get(
-                url, headers=self.headers
+                url, headers=self.headers,
             )
             if response is None:
                 logger.warning(
@@ -87,7 +87,7 @@ class StyleRepository:
             response.raise_for_status()
             self.csl_content = response.text
             logger.debug(
-                "Successfully fetched CSL metadata for style: %s", self.favored_style
+                "Successfully fetched CSL metadata for style: %s", self.favored_style,
             )
         except httpx.HTTPStatusError as e:
             if e.response.status_code == HTTPStatus.NOT_FOUND:
@@ -137,17 +137,17 @@ class StyleRepository:
         url = str(self.config.all_styles_repo_url)
         try:
             response, predicted_url = self.http_client_wrapper.get(
-                url, headers=self.headers
+                url, headers=self.headers,
             )
             if response is None:
                 raise ValueError(
-                    f"Empty index response received from URL: {predicted_url}"
+                    f"Empty index response received from URL: {predicted_url}",
                 )
             response.raise_for_status()
             styles_list = response.json()
         except (httpx.HTTPError, ValueError) as e:
             logger.critical(
-                "Failed to retrieve or decode style repository index from %s", url
+                "Failed to retrieve or decode style repository index from %s", url,
             )
             raise e
 
@@ -165,11 +165,11 @@ class StyleRepository:
             )
             raise TypeError(
                 f"Unexpected schema format: index root is not a list. Got: "
-                f"{type(styles_list).__name__}"
+                f"{type(styles_list).__name__}",
             )
 
         matched_style_name, is_dependent = self._fuzzy_match_style(
-            styles_list, normalized_target
+            styles_list, normalized_target,
         )
 
         if not matched_style_name:
@@ -190,7 +190,7 @@ class StyleRepository:
         return matched_style_name
 
     def _fuzzy_match_style(
-        self, styles_list: list[Any], normalized_target: str
+        self, styles_list: list[Any], normalized_target: str,
     ) -> tuple[str | None, bool]:
         """Perform fuzzy search on style list and extract match metadata."""
         for style in styles_list:
@@ -222,17 +222,17 @@ class StyleRepository:
     def _resolve_independent_parent(self, child_style_name: str) -> str | None:
         """Parse a dependent CSL file and extract its parent layout slug identifier."""
         url = self.config.child_style_repo_url.replace(
-            "{object_name}", child_style_name
+            "{object_name}", child_style_name,
         )
 
         response = None
         try:
             response_obj, predicted_url = self.http_client_wrapper.get(
-                url, headers=self.headers
+                url, headers=self.headers,
             )
             if response_obj is None:
                 raise ValueError(
-                    f"No response payload returned from style endpoint: {predicted_url}"
+                    f"No response payload returned from style endpoint: {predicted_url}",
                 )
 
             response = response_obj
@@ -273,7 +273,7 @@ class StyleRepository:
 
         if not root.tag.startswith("{"):
             raise ValueError(
-                f"XML root element '{root.tag}' does not define a namespace."
+                f"XML root element '{root.tag}' does not define a namespace.",
             )
 
         actual_namespace = root.tag.split("}")[0].strip("{")
@@ -289,7 +289,7 @@ class StyleRepository:
         if not matched_prefix:
             raise ValueError(
                 f"Security Violation: Unrecognized CSL namespace detected:"
-                f" '{actual_namespace}'"
+                f" '{actual_namespace}'",
             )
 
         # Query independent parent link node
@@ -303,7 +303,7 @@ class StyleRepository:
                 # (e.g., "http://www.zotero.org/styles/apa" -> "apa")
                 parent_style_code = parent_href.strip("/").split("/")[-1]
                 logger.info(
-                    "Successfully resolved parent style: '%s'", parent_style_code
+                    "Successfully resolved parent style: '%s'", parent_style_code,
                 )
                 return parent_style_code
 
@@ -344,7 +344,7 @@ class StyleRepository:
 
         normalized_content = content.replace("\r\n", "\n")
         if normalized_content.startswith(start_marker) and normalized_content.endswith(
-            end_marker
+            end_marker,
         ):
             self.favored_style_is_valid = True
             logger.info(

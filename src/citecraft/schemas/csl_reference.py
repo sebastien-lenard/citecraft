@@ -70,7 +70,7 @@ class CSLReference(BaseModel):
     URL: str | None = None
     ISBN: str | None = None
     issn: str | None = Field(
-        default=None, validation_alias=AliasChoices("ISSN", "issn")
+        default=None, validation_alias=AliasChoices("ISSN", "issn"),
     )
 
     # Miscellaneous Metadata

@@ -19,7 +19,7 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
     doc.add_paragraph(
         "Le voila (Lenard et al., 2020), sans parler des erreurs oubliées "
         "(e.g. Fig. 7 in Guns and Vanacker, 2014). Jeu de donnees de Croissant et al. "
-        "(2019)."
+        "(2019).",
     )
 
     doc.add_paragraph("Journals\nGeology\nNature Geoscience\nAnthropocene")
@@ -86,7 +86,7 @@ def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
     doc.add_paragraph(
         "Le voila (Lenard et al., 2020), sans parler des erreurs oubliées "
         "(e.g. Fig. 7 in Guns and Vanacker, 2014). Jeu de donnees de Croissant et al. "
-        "(2019)."
+        "(2019).",
     )
 
     doc.add_paragraph("Journals\nGeology\nNature Geoscience\nAnthropocene")

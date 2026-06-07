@@ -93,7 +93,7 @@ class BibliographyService:
                         "Citation": citation_str,
                         "Status": "Warning: No doi or reference found for the citation",
                         "Reference": None,
-                    }
+                    },
                 )
                 continue
 
@@ -121,7 +121,7 @@ class BibliographyService:
                         "Citation": citation_str,
                         "Status": status,
                         "Reference": cleaned_ref,
-                    }
+                    },
                 )
 
         # Sort with fallback empty string to handle None references
@@ -129,7 +129,7 @@ class BibliographyService:
             key=lambda r: (
                 (r["Reference"] or "").lower(),
                 r["Citation"].lower(),
-            )
+            ),
         )
 
         fieldnames = ["Citation", "Status", "Reference"]

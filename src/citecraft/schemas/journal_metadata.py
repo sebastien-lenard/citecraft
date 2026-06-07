@@ -17,7 +17,7 @@ class JournalMetadata(BaseSchema):
     true_title: str | None = None  # e.g. Nature Geoscience
     publisher: str | None = None  # e.g. Nature Portfolio / Springer Nature
     issn: IssnType | None = Field(
-        default=None, validation_alias=AliasChoices("ISSN", "issn")
+        default=None, validation_alias=AliasChoices("ISSN", "issn"),
     )  # e.g. 1752-0894
     start_year: int | None = Field(default=None, ge=1600, le=2099)  # e.g. 2008
     end_year: int | None = Field(default=None, ge=1600, le=2099)  # e.g. 2026
@@ -25,7 +25,7 @@ class JournalMetadata(BaseSchema):
         None  # Titles in the remote repository (crossref) similar to input_title
     )
     update: str = Field(
-        default_factory=lambda: str(date.today())
+        default_factory=lambda: str(date.today()),
     )  # ISO format: YYYY-MM-DD
 
     @property
@@ -62,7 +62,7 @@ class JournalMetadata(BaseSchema):
             if self.start_year > self.end_year:
                 raise ValueError(
                     f"start_year ({self.start_year}) should be lower than end_year"
-                    f" ({self.end_year})"
+                    f" ({self.end_year})",
                 )
             return self
         return self

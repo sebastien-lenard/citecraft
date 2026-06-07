@@ -95,7 +95,7 @@ def test_html_cleaner_uses_injected_config(test_config: AppConfig) -> None:
         update={
             "preserved_html_tags": {"custom-sup"},
             "discarded_html_tags": {"custom-i"},
-        }
+        },
     )
 
     cleaner = HtmlCleaner(config=test_config)

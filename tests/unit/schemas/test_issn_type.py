@@ -31,7 +31,7 @@ def test_check_standalone_issn_valid(valid_issn: str) -> None:
     ],
 )
 def test_check_standalone_issn_invalid(
-    caplog: pytest.LogCaptureFixture, invalid_issn: str, expected_log_snippet: str
+    caplog: pytest.LogCaptureFixture, invalid_issn: str, expected_log_snippet: str,
 ) -> None:
     """Verify that invalid strings return False and trigger a structural warning log."""
     with caplog.at_level(logging.WARNING):

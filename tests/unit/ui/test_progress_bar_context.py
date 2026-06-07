@@ -65,7 +65,7 @@ def test_progress_bar_passive_mode_when_verbose() -> None:
 
         # Callbacks should execute as no-ops safely
         step = ProgressStep(
-            step_name="parsing", current=1, total=4, message="Test", status="started"
+            step_name="parsing", current=1, total=4, message="Test", status="started",
         )
         ctx.update(step)
         assert ctx._state["current_step"] == 0  # State unchanged
@@ -89,7 +89,7 @@ def test_progress_lifecycle_and_render(monkeypatch: pytest.MonkeyPatch) -> None:
                 total=4,
                 message="Parsing documents",
                 status="completed",
-            )
+            ),
         )
         # Leave brief window for background thread to execute one loop cleanly
         time.sleep(0.05)
@@ -117,7 +117,7 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
                 total=4,
                 message="Crashing step",
                 status="started",
-            )
+            ),
         )
         raise ValueError("Pipeline Failure")
 

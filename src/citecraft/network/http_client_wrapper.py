@@ -64,7 +64,7 @@ class HTTPClientWrapper:
             else self.config.default_api_url_max_character_length
         )
         self.client: httpx.Client = httpx.Client(
-            timeout=httpx.Timeout(self.timeout), follow_redirects=True
+            timeout=httpx.Timeout(self.timeout), follow_redirects=True,
         )
 
     def _is_transient_error(self, exception: BaseException) -> bool:
@@ -148,7 +148,7 @@ class HTTPClientWrapper:
 
         # Get and check request length
         request = httpx.Request(
-            method="GET", url=target_url, params=query_params, headers=request_headers
+            method="GET", url=target_url, params=query_params, headers=request_headers,
         )
         predicted_url_length = len(str(request.url))
         if (

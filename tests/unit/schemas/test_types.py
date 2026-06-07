@@ -28,7 +28,7 @@ def test_url_with_object_name_missing_placeholder() -> None:
         MockUrlWithObjectNameModel(url="https://crossref.org10.1000/xyz123")
 
     assert "URL must contain the mandatory '{object_name}' placeholder." in str(
-        exc_info.value
+        exc_info.value,
     )
 
 
@@ -46,7 +46,7 @@ def test_url_with_object_name_missing_placeholder() -> None:
     ],
 )
 def test_https_url_str_successful_cases(
-    incoming_input: str, expected_output: str
+    incoming_input: str, expected_output: str,
 ) -> None:
     """Ensure that valid URLs are preserved, repaired, or safely bypassed."""
     model = MockUrlModel(url=incoming_input)
@@ -60,14 +60,14 @@ def test_https_url_str_unsupported_scheme() -> None:
     with pytest.raises(ValidationError) as exc_info:
         MockUrlModel(url="ftp://example.com")
     assert "URL must use 'https://' scheme. Got unsupported: 'ftp'" in str(
-        exc_info.value
+        exc_info.value,
     )
 
     # Case 2: Test a corrupted unsupported protocol
     with pytest.raises(ValidationError) as exc_info_corrupt:
         MockUrlModel(url="ws://://example.com")
     assert "URL must use 'https://' scheme. Got unsupported: 'ws'" in str(
-        exc_info_corrupt.value
+        exc_info_corrupt.value,
     )
 
 

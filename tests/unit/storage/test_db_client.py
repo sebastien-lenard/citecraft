@@ -91,7 +91,7 @@ def test_safe_fetch_all_scenarios(conn: sqlite3.Connection) -> None:
 
     # Fetch using positional parameters
     res_args = DbClient.safe_fetch_all(
-        conn, "SELECT * FROM {table_name} WHERE id > ?;", "test_fetch", 5
+        conn, "SELECT * FROM {table_name} WHERE id > ?;", "test_fetch", 5,
     )
     assert len(res_args) == 2
 

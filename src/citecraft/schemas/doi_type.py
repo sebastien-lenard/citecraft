@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # Doi starting format + any character except spaces (legacy DOIs), match () and <>
 # blocks + no trailing punctuation
 DOI_REGEX = re.compile(
-    r"^10\.\d{4,9}/(?:[^\s()<>]+|\([^)]*\)|<[^>]*>)+(?<![.,;!?:\-])$", re.IGNORECASE
+    r"^10\.\d{4,9}/(?:[^\s()<>]+|\([^)]*\)|<[^>]*>)+(?<![.,;!?:\-])$", re.IGNORECASE,
 )
 
 
@@ -25,7 +25,7 @@ def validate_doi(doi: str) -> str:
         )
         raise ValueError(
             "Invalid DOI format. Must start with '10.' followed by a valid suffix and"
-            "no space within and no trailing punctuation."
+            "no space within and no trailing punctuation.",
         )
     return doi
 

@@ -181,13 +181,13 @@ def test_create_json_source_success_with_unsupported_warning(
 # WARNING: we don't the fields set to None, citeproc-py has another behavior that is
 # inconsistent
 def test_create_json_source_malformed_payloads(
-    broken_csl_payload: dict[str, Any], caplog: pytest.LogCaptureFixture
+    broken_csl_payload: dict[str, Any], caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify structural type and ID anomalies handle standard citeproc failures
     gracefully via parameter variants."""
     with caplog.at_level(logging.WARNING):
         source, err = CiteprocAdapter.create_json_source(
-            broken_csl_payload, doi="10.1000/xyz123"
+            broken_csl_payload, doi="10.1000/xyz123",
         )
 
     assert source is None
@@ -210,7 +210,7 @@ def test_parse_csl_style_failure(caplog: pytest.LogCaptureFixture) -> None:
 
     with caplog.at_level(logging.WARNING):
         style, err = CiteprocAdapter.parse_csl_style(
-            malformed_xml, doi="10.1000/xyz123"
+            malformed_xml, doi="10.1000/xyz123",
         )
 
     assert style is None
@@ -238,7 +238,7 @@ def test_full_rendering_pipeline_success(caplog: pytest.LogCaptureFixture) -> No
 
     with caplog.at_level(logging.DEBUG):
         rendered_text, err = CiteprocAdapter.render_bibliography(
-            style, source, item_id=doi_key, doi=doi_key
+            style, source, item_id=doi_key, doi=doi_key,
         )
 
     assert err is None
@@ -280,7 +280,7 @@ def test_render_bibliography_corrupted_github_style_handles_attribute_error(
         caplog.at_level(logging.WARNING),
     ):
         rendered_text, err = CiteprocAdapter.render_bibliography(
-            style, source, item_id=doi_key, doi=doi_key
+            style, source, item_id=doi_key, doi=doi_key,
         )
 
     assert rendered_text is None

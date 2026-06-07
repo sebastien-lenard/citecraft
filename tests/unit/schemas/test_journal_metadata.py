@@ -42,7 +42,7 @@ def test_journal_metadata_year_range_logic() -> None:
         JournalMetadata(input_title="Test", start_year=2025, end_year=2020)
 
     assert "start_year (2025) should be lower than end_year (2020)" in str(
-        excinfo.value
+        excinfo.value,
     )
 
 

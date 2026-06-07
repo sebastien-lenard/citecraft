@@ -105,7 +105,7 @@ def test_work_metadata_doi_normalization() -> None:
     ],
 )
 def test_work_metadata_status_property(
-    doi: str | None, reference: str | None, expected_status: str
+    doi: str | None, reference: str | None, expected_status: str,
 ) -> None:
     """Verify evaluation transitions of WorkMetadata status states."""
     work = WorkMetadata(

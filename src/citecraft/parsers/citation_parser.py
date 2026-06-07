@@ -53,7 +53,7 @@ class CitationParser:
 
         # Pre-compiled regular expressions for runtime efficiency
         self._narrative_regex = re.compile(
-            rf"({self.author_pattern})\s*\((({self.year_pattern})(?:,\s*{self.year_pattern})*)\)"
+            rf"({self.author_pattern})\s*\((({self.year_pattern})(?:,\s*{self.year_pattern})*)\)",
         )
         self._year_regex = re.compile(self.year_pattern)
         self._author_comma_regex = re.compile(rf"({self.author_pattern})\s*,")
@@ -105,7 +105,7 @@ class CitationParser:
                         type="narrative",
                     )
                     for y in years
-                ]
+                ],
             )
 
         # 2. PARENTHETICAL CITATIONS: (Hovius et al., 1997; Parker and Smith, 2011)
@@ -147,7 +147,7 @@ class CitationParser:
                                 type="parenthetical",
                             )
                             for y in years
-                        ]
+                        ],
                     )
 
         logger.info(

@@ -43,7 +43,7 @@ def parser() -> JournalParser:
     ],
 )
 def test_journal_parser_scenarios(
-    parser: JournalParser, text: str, expected: list[str]
+    parser: JournalParser, text: str, expected: list[str],
 ) -> None:
     """Verify structural extraction rules and boundary parsing edge cases."""
     assert parser.extract_all(text) == expected

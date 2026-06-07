@@ -57,7 +57,7 @@ def parser() -> CitationParser:
     ],
 )
 def test_citation_parser_extractions(
-    parser: CitationParser, text: str, expected_authors: list[str]
+    parser: CitationParser, text: str, expected_authors: list[str],
 ) -> None:
     """Verify successful citation parsings across diverse formatting combinations."""
     res = parser.extract_all(text)

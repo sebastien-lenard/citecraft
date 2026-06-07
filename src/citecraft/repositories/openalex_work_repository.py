@@ -165,7 +165,7 @@ class OpenAlexWorkRepository(WorkRepository):
 
     @override
     def _set_metadata_attribute(
-        self, work_metadata: WorkMetadata, item: dict
+        self, work_metadata: WorkMetadata, item: dict,
     ) -> WorkMetadata:
         """Clean and update the metadata attribute and returns object."""
         logger.debug(
@@ -194,7 +194,7 @@ class OpenAlexWorkRepository(WorkRepository):
         norm_input_author = self._normalize_string(input_author)
         norm_api_author = self._normalize_string(api_author_name)
         if norm_input_author in norm_api_author and not norm_api_author.endswith(
-            norm_input_author
+            norm_input_author,
         ):
             logger.info(
                 (

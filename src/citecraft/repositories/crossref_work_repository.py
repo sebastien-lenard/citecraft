@@ -69,7 +69,7 @@ class CrossrefWorkRepository(WorkRepository):
         }
 
         response, _ = self.http_client_wrapper.get(
-            str(self.config.crossref_api_works_url), headers=self.headers, params=params
+            str(self.config.crossref_api_works_url), headers=self.headers, params=params,
         )
         if response is None:
             return []
@@ -101,7 +101,7 @@ class CrossrefWorkRepository(WorkRepository):
 
     @override
     def _set_metadata_attribute(
-        self, work_metadata: WorkMetadata, item: dict
+        self, work_metadata: WorkMetadata, item: dict,
     ) -> WorkMetadata:
         """Clean and update the metadata attribute and returns object."""
         work_metadata.crossref_metadata = self._clean_metadata(
@@ -128,5 +128,5 @@ class CrossrefWorkRepository(WorkRepository):
         else:
             return False
         return self._normalize_string(input_author) == self._normalize_string(
-            api_author_name
+            api_author_name,
         )

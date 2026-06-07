@@ -25,7 +25,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         api: str = "crossref",
     ) -> None:
         super().__init__(
-            local_filename, model_class=WorkMetadata, config=config, api=api
+            local_filename, model_class=WorkMetadata, config=config, api=api,
         )
 
     def _call_work_api(
@@ -42,7 +42,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
     def _get_authors_from_api_item(self, item: dict) -> list[dict] | None:
         """Get authors of an item returned by the api"""
         raise NotImplementedError(
-            "Subclasses must implement _get_authors_from_api_item"
+            "Subclasses must implement _get_authors_from_api_item",
         )
 
     def _get_doi_from_api_item(self, item: dict) -> str | None:
@@ -92,7 +92,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         """
         if not input_issns:
             raise ValueError(
-                "input_issn is an obligatory argument (valid issn of a journal)"
+                "input_issn is an obligatory argument (valid issn of a journal)",
             )
         input_first_authors_txt = input_citation_metadata.first_authors_txt
         input_year_and_suffix = input_citation_metadata.year_and_suffix
@@ -104,7 +104,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             raise ValueError(
                 f"year {year_int} must be in the "
                 f"{self.config.min_publication_year}-"
-                f"{self.config.max_publication_year} range"
+                f"{self.config.max_publication_year} range",
             )
         get_limit = (
             int(get_limit)
@@ -113,7 +113,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         )
 
         input_first_authors, input_is_et_al = self._get_input_first_authors_and_et_al(
-            input_first_authors_txt
+            input_first_authors_txt,
         )
 
         items = self._call_work_api(
@@ -139,7 +139,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                     continue
 
                 if not self._validate_first_authors(
-                    input_first_authors or [], api_authors
+                    input_first_authors or [], api_authors,
                 ):
                     continue
 
@@ -159,7 +159,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         return candidates
 
     def _log_heartbeat_if_needed(
-        self, processed: int, total: int, last_time: float
+        self, processed: int, total: int, last_time: float,
     ) -> float:
         """Log progress status every 10 seconds of processing time."""
         current_time = time.time()
@@ -244,14 +244,14 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             return False
 
         validate_first_author = self._validate_author(
-            input_first_authors[0], api_authors[0]
+            input_first_authors[0], api_authors[0],
         )
 
         if len(input_first_authors) == self.config.max_count_of_authors_in_citation:
             if len(api_authors) < self.config.max_count_of_authors_in_citation:
                 return False
             validate_first_author = validate_first_author & self._validate_author(
-                input_first_authors[1], api_authors[1]
+                input_first_authors[1], api_authors[1],
             )
         return validate_first_author
 
@@ -291,7 +291,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         )
 
     def _set_metadata_attribute(
-        self, work_metadata: WorkMetadata, item: dict
+        self, work_metadata: WorkMetadata, item: dict,
     ) -> WorkMetadata:
         """Update the metadata correct attribute and returns object."""
         raise NotImplementedError("Subclasses must implement set_metadata_attribute")
@@ -358,7 +358,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             groups_of_issns = self._get_issns_groups_for_api(filtered_issns)
             for grp_issns in groups_of_issns:
                 results = self.get_work_metadata(
-                    input_citation_metadata=citation_info, input_issns=grp_issns
+                    input_citation_metadata=citation_info, input_issns=grp_issns,
                 )
 
                 if results:

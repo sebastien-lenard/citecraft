@@ -79,7 +79,7 @@ def test_db_filepath_computed_property(base_raw_config: dict[str, Any]) -> None:
 
 
 def test_ensure_output_directory_creation(
-    tmp_path: Path, base_raw_config: dict[str, Any]
+    tmp_path: Path, base_raw_config: dict[str, Any],
 ) -> None:
     """Verify that ensure_output_directory creates the expected filesystem target."""
     test_output = tmp_path / "test_output"
@@ -96,7 +96,7 @@ def test_ensure_output_directory_creation(
 
 
 def test_get_config_global_cache_and_isolation(
-    monkeypatch: pytest.MonkeyPatch, base_raw_config: dict[str, Any]
+    monkeypatch: pytest.MonkeyPatch, base_raw_config: dict[str, Any],
 ) -> None:
     """Verify get_config returns a cached singleton instance when evaluated."""
     # Since get_config reads environment variables / .env by default,

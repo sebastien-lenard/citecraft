@@ -11,7 +11,7 @@ class WorkMetadata(BaseSchema):
     """Represents validated metadata for a published work."""
 
     input_first_authors_txt: str = Field(
-        min_length=1
+        min_length=1,
     )  # e.g. Lenard et al., Guns and Vanacker
     input_year_and_suffix: str = Field(min_length=1)  # e.g. 2020a
     input_issns: list[str] | None = None  # e.g. ["1752-0894"]

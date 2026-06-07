@@ -134,7 +134,7 @@ def test_load_records_missing_boundaries(tmp_path: Path) -> None:
     # 2. Nonexistent table name within a valid database file
     db_path = tmp_path / "real_file.db"
     save_records(
-        db_path, "actual_table", [SimpleMockModel(id=1, name="A")], SimpleMockModel
+        db_path, "actual_table", [SimpleMockModel(id=1, name="A")], SimpleMockModel,
     )
     assert load_records(db_path, "nonexistent_table", SimpleMockModel) == []
 
@@ -196,7 +196,7 @@ def test_transaction_rollback_integrity(tmp_path: Path) -> None:
     # We bypass schema creation by calling save_records with our mismatched model.
     # This forces SQLite to raise a real sqlite3.OperationalError (no such column).
     bad_records = [
-        MismatchedMockModel(id=2, name="Failure", non_existent_column="test")
+        MismatchedMockModel(id=2, name="Failure", non_existent_column="test"),
     ]
 
     with pytest.raises(sqlite3.Error) as exc_info:

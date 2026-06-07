@@ -75,7 +75,7 @@ def test_app_scaffolding_initialization() -> None:
 
         mock_init.assert_called_once()
         mock_title.assert_called_once_with(
-            "CiteCraft — Manuscript Bibliography Generator"
+            "CiteCraft — Manuscript Bibliography Generator",
         )
         mock_geometry.assert_called_once_with("1100x650")
         mock_minsize.assert_called_once_with(900, 500)
@@ -111,7 +111,7 @@ def test_sidebar_frame_creation() -> None:
 
         # Verify ComboBox for API selection binds the state's API variable
         mock_combo.assert_called_once_with(
-            sidebar, values=["OpenAlex", "Crossref"], variable=mock_state.api
+            sidebar, values=["OpenAlex", "Crossref"], variable=mock_state.api,
         )
 
         # Check expected text input counts (Journal and Style entries)
@@ -148,7 +148,7 @@ def test_main_frame_creation() -> None:
 
         # Ensure grid alignment calls are bypassed on sub-frames
         mock_frame_grid.assert_called_once_with(
-            row=0, column=0, padx=20, pady=(20, 10), sticky="ew"
+            row=0, column=0, padx=20, pady=(20, 10), sticky="ew",
         )
 
         # Checking existence of layout components (3 buttons: Input, Output, Run)
@@ -196,10 +196,10 @@ def test_select_input_file_updates_state() -> None:
         main_frame._select_input_file()
 
         mock_dialog.assert_called_once_with(
-            title="Select Manuscript Document", filetypes=[("Word Documents", "*.docx")]
+            title="Select Manuscript Document", filetypes=[("Word Documents", "*.docx")],
         )
         mock_state.input_file_path.set.assert_called_once_with(
-            "C:/mock/manuscript.docx"
+            "C:/mock/manuscript.docx",
         )
 
 
@@ -299,7 +299,7 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
     """Validate run event writes success to console log on valid state inputs."""
 
     def mock_after(
-        self: object, delay: int, func: typing.Callable, *args: object
+        self: object, delay: int, func: typing.Callable, *args: object,
     ) -> None:
         func(*args)
 
@@ -335,7 +335,7 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
 
         # Mock thread to run synchronously inside unit testing context safely
         def mock_thread_init(
-            target: typing.Callable, args: tuple = (), **kwargs: object
+            target: typing.Callable, args: tuple = (), **kwargs: object,
         ) -> MagicMock:  # type: ignore[type-arg]
             target(*args)
             return MagicMock()
@@ -344,7 +344,7 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
             return_value=(
                 [],
                 MagicMock(total_rows=10, output_filepath="C:/output.csv"),
-            )
+            ),
         )
 
         with (
@@ -439,7 +439,7 @@ def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
 
         # Ensure btn_input configure border_color was highlighted
         typing.cast(MagicMock, main_frame.btn_input.configure).assert_called_with(
-            border_width=2, border_color="red"
+            border_width=2, border_color="red",
         )
 
 
@@ -476,7 +476,7 @@ def test_on_run_pipeline_output_failure(test_config: AppConfig) -> None:
 
         # Ensure btn_output configure border_color was highlighted
         typing.cast(MagicMock, main_frame.btn_output.configure).assert_called_with(
-            border_width=2, border_color="red"
+            border_width=2, border_color="red",
         )
 
 
@@ -548,7 +548,7 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
     """Verify background run thread disables and restores controls on success."""
 
     def mock_after(
-        self: object, delay: int, func: typing.Callable, *args: object
+        self: object, delay: int, func: typing.Callable, *args: object,
     ) -> None:
         func(*args)  # Emulate main-thread callback dispatcher instantly
 
@@ -583,7 +583,7 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
             return_value=(
                 [MagicMock(input_title="Anomalous Journal")],
                 MagicMock(total_rows=10, output_filepath="C:/output.csv"),
-            )
+            ),
         )
 
         with (
@@ -592,7 +592,7 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
         ):
 
             def mock_thread_init(
-                target: typing.Callable, args: tuple = (), **kwargs: object
+                target: typing.Callable, args: tuple = (), **kwargs: object,
             ) -> MagicMock:
                 # Force synchronous execution inside mock thread to test flow
                 target(*args)
@@ -618,7 +618,7 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
     """Verify background run thread captures and handles backend errors gracefully."""
 
     def mock_after(
-        self: object, delay: int, func: typing.Callable, *args: object
+        self: object, delay: int, func: typing.Callable, *args: object,
     ) -> None:
         func(*args)
 
@@ -657,7 +657,7 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
         ):
 
             def mock_thread_init(
-                target: typing.Callable, args: tuple = (), **kwargs: object
+                target: typing.Callable, args: tuple = (), **kwargs: object,
             ) -> MagicMock:
                 target(*args)
                 return MagicMock()
@@ -667,5 +667,5 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
 
         # Verify text console printed error log
         main_frame.txt_console.insert.assert_any_call(
-            "end", "❌ Execution Failure: API failure\n"
+            "end", "❌ Execution Failure: API failure\n",
         )

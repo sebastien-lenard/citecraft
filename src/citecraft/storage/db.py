@@ -26,7 +26,7 @@ def _is_collection_type(type_annotation: object) -> bool:
         return any(_is_collection_type(arg) for arg in get_args(type_annotation))
 
     return isinstance(type_annotation, type) and issubclass(
-        type_annotation, list | dict | set
+        type_annotation, list | dict | set,
     )
 
 
@@ -51,7 +51,7 @@ def _get_sqlite_type(type_annotation: object) -> str:
 
 
 def create_table_for_model(
-    conn: sqlite3.Connection, table_name: str, model_class: type[BaseModel]
+    conn: sqlite3.Connection, table_name: str, model_class: type[BaseModel],
 ) -> None:
     """Create a table dynamically based on Pydantic model fields."""
     column_definitions = [
@@ -96,7 +96,7 @@ def deserialize_row[T: BaseModel](row_dict: dict[str, Any], model_class: type[T]
 
 
 def save_records[T: BaseModel](
-    db_path: Path, table_name: str, records: list[T], model_class: type[T]
+    db_path: Path, table_name: str, records: list[T], model_class: type[T],
 ) -> None:
     """Atomically save records to the database within a transaction."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -126,7 +126,7 @@ def save_records[T: BaseModel](
 
 
 def load_records[T: BaseModel](
-    db_path: Path, table_name: str, model_class: type[T]
+    db_path: Path, table_name: str, model_class: type[T],
 ) -> list[T]:
     """Retrieve all records for a given model from the SQLite database."""
     if not db_path.exists():

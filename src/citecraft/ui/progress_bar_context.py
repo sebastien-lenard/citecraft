@@ -76,14 +76,14 @@ class ProgressBarContext:
             self._custom_handler = LogInterceptor(draw_callback=self._draw_line)
             self._custom_handler.setFormatter(
                 logging.Formatter(
-                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-                )
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                ),
             )
             root_logger.addHandler(self._custom_handler)
 
             # Start background worker ticker thread
             self._ticker_thread = threading.Thread(
-                target=self._loop_render, daemon=True
+                target=self._loop_render, daemon=True,
             )
             self._ticker_thread.start()
         return self
@@ -164,7 +164,7 @@ class ProgressBarContext:
         else:
             remaining_steps = total - current
             estimated_remaining_seconds = int(
-                (remaining_steps * elapsed_time) / current
+                (remaining_steps * elapsed_time) / current,
             )
             eta_min, eta_sec = divmod(estimated_remaining_seconds, 60)
             eta_str = f"{eta_min:02d}:{eta_sec:02d}"

@@ -147,7 +147,7 @@ class ParsingStep:
             style_id = ctx.style_repo.favored_style or ctx.journal_title or ctx.style
             raise ValueError(
                 f"Style '{style_id}' is not found in CSL repository "
-                "https://github.com/citation-style-language/styles."
+                "https://github.com/citation-style-language/styles.",
             )
 
         ctx.journal_required_titles = JournalParser().extract_all(ctx.input_text)
@@ -228,7 +228,7 @@ class WorkUpdateStep:
 
         if not ctx.skip_work_update:
             issns = ctx.journal_repo.get_unique_issns_for_titles(
-                ctx.journal_required_titles
+                ctx.journal_required_titles,
             )
             logger.info(
                 "Updating local works database for target ISSNs.",
@@ -363,7 +363,7 @@ class ExportStep:
             for j in ctx.journal_repo.records:
                 if j.status != "OK":
                     all_found_issns = ctx.journal_repo.get_issns_by_input_title(
-                        j.input_title
+                        j.input_title,
                     )
                     ctx.anomalous_journals.append(
                         AnomalousJournal(
@@ -373,7 +373,7 @@ class ExportStep:
                             issns_found=", ".join(all_found_issns)
                             if all_found_issns
                             else "",
-                        )
+                        ),
                     )
             logger.info(
                 "Anomalous journals verification complete.",
@@ -426,7 +426,7 @@ def run(options: PipelineOptions) -> tuple[list[AnomalousJournal], ExportResult 
                         total=total_steps,
                         message=step.message,
                         status="started",
-                    )
+                    ),
                 )
 
             step.execute(ctx)
@@ -439,7 +439,7 @@ def run(options: PipelineOptions) -> tuple[list[AnomalousJournal], ExportResult 
                         total=total_steps,
                         message=f"Finished: {step.message}",
                         status="completed",
-                    )
+                    ),
                 )
     finally:
         get_http_client_registry().close_all()

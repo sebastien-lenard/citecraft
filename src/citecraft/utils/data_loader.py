@@ -61,7 +61,7 @@ class DataLoader:
             return None
 
     def load_json[T](
-        self, validator: Callable[[T], bool] | None = None
+        self, validator: Callable[[T], bool] | None = None,
     ) -> list[T] | dict[str, Any] | None:
         """Load, parse, and optionally validate list item schemas from a JSON source."""
         if not self.file_path.is_file():

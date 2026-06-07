@@ -58,7 +58,7 @@ def test_validation_error_when_both_id_and_doi_missing() -> None:
     ],
 )
 def test_issn_parsing_variants(
-    issn_input: list[str] | str, expected_issn: str | None
+    issn_input: list[str] | str, expected_issn: str | None,
 ) -> None:
     """Verify raw ISSN data input variants map onto a singular identifier string."""
     raw_data = {"id": "test_id", "type": "book", "ISSN": issn_input}
@@ -86,7 +86,7 @@ def test_validate_csl_type_matching_config(test_config: AppConfig) -> None:
     test_config = test_config.model_copy(
         update={
             "work_csl_schema_types": ["article-journal", "book"],
-        }
+        },
     )
     raw_data = {
         "id": "valid-id-1",
@@ -99,13 +99,13 @@ def test_validate_csl_type_matching_config(test_config: AppConfig) -> None:
 
 
 def test_validate_csl_type_unknown_triggers_structured_log(
-    test_config: AppConfig, caplog: pytest.LogCaptureFixture
+    test_config: AppConfig, caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that an unlisted type logs a warning with explicit context metadata."""
     test_config = test_config.model_copy(
         update={
             "work_csl_schema_types": ["article-journal"],
-        }
+        },
     )
     raw_data = {
         "id": "10.1234/test-doi",
@@ -114,7 +114,7 @@ def test_validate_csl_type_unknown_triggers_structured_log(
 
     with caplog.at_level(logging.WARNING):
         validated = CSLReference.model_validate(
-            raw_data, context={"config": test_config}
+            raw_data, context={"config": test_config},
         )
 
     assert validated.type == "custom-fallback-type"

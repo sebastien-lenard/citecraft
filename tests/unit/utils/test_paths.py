@@ -56,7 +56,7 @@ class TestOSBaseDirectories:
         ids=["windows_default", "macos_default", "linux_default"],
     )
     def test_default_os_paths(
-        self, target_os, mock_home, extra_env, expected_subpath
+        self, target_os, mock_home, extra_env, expected_subpath,
     ) -> None:
         """Should map to the correct OS-specific data directory structure."""
         # Dynamically apply any specific environment variables required for the platform

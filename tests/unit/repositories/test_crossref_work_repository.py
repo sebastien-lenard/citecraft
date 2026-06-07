@@ -17,7 +17,7 @@ def repo(test_config: AppConfig) -> CrossrefWorkRepository:
             "crossref_api_works_url": "https://api.crossref.org/works",
             "crossref_api_works_get_limit": 20,
             "doi_api_url": "https://doi.org/{object_name}",
-        }
+        },
     )
     return CrossrefWorkRepository(config=test_config)
 
@@ -26,11 +26,11 @@ def test_call_work_api_success(repo: CrossrefWorkRepository) -> None:
     """Verify that _call_work_api executes GET request with correct parameters."""
     mock_response = MagicMock()
     mock_response.json.return_value = {
-        "message": {"items": [{"DOI": "10.1038/s41561-020-0585-2"}]}
+        "message": {"items": [{"DOI": "10.1038/s41561-020-0585-2"}]},
     }
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, 100)
+        repo.http_client_wrapper, "get", return_value=(mock_response, 100),
     ) as mock_get:
         items = repo._call_work_api(
             input_first_authors_txt="Lenard",
@@ -47,7 +47,7 @@ def test_call_work_api_success(repo: CrossrefWorkRepository) -> None:
 
 
 def test_call_work_api_multiple_issns_fails(
-    repo: CrossrefWorkRepository, caplog: pytest.LogCaptureFixture
+    repo: CrossrefWorkRepository, caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that providing several ISSNs logs warning and returns empty list."""
     caplog.set_level(logging.WARNING)
@@ -105,7 +105,7 @@ def test_get_type_from_api_item(repo: CrossrefWorkRepository) -> None:
 def test_set_metadata_attribute(repo: CrossrefWorkRepository) -> None:
     """Verify that crossref item is attached to crossref_metadata attribute."""
     work_metadata = WorkMetadata(
-        input_first_authors_txt="Lenard", input_year_and_suffix="2020"
+        input_first_authors_txt="Lenard", input_year_and_suffix="2020",
     )
     raw_item = {"DOI": "10.1001", "author": []}
     updated = repo._set_metadata_attribute(work_metadata, raw_item)
