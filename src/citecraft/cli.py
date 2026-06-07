@@ -18,6 +18,7 @@ from .core import AnomalousJournal, PipelineOptions, run
 from .logging_config import setup_logging
 from .services import ExportResult
 from .storage.db import archive_database_cache
+from .ui.app import CiteCraftApp
 from .ui.progress_bar_context import ProgressBarContext
 from .utils import AppConfig
 from .utils.config import get_config
@@ -52,12 +53,16 @@ class ProcessedArgs:
 
 def _configure_windows_console() -> None:
     """Force Windows console to replace unencodable characters instead of crashing."""
-    if sys.platform == "win32":
+    if sys.platform == "win32":  # pragma: no branch
         sys.stdout = io.TextIOWrapper(
-            sys.stdout.buffer, encoding=sys.stdout.encoding, errors="replace"
+            sys.stdout.buffer,
+            encoding=sys.stdout.encoding,
+            errors="replace",
         )
         sys.stderr = io.TextIOWrapper(
-            sys.stderr.buffer, encoding=sys.stderr.encoding, errors="replace"
+            sys.stderr.buffer,
+            encoding=sys.stderr.encoding,
+            errors="replace",
         )
 
 
@@ -163,7 +168,7 @@ def _render_csv_preview(metadata: ExportResult) -> None:
         click.echo(
             f"{row['Citation']:<{COL1_W}} | "
             f"{status_text:<{COL2_W}} | "
-            f"{ref_lines[0]:<{COL3_W}}"
+            f"{ref_lines[0]:<{COL3_W}}",
         )
 
         for extra_line in ref_lines[1:]:
@@ -175,39 +180,42 @@ def _render_recommendations(metadata: ExportResult) -> None:
     click.echo("")
     click.secho("💡 Next Steps & Recommendations:", bold=True, fg="yellow")
 
-    if metadata.missing_count > 0:
+    if metadata.missing_count > 0:  # pragma: no branch
         click.echo(
             "  • For citations marked as 'Missing DOI/Reference': "
             "Please search for their DOIs\n"
             "    manually on the Crossref website "
-            "(https://search.crossref.org) and update your records."
+            "(https://search.crossref.org) and update your records.",
         )
 
-    if metadata.duplicate_count > 0:
+    if metadata.duplicate_count > 0:  # pragma: no branch
         click.echo(
             "  • For citations with multiple matches: "
             "Review the generated CSV file and delete\n"
             "    the irrelevant reference rows, leaving only the "
-            "correct one for each citation."
+            "correct one for each citation.",
         )
 
     click.echo(
         "  • Once the CSV file is cleaned and reviewed, you can directly"
         " copy and paste\n"
-        "    the finalized reference list into your manuscript."
+        "    the finalized reference list into your manuscript.",
     )
     click.echo("")
 
 
 def _handle_execution_failure(
-    err: Exception, verbose: int, cache_msg: str | None
+    err: Exception,
+    verbose: int,
+    cache_msg: str | None,
 ) -> None:
     """Log the failure securely and output clear terminal diagnostics."""
-    logger.critical(
-        "Fatal application crash encountered during execution", exc_info=True
+    logger.error(
+        "Fatal application crash encountered during execution",
+        exc_info=err,
     )
 
-    if cache_msg:
+    if cache_msg:  # pragma: no branch
         click.echo("")
         click.secho(cache_msg, fg="green", bold=True)
 
@@ -216,9 +224,7 @@ def _handle_execution_failure(
 
     if verbose > 0:
         click.secho("\n--- Debug Traceback ---", fg="yellow", err=True)
-        tb_lines = traceback.format_exception(
-            type(err), err, err.__traceback__, limit=3
-        )
+        tb_lines = traceback.format_exception(err, limit=3)
         click.echo("".join(tb_lines), err=True)
         click.secho("-----------------------", fg="yellow", err=True)
     else:
@@ -235,7 +241,9 @@ def _handle_execution_failure(
 
 
 def _execute_processing_pipeline(
-    config: AppConfig, p_args: ProcessedArgs, cache_summary_message: str | None
+    config: AppConfig,
+    p_args: ProcessedArgs,
+    cache_summary_message: str | None,
 ) -> None:
     """Isolate runtime pipeline logic execution from Click decorator syntax."""
     valid_text = p_args.text if p_args.text else _read_piped_input()
@@ -248,7 +256,8 @@ def _execute_processing_pipeline(
     try:
         config.ensure_repo_directory()
         progress_context = ProgressBarContext(
-            verbose_level=p_args.verbose, bar_width=30
+            verbose_level=p_args.verbose,
+            bar_width=30,
         )
 
         with progress_context as ctx_manager:
@@ -266,7 +275,7 @@ def _execute_processing_pipeline(
                     ),
                     skip_journal_update=p_args.skip_journal_update,
                     skip_work_update=p_args.skip_work_update,
-                )
+                ),
             )
 
         if cache_summary_message:
@@ -303,6 +312,11 @@ def _execute_processing_pipeline(
 
 @click.group(invoke_without_command=True)
 @click.pass_context
+@click.option(
+    "--gui",
+    is_flag=True,
+    help="Launch the modern desktop CustomTkinter GUI wrapper.",
+)
 @click.option(
     "-a",
     "--api",
@@ -383,6 +397,13 @@ def cli(ctx: click.Context, **kwargs: object) -> None:
     if "config" not in ctx.obj:
         ctx.obj["config"] = get_config()
 
+    # Intercept --gui option right at the root entrypoint
+    if kwargs.get("gui"):
+        logger.info("Bootstrapping modern CustomTkinter desktop UI wrapper.")
+        app = CiteCraftApp()
+        app.mainloop()
+        sys.exit(0)
+
     # Intercept --clear-cache right at the root entrypoint
     if kwargs.get("clear_cache"):
         ctx.forward(clear_cache_command)
@@ -413,7 +434,7 @@ def clear_cache_command(ctx: click.Context, **_kwargs: object) -> None:
     )
     click.echo(
         "This will archive your existing database local repository,"
-        " forcing fresh remote API lookups."
+        " forcing fresh remote API lookups.",
     )
 
     if not click.confirm("Do you want to proceed?", default=False):

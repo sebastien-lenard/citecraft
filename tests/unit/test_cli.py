@@ -72,9 +72,37 @@ def dummy_export_result(tmp_path: Path) -> ExportResult:
                 "Citation": "Dup2022",
                 "Status": "select the right reference",
                 "Reference": "Dup, A.",
-            }
+            },
         ],
     )
+
+
+# ==============================================================================
+# GUI
+# ==============================================================================
+
+
+def test_cli_gui_flag_routing() -> None:
+    """Validate --gui option intercepts standard CLI flow and boots GUI app."""
+    runner = CliRunner()
+    with (
+        # Target the class inside the module where it is actually invoked
+        # Isolate only the GUI App class lookup to prevent window instantiation
+        patch("citecraft.cli.CiteCraftApp") as mock_app_cls,
+        patch("sys.exit") as mock_exit,
+    ):
+        mock_app = MagicMock()
+        mock_app_cls.return_value = mock_app
+
+        # Execute Click CLI and capture the runner's lifecycle metrics
+        result = runner.invoke(cli, ["--gui"])
+
+        # Assert GUI bootstrapper was loaded and mainloop was launched cleanly
+        mock_app_cls.assert_called_once()
+        mock_app.mainloop.assert_called_once()
+
+        # Let Click evaluate the exit condition naturally
+        assert result.exit_code == 0
 
 
 # ==============================================================================
@@ -122,7 +150,7 @@ def test_render_anomalous_journals_displays_table() -> None:
             # Exceeds visual column layouts to force multiple wrapper line sequences
             status="Missing Works " * 20,
             issns_found="0028-0836",
-        )
+        ),
     ]
 
     with patch("click.echo") as mock_echo, patch("click.secho") as mock_secho:
@@ -337,14 +365,19 @@ def test_execute_pipeline_catches_generic_exceptions(test_config: AppConfig) -> 
 def test_handle_execution_failure_verbose_traceback() -> None:
     """Verify debug system captures call frames explicitly under verbose level flags."""
     try:
-        raise ValueError("Deep core tracking error")
+        err_msg = "Deep core tracking error"
+        raise ValueError(err_msg)
     except ValueError as err:
         with (
             patch("click.echo"),
             patch("click.secho") as mock_secho,
-            pytest.raises(SystemExit) as exit_block,
         ):
-            _handle_execution_failure(err, verbose=1, cache_msg="Clean Cache Running")
+            with pytest.raises(SystemExit) as exit_block:
+                _handle_execution_failure(
+                    err,
+                    verbose=1,
+                    cache_msg="Clean Cache Running",
+                )
             assert exit_block.value.code == 1
             assert any(
                 "Debug Traceback" in call[0][0] for call in mock_secho.call_args_list
@@ -354,13 +387,14 @@ def test_handle_execution_failure_verbose_traceback() -> None:
 def test_handle_execution_failure_non_verbose() -> None:
     """Verify output reminds users about available debug verbosity switches when low."""
     try:
-        raise ValueError("Standard muted dependency crash")
+        err_msg = "Standard muted dependency crash"
+        raise ValueError(err_msg)
     except ValueError as err:
         with (
             patch("click.echo") as mock_echo,
-            pytest.raises(SystemExit) as exit_block,
         ):
-            _handle_execution_failure(err, verbose=0, cache_msg="Cache Ok")
+            with pytest.raises(SystemExit) as exit_block:
+                _handle_execution_failure(err, verbose=0, cache_msg="Cache Ok")
             assert exit_block.value.code == 1
             printed_output = "".join(call[0][0] for call in mock_echo.call_args_list)
             assert (
@@ -540,11 +574,15 @@ def test_cache_clear_handles_sqlite_exceptions(
 ) -> None:
     """Ensure sqlite operational locks capture traceback states and exit with 1."""
     with patch(
-        "citecraft.cli.archive_database_cache", side_effect=sqlite3.Error("Locked file")
+        "citecraft.cli.archive_database_cache",
+        side_effect=sqlite3.Error("Locked file"),
     ):
         runner = CliRunner()
         result = runner.invoke(
-            cli, ["cache", "clear"], obj={"config": test_config}, input="y\n"
+            cli,
+            ["cache", "clear"],
+            obj={"config": test_config},
+            input="y\n",
         )
 
     assert result.exit_code == 1
@@ -565,7 +603,9 @@ def test_process_command_triggers_inline_cache_clear(
         mock_archive.return_value = Path("repo/cache.db.backup")
         runner = CliRunner()
         result = runner.invoke(
-            cli, ["--clear-cache", "-t", "Citation text"], input="y\n"
+            cli,
+            ["--clear-cache", "-t", "Citation text"],
+            input="y\n",
         )
         assert result.exit_code == 0
         assert "Local cache cleared" in result.output
