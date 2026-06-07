@@ -1,4 +1,6 @@
 # src/citecraft/utils/paths.py
+"""Path and directory utilities for the CiteCraft application."""
+
 import os
 import platform
 import tempfile
@@ -15,7 +17,7 @@ def get_app_name() -> str:
 
 
 def get_app_base_dir() -> Path:
-    """Determines the persistent base root directory for the app based on OS."""
+    """Determine the persistent base root directory for the app based on OS."""
     if custom_base := _ENV.get("APP_BASE_DIR"):
         return Path(custom_base.strip("\"'")).resolve()
 
@@ -34,13 +36,15 @@ def get_app_base_dir() -> Path:
 
 
 def get_safe_dir(subfolder: str) -> tuple[Path, Path, bool]:
-    """Returns a writable directory, the original intended path, and a boolean = True
-    if it had to resort to a temp directory."""
+    """Ensure a writable directory.
+
+    Return a writable directory, the original intended path, and a boolean = True
+    if it had to resort to a temp directory.
+    """
     target_path = get_app_base_dir() / subfolder
 
     try:
         target_path.mkdir(parents=True, exist_ok=True)
-        return target_path, target_path, False
     except OSError:
         # Fallback to temp directory if persistent directory is locked/read-only
         fallback_path = (
@@ -48,3 +52,5 @@ def get_safe_dir(subfolder: str) -> tuple[Path, Path, bool]:
         )
         fallback_path.mkdir(parents=True, exist_ok=True)
         return fallback_path, target_path, True
+    else:
+        return target_path, target_path, False
