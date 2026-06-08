@@ -1,4 +1,6 @@
 # src/citecraft/repositories/doi_repository.py
+"""Repository for fetching and sanitizing metadata records using DOI resolution."""
+
 import json
 import logging
 from http import HTTPStatus
@@ -31,6 +33,7 @@ class DoiRepository:
 
     def get_metadata(self, doi: DoiType) -> dict[str, Any]:
         """Retrieve CSL-JSON metadata via DOI content negotiation.
+
         Ensures that metadata contains an attribute id or DOI, necessary for
         CSLReference validation.
         """
@@ -39,65 +42,16 @@ class DoiRepository:
 
         try:
             res, _ = self.http_client_wrapper.get(url, headers=headers)
+            if res is None:
+                return {}
+
             res.raise_for_status()
             csl_metadata = res.json()
 
-            if (
-                "id" not in csl_metadata
-                and "DOI" not in csl_metadata
-                and "doi" not in csl_metadata
-            ):
-                logger.debug(
-                    "Invalid CSL-JSON content: %s",
-                    json.dumps(csl_metadata, separators=(",", ":")),
-                    extra={
-                        "status": "KO",
-                        "event": "doi_csl_json_dump",
-                        "doi": doi,
-                    },
-                )
-                logger.warning(
-                    (
-                        "CSL-JSON metadata invalid (missing 'id' and 'DOI'/'doi' "
-                        "field) for DOI:%s"
-                    ),
-                    doi,
-                    extra={
-                        "status": "KO",
-                        "event": "doi_csl_json_invalid_id_and_doi",
-                        "doi": doi,
-                    },
-                )
+            if not self._is_valid_csl(csl_metadata, doi):
                 return {}
 
-            # Purge configured blacklisted fields
-            work_blacklist_fields = self.config.work_crossref_schema_blacklist_fields
-            for field in work_blacklist_fields:
-                csl_metadata.pop(field, None)
-
-            author_blacklist_fields = (
-                self.config.author_crossref_schema_blacklist_fields
-            )
-            if (
-                author_blacklist_fields
-                and "author" in csl_metadata
-                and isinstance(csl_metadata["author"], list)
-            ):
-                for author_entry in csl_metadata["author"]:
-                    if isinstance(author_entry, dict):
-                        for sub_field in author_blacklist_fields:
-                            author_entry.pop(sub_field, None)
-
-            logger.debug(
-                "Successfully resolved CSL-JSON metadata for DOI: %s",
-                doi,
-                extra={
-                    "status": "OK",
-                    "event": "doi_csl_json_success",
-                    "doi": doi,
-                },
-            )
-            return csl_metadata
+            self._apply_blacklists(doi, csl_metadata)
 
         except json.JSONDecodeError:
             logger.warning(
@@ -124,4 +78,62 @@ class DoiRepository:
                     },
                 )
                 return {}
-            raise e
+            raise
+        else:
+            return csl_metadata
+
+    def _is_valid_csl(self, csl_metadata: dict[str, Any], doi: DoiType) -> bool:
+        """Validate that essential identifying keys exist within CSL-JSON record."""
+        if (
+            "id" not in csl_metadata
+            and "DOI" not in csl_metadata
+            and "doi" not in csl_metadata
+        ):
+            logger.debug(
+                "Invalid CSL-JSON content: %s",
+                json.dumps(csl_metadata, separators=(",", ":")),
+                extra={
+                    "status": "KO",
+                    "event": "doi_csl_json_dump",
+                    "doi": doi,
+                },
+            )
+            logger.warning(
+                "CSL-JSON metadata invalid (missing 'id' and 'DOI'/'doi' "
+                "field) for DOI:%s",
+                doi,
+                extra={
+                    "status": "KO",
+                    "event": "doi_csl_json_invalid_id_and_doi",
+                    "doi": doi,
+                },
+            )
+            return False
+        return True
+
+    def _apply_blacklists(self, doi: DoiType, csl_metadata: dict[str, Any]) -> None:
+        """Filter out blacklisted work attributes and author profile fields."""
+        work_blacklist_fields = self.config.work_crossref_schema_blacklist_fields
+        for field in work_blacklist_fields:
+            csl_metadata.pop(field, None)
+
+        author_blacklist_fields = self.config.author_crossref_schema_blacklist_fields
+        if (
+            author_blacklist_fields
+            and "author" in csl_metadata
+            and isinstance(csl_metadata["author"], list)
+        ):
+            for author_entry in csl_metadata["author"]:
+                if isinstance(author_entry, dict):
+                    for sub_field in author_blacklist_fields:
+                        author_entry.pop(sub_field, None)
+
+        logger.debug(
+            "Successfully resolved CSL-JSON metadata for DOI: %s",
+            doi,
+            extra={
+                "status": "OK",
+                "event": "doi_csl_json_success",
+                "doi": doi,
+            },
+        )
