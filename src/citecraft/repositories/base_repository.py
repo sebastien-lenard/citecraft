@@ -1,8 +1,10 @@
 # src/citecraft/repositories/base_repository.py
+"""Base database repository implementing storage operations and schema enforcement."""
+
 import logging
 import sqlite3
 from contextlib import suppress
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TypeVar
 
@@ -22,8 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseRepository[T: BaseSchema]:
-    """Base repository delivering structured local SQLite storage and schema
-    enforcement."""
+    """Base repository delivering local storage and schema enforcement."""
 
     def __init__(
         self,
@@ -47,6 +48,7 @@ class BaseRepository[T: BaseSchema]:
         self.records: list[T] = []
 
     def __len__(self) -> int:
+        """Return the number of records currently loaded in memory."""
         return len(self.records)
 
     def deduplicate(self) -> None:
@@ -68,20 +70,21 @@ class BaseRepository[T: BaseSchema]:
         *,
         raise_exception: bool = False,
     ) -> None:
-        """Load and validate records from SQLite storage into memory. The list of
-        records of the object are set to [] if invalid."""
+        """Load and validate records into memory.
+
+        The list of records of the object are set to [] if invalid.
+        """
         path = Path(input_filepath or self.config.db_filepath).resolve()
 
         try:
             self.records = load_records(path, self.table_name, self.model_class)
             self._load_failed = False
-        except (sqlite3.Error, TypeError, ValueError) as e:
+        except (sqlite3.Error, TypeError, ValueError):
             logger.warning(
                 "Failed validation or database corrupted for %s in SQLite file %s. "
                 "Triggering database recovery and backup.",
                 self.model_class.__name__,
                 str(path),
-                exc_info=True,
                 extra={
                     "status": "KO",
                     "event": "repository_validation_failed",
@@ -91,7 +94,7 @@ class BaseRepository[T: BaseSchema]:
             )
 
             if path.is_file():
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
                 backup_filename = f"{path.stem}_corrupted_{timestamp}{path.suffix}"
                 backup_path = path.with_name(backup_filename)
                 try:
@@ -101,11 +104,9 @@ class BaseRepository[T: BaseSchema]:
                         str(backup_path),
                         extra={"event": "database_corrupted_backup_created"},
                     )
-                except OSError as backup_err:
-                    logger.error(
-                        "Failed to back up corrupted database: %s",
-                        str(backup_err),
-                        exc_info=True,
+                except OSError:
+                    logger.exception(
+                        "Failed to back up corrupted database",
                     )
                     with suppress(OSError):
                         path.unlink(missing_ok=True)
@@ -113,7 +114,7 @@ class BaseRepository[T: BaseSchema]:
             self.records = []
             self._load_failed = True
             if raise_exception:
-                raise e
+                raise
 
         logger.info(
             "Loaded %d records into memory from SQLite %s",
@@ -134,14 +135,12 @@ class BaseRepository[T: BaseSchema]:
         try:
             save_records(target_path, self.table_name, self.records, self.model_class)
             self._load_failed = False
-        except (sqlite3.Error, OSError) as e:
-            logger.error(
-                "Failed to save records to SQLite at %s: %s",
+        except (sqlite3.Error, OSError):
+            logger.exception(
+                "Failed to save records to SQLite at %s",
                 str(target_path),
-                str(e),
-                exc_info=True,
             )
-            raise e
+            raise
 
         logger.info(
             "Saved %d records to SQLite %s",

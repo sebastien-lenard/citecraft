@@ -1,4 +1,6 @@
 # src/citecraft/repositories/openalex_work_repository.py
+"""OpenAlex repository implementation for querying and validating academic works."""
+
 import logging
 from typing import override
 
@@ -24,7 +26,7 @@ class OpenAlexWorkRepository(WorkRepository):
         super().__init__(local_filename, config=config, api=api)
 
     def _build_author_api_filter(self, input_authors_txt: str) -> str | None:
-        """Builds a filter from author string."""
+        """Build a filter from author string."""
         authors, _ = self._get_input_first_authors_and_et_al(input_authors_txt)
 
         if not authors:
@@ -116,12 +118,12 @@ class OpenAlexWorkRepository(WorkRepository):
 
     @override
     def _get_authors_from_api_item(self, item: dict) -> list[dict] | None:
-        """Get authors of an item returned by the api"""
+        """Get authors of an item returned by the api."""
         return item.get("authorships")
 
     @override
     def _get_doi_from_api_item(self, item: dict) -> str | None:
-        """Get doi of an item returned by the api"""
+        """Get doi of an item returned by the api."""
         doi = item.get("doi")
         if doi and isinstance(doi, str):
             return doi.removeprefix("https://doi.org/")
@@ -158,14 +160,16 @@ class OpenAlexWorkRepository(WorkRepository):
 
     @override
     def _get_type_from_api_item(self, item: dict) -> str | None:
-        """Get type of an item returned by the api"""
+        """Get type of an item returned by the api."""
         if "primary_location" in item and "raw_type" in item["primary_location"]:
             return item["primary_location"]["raw_type"]
         return item.get("type")
 
     @override
     def _set_metadata_attribute(
-        self, work_metadata: WorkMetadata, item: dict,
+        self,
+        work_metadata: WorkMetadata,
+        item: dict,
     ) -> WorkMetadata:
         """Clean and update the metadata attribute and returns object."""
         logger.debug(
@@ -181,8 +185,10 @@ class OpenAlexWorkRepository(WorkRepository):
     @override
     def _validate_author(self, input_author: str, api_author: dict) -> bool:
         """Verify that input input and api authors are similar.
+
         WARNING: Comparison lacks of accuracy because OpenAlex API only provides
-        full names rather than given/family names."""
+        full names rather than given/family names.
+        """
         if not input_author:
             return False
         if "raw_author_name" in api_author:

@@ -1,4 +1,6 @@
 # src/citecraft/repositories/style_repository.py
+"""Repository for managing, fetching, and validating Citation Style Language (CSL) files."""
+
 import logging
 from http import HTTPStatus
 from typing import Any
@@ -29,7 +31,9 @@ class StyleRepository:
         config: AppConfig | None = None,
         registry: HTTPClientRegistry | None = None,
     ) -> None:
-        """Examples of styles:
+        """Instantiate StyleRepository.
+
+        Examples of styles:
         apa (AGU, Wiley), copernicus-publications (EGU), elsevier-harvard (Elsevier),
         chicago-author-date (Taylor & Francis), springer-basic-author-date (Springer),
         etc.
@@ -66,12 +70,14 @@ class StyleRepository:
             return
 
         url = self.config.style_repo_url.replace(
-            "{object_name}", str(self.favored_style),
+            "{object_name}",
+            str(self.favored_style),
         )
 
         try:
             response, predicted_url = self.http_client_wrapper.get(
-                url, headers=self.headers,
+                url,
+                headers=self.headers,
             )
             if response is None:
                 logger.warning(
@@ -87,7 +93,8 @@ class StyleRepository:
             response.raise_for_status()
             self.csl_content = response.text
             logger.debug(
-                "Successfully fetched CSL metadata for style: %s", self.favored_style,
+                "Successfully fetched CSL metadata for style: %s",
+                self.favored_style,
             )
         except httpx.HTTPStatusError as e:
             if e.response.status_code == HTTPStatus.NOT_FOUND:
@@ -104,20 +111,19 @@ class StyleRepository:
                 )
                 self.csl_content = None
                 return
-            raise e
+            raise
 
     def get_style(self, journal_title: str) -> str | None:
-        """Locate style code for a journal title, resolving independent parent style if
-        child.
+        """Locate style code for a journal title.
+
         Fetch the style name/code for a journal (e.g. "nature" for journal "Nature"),
         and if style is dependent (=child) fetch the parent style name/code (e.g.
         "american-geophysical-union" for journal
         "Journal of Geophysical Research: Solid Earth".
         """
-
         # the valid namespaces are stored in the dict self.config.csl_xml_namespaces
         # the string
-        # "https://raw.githubusercontent.com/citation-style-language/styles/master/{object_name}.csl" # noqa ERA001
+        # "https://raw.githubusercontent.com/citation-style-language/styles/master/{object_name}.csl" # noqa: ERA001, E501
         # is stored in self.config.style_repo_url
         # the string "https://www.zotero.org/styles-files/styles.json" is stored in
         # self.config.all_styles_repo_url
@@ -137,19 +143,27 @@ class StyleRepository:
         url = str(self.config.all_styles_repo_url)
         try:
             response, predicted_url = self.http_client_wrapper.get(
-                url, headers=self.headers,
+                url,
+                headers=self.headers,
             )
-            if response is None:
-                raise ValueError(
-                    f"Empty index response received from URL: {predicted_url}",
-                )
-            response.raise_for_status()
-            styles_list = response.json()
-        except (httpx.HTTPError, ValueError) as e:
+            if response is not None:
+                response.raise_for_status()
+        except (httpx.HTTPError, ValueError):
             logger.critical(
-                "Failed to retrieve or decode style repository index from %s", url,
+                "Failed to retrieve or decode style repository index from %s",
+                url,
             )
-            raise e
+            raise
+
+        if response is None:
+            err_msg = f"Empty index response received from URL: {predicted_url}"
+            raise ValueError(err_msg)
+
+        try:
+            styles_list = response.json()
+        except ValueError:
+            logger.critical("Failed to decode style repository JSON payload.")
+            raise
 
         if not isinstance(styles_list, list):
             snippet = str(styles_list)[:200]
@@ -163,13 +177,15 @@ class StyleRepository:
                     "got": type(styles_list).__name__,
                 },
             )
-            raise TypeError(
+            err_msg = (
                 f"Unexpected schema format: index root is not a list. Got: "
-                f"{type(styles_list).__name__}",
+                f"{type(styles_list).__name__}"
             )
+            raise TypeError(err_msg)
 
         matched_style_name, is_dependent = self._fuzzy_match_style(
-            styles_list, normalized_target,
+            styles_list,
+            normalized_target,
         )
 
         if not matched_style_name:
@@ -190,7 +206,9 @@ class StyleRepository:
         return matched_style_name
 
     def _fuzzy_match_style(
-        self, styles_list: list[Any], normalized_target: str,
+        self,
+        styles_list: list[Any],
+        normalized_target: str,
     ) -> tuple[str | None, bool]:
         """Perform fuzzy search on style list and extract match metadata."""
         for style in styles_list:
@@ -222,26 +240,22 @@ class StyleRepository:
     def _resolve_independent_parent(self, child_style_name: str) -> str | None:
         """Parse a dependent CSL file and extract its parent layout slug identifier."""
         url = self.config.child_style_repo_url.replace(
-            "{object_name}", child_style_name,
+            "{object_name}",
+            child_style_name,
         )
 
         response = None
         try:
             response_obj, predicted_url = self.http_client_wrapper.get(
-                url, headers=self.headers,
+                url,
+                headers=self.headers,
             )
-            if response_obj is None:
-                raise ValueError(
-                    f"No response payload returned from style endpoint: {predicted_url}",
-                )
+            if response_obj is not None:
+                response_obj.raise_for_status()
+                response = response_obj
 
-            response = response_obj
-            response.raise_for_status()
-
-            # Secure XML parsing: defusedxml prevents XXE/entity expansion attacks
-            root = ElementTree.fromstring(response.content)
         except httpx.HTTPStatusError as e:
-            logger.error(
+            logger.exception(
                 "Dependent CSL metadata endpoint returned status %d for URL: %s",
                 e.response.status_code,
                 url,
@@ -252,8 +266,19 @@ class StyleRepository:
                     "status_code": e.response.status_code,
                 },
             )
-            raise e
-        except ElementTree.ParseError as e:
+            raise
+
+        if response is None:
+            err_msg = (
+                f"No response payload returned from style endpoint: {predicted_url}"
+            )
+            raise ValueError(err_msg)
+
+        try:
+            # Secure XML parsing: defusedxml prevents XXE/entity expansion attacks
+            root = ElementTree.fromstring(response.content)
+
+        except ElementTree.ParseError:
             snippet = (
                 response.text[:200]
                 if response is not None and response.text
@@ -269,12 +294,11 @@ class StyleRepository:
                     "style": child_style_name,
                 },
             )
-            raise e
+            raise
 
         if not root.tag.startswith("{"):
-            raise ValueError(
-                f"XML root element '{root.tag}' does not define a namespace.",
-            )
+            err_msg = f"XML root element '{root.tag}' does not define a namespace."
+            raise ValueError(err_msg)
 
         actual_namespace = root.tag.split("}")[0].strip("{")
         matched_prefix = next(
@@ -287,10 +311,11 @@ class StyleRepository:
         )
 
         if not matched_prefix:
-            raise ValueError(
+            err_msg = (
                 f"Security Violation: Unrecognized CSL namespace detected:"
-                f" '{actual_namespace}'",
+                f" '{actual_namespace}'"
             )
+            raise ValueError(err_msg)
 
         # Query independent parent link node
         query = f".//{matched_prefix}:link[@rel='independent-parent']"
@@ -303,7 +328,8 @@ class StyleRepository:
                 # (e.g., "http://www.zotero.org/styles/apa" -> "apa")
                 parent_style_code = parent_href.strip("/").split("/")[-1]
                 logger.info(
-                    "Successfully resolved parent style: '%s'", parent_style_code,
+                    "Successfully resolved parent style: '%s'",
+                    parent_style_code,
                 )
                 return parent_style_code
 
@@ -334,7 +360,6 @@ class StyleRepository:
 
         content = self.csl_content.strip()
 
-        # TODO: schema validation
         # Standardizing strict check to match requirements precisely
         start_marker = (
             '<?xml version="1.0" encoding="utf-8"?>\n'

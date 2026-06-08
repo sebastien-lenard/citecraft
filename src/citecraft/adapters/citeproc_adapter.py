@@ -1,4 +1,6 @@
 # src/citecraft/adapters/citeproc_adapter.py
+"""Adapter for interfacing with the citeproc-py bibliography engine."""
+
 import io
 import logging
 import warnings
@@ -97,7 +99,7 @@ class CiteprocAdapter:
             style_bytes = style_content.encode("utf-8")
             style_file = io.BytesIO(style_bytes)
             bib_style = CitationStylesStyle(style_file, validate=False)
-            return bib_style, None
+
         except Exception as e:
             error_msg = str(e)
             logger.warning(
@@ -111,6 +113,8 @@ class CiteprocAdapter:
                 },
             )
             return None, error_msg
+        else:
+            return bib_style, None
 
     @staticmethod
     def render_bibliography(
@@ -147,8 +151,6 @@ class CiteprocAdapter:
                     },
                 )
                 return rendered_text, None
-
-            return None, "Empty layout produced by bibliography generator."
 
         except AttributeError as e:
             if "'NoneType' object has no attribute 'render'" in str(e):
@@ -188,3 +190,5 @@ class CiteprocAdapter:
                 },
             )
             return None, error_msg
+        else:
+            return None, "Empty layout produced by bibliography generator."

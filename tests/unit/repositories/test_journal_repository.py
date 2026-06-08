@@ -1,7 +1,9 @@
 # tests/unit/repositories/test_journal_repository.py
+"""Unit tests for the local journal metadata repository persistence workflows."""
+
 import logging
 import time
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from unittest.mock import MagicMock, patch
 
@@ -20,7 +22,8 @@ def repo(test_config: AppConfig) -> JournalRepository:
 
 
 def test_log_heartbeat_if_needed(
-    repo: JournalRepository, caplog: pytest.LogCaptureFixture,
+    repo: JournalRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify heartbeat logger triggers periodically based on config threshold."""
     repo.config = repo.config.model_copy(
@@ -73,7 +76,8 @@ def test_get_journal_metadata_success(repo: JournalRepository) -> None:
 
 
 def test_get_journal_metadata_not_found_behavior(
-    repo: JournalRepository, caplog: pytest.LogCaptureFixture,
+    repo: JournalRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify fallback to template when no match is found."""
     mock_resp = MagicMock(status_code=200)
@@ -91,7 +95,8 @@ def test_get_journal_metadata_not_found_behavior(
 
 
 def test_get_journal_metadata_empty_response(
-    repo: JournalRepository, caplog: pytest.LogCaptureFixture,
+    repo: JournalRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify fallback when network or API returns a null response."""
     with (
@@ -106,7 +111,8 @@ def test_get_journal_metadata_empty_response(
 
 
 def test_get_journal_metadata_exact_matches_duplicate_discarded(
-    repo: JournalRepository, caplog: pytest.LogCaptureFixture,
+    repo: JournalRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify multiple exact matches logs a warning and selects the first match."""
     mock_main = MagicMock(status_code=200)
@@ -139,7 +145,8 @@ def test_get_journal_metadata_exact_matches_duplicate_discarded(
 
 
 def test_get_journal_metadata_similar_matches_found(
-    repo: JournalRepository, caplog: pytest.LogCaptureFixture,
+    repo: JournalRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify fuzzy title similarity, filtering, and mapping logic."""
     mock_main = MagicMock(status_code=200)
@@ -209,7 +216,9 @@ def test_get_journal_metadata_missing_issn_handling(repo: JournalRepository) -> 
     }
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_main, None),
+        repo.http_client_wrapper,
+        "get",
+        return_value=(mock_main, None),
     ) as mock_get:
         results = repo.get_journal_metadata("Natural Hazards")
 
@@ -254,10 +263,16 @@ def test_get_issns_by_input_title(repo: JournalRepository) -> None:
     """Verify unicity and extraction of valid ISSNs."""
     repo.records = [
         JournalMetadata(
-            input_title="Journal A", issn="0010-051x", start_year=2000, end_year=2010,
+            input_title="Journal A",
+            issn="0010-051x",
+            start_year=2000,
+            end_year=2010,
         ),
         JournalMetadata(
-            input_title="Journal A", issn="2049-3630", start_year=2005, end_year=2015,
+            input_title="Journal A",
+            issn="2049-3630",
+            start_year=2005,
+            end_year=2015,
         ),
         JournalMetadata(input_title="Journal A", issn=None),
     ]
@@ -291,7 +306,7 @@ def test_get_unique_issns_for_titles(repo: JournalRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "order, mock_items, expected_year",
+    ("order", "mock_items", "expected_year"),
     [
         (
             "asc",
@@ -337,7 +352,9 @@ def test_get_issn_year_endpoint_scenarios(
     mock_response.json.return_value = {"message": {"items": mock_items}}
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, None),
+        repo.http_client_wrapper,
+        "get",
+        return_value=(mock_response, None),
     ) as mock_get:
         assert repo.get_issn_year_endpoint("2049-3630", order) == expected_year
         mock_get.assert_called_once()
@@ -346,7 +363,9 @@ def test_get_issn_year_endpoint_scenarios(
 def test_get_issn_year_endpoint_empty_response(repo: JournalRepository) -> None:
     """Verify endpoint recovery when response resolves to None."""
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(None, "mock_url"),
+        repo.http_client_wrapper,
+        "get",
+        return_value=(None, "mock_url"),
     ) as mock_get:
         assert repo.get_issn_year_endpoint("1234-5678", "asc") is None
         mock_get.assert_called_once()
@@ -366,15 +385,21 @@ def test_get_issn_year_endpoint_no_valid_years(repo: JournalRepository) -> None:
         },
     }
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, None),
+        repo.http_client_wrapper,
+        "get",
+        return_value=(mock_response, None),
     ):
         assert repo.get_issn_year_endpoint("2049-3630", "asc") is None
 
 
 @pytest.mark.parametrize(
     (
-        "records, pending_updates, expected_synchronized, expected_missing, "
-        "expected_expired, expected_pending"
+        "records",
+        "pending_updates",
+        "expected_synchronized",
+        "expected_missing",
+        "expected_expired",
+        "expected_pending",
     ),
     [
         (
@@ -386,7 +411,9 @@ def test_get_issn_year_endpoint_no_valid_years(repo: JournalRepository) -> None:
                     issn="2049-3630",
                     start_year=2000,
                     end_year=2026,
-                    update=str(date.today() - timedelta(days=5)),
+                    update=str(
+                        datetime.now(UTC).date() - timedelta(days=5),
+                    ),
                 ),
                 JournalMetadata(
                     input_title="Expired J",
@@ -395,7 +422,7 @@ def test_get_issn_year_endpoint_no_valid_years(repo: JournalRepository) -> None:
                     issn="1752-0908",
                     start_year=2000,
                     end_year=2026,
-                    update=str(date.today() - timedelta(days=45)),
+                    update=str(datetime.now(UTC).date() - timedelta(days=45)),
                 ),
                 JournalMetadata(
                     input_title="Missing J",
@@ -404,7 +431,7 @@ def test_get_issn_year_endpoint_no_valid_years(repo: JournalRepository) -> None:
                     issn=None,
                     start_year=None,
                     end_year=None,
-                    update=str(date.today() - timedelta(days=5)),
+                    update=str(datetime.now(UTC).date() - timedelta(days=5)),
                 ),
             ],
             True,
@@ -422,7 +449,7 @@ def test_get_issn_year_endpoint_no_valid_years(repo: JournalRepository) -> None:
                     issn="2049-3630",
                     start_year=2000,
                     end_year=2026,
-                    update=str(date.today() - timedelta(days=5)),
+                    update=str(datetime.now(UTC).date() - timedelta(days=5)),
                 ),
             ],
             False,
@@ -471,14 +498,15 @@ def test_merge_new_titles(repo: JournalRepository) -> None:
 
 
 def test_update_all_priority_and_limit(
-    repo: JournalRepository, caplog: pytest.LogCaptureFixture,
+    repo: JournalRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify prioritizing missing metadata and enforcement of capacity limits."""
     caplog.set_level(logging.INFO)
     repo.config = repo.config.model_copy(
         update={"journal_update_limit": 1, "journal_update_days": 30},
     )
-    today = date.today()
+    today = datetime.now(UTC).date()
     old_date = str(today - timedelta(days=45))
     recent_date = str(today - timedelta(days=5))
 
@@ -525,7 +553,9 @@ def test_update_all_priority_and_limit(
     ]
 
     with patch.object(
-        JournalRepository, "get_journal_metadata", return_value=updated_data,
+        JournalRepository,
+        "get_journal_metadata",
+        return_value=updated_data,
     ) as mock_get:
         repo.update_all()
 
@@ -540,7 +570,7 @@ def test_update_all_sorting_logic_strict(repo: JournalRepository) -> None:
     repo.config = repo.config.model_copy(
         update={"journal_update_limit": 0, "journal_update_days": 30},
     )
-    today = date.today()
+    today = datetime.now(UTC).date()
     recent_date = str(today - timedelta(days=5))
 
     repo.records = [

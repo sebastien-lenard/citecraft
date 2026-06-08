@@ -1,4 +1,6 @@
 # tests/unit/repositories/test_openalex_work_repository.py
+"""Unit tests for the OpenAlex work repository API querying and matching logic."""
+
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -28,7 +30,9 @@ def test_call_work_api_success(repo: OpenAlexWorkRepository) -> None:
     mock_response.json.return_value = {"results": [{"doi": "https://doi.org/10.1001"}]}
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, 100),
+        repo.http_client_wrapper,
+        "get",
+        return_value=(mock_response, 100),
     ) as mock_get:
         items = repo._call_work_api(
             input_first_authors_txt="Lenard",
@@ -45,7 +49,8 @@ def test_call_work_api_success(repo: OpenAlexWorkRepository) -> None:
 
 
 def test_call_work_api_no_issns_fails(
-    repo: OpenAlexWorkRepository, caplog: pytest.LogCaptureFixture,
+    repo: OpenAlexWorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that empty ISSNs return empty list and log a warning."""
     caplog.set_level(logging.WARNING)
@@ -59,7 +64,8 @@ def test_call_work_api_no_issns_fails(
 
 
 def test_call_work_api_too_many_issns_fails(
-    repo: OpenAlexWorkRepository, caplog: pytest.LogCaptureFixture,
+    repo: OpenAlexWorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that providing more than 100 ISSNs logs a warning."""
     caplog.set_level(logging.WARNING)
@@ -110,7 +116,7 @@ def test_get_issns_groups_for_api(repo: OpenAlexWorkRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "item, expected_type",
+    ("item", "expected_type"),
     [
         # Case 1: Primary location raw_type is present (Takes highest priority)
         (
@@ -141,7 +147,9 @@ def test_get_issns_groups_for_api(repo: OpenAlexWorkRepository) -> None:
     ],
 )
 def test_get_type_from_api_item(
-    repo: OpenAlexWorkRepository, item: dict, expected_type: str | None,
+    repo: OpenAlexWorkRepository,
+    item: dict,
+    expected_type: str | None,
 ) -> None:
     """Verify raw type extraction branches correctly from OpenAlex API payloads."""
     assert repo._get_type_from_api_item(item) == expected_type
@@ -150,7 +158,8 @@ def test_get_type_from_api_item(
 def test_set_metadata_attribute(repo: OpenAlexWorkRepository) -> None:
     """Verify that OpenAlex metadata resets openalex_metadata attribute to None."""
     work_metadata = WorkMetadata(
-        input_first_authors_txt="Lenard", input_year_and_suffix="2020",
+        input_first_authors_txt="Lenard",
+        input_year_and_suffix="2020",
     )
     work_metadata.openalex_metadata = {"some": "data"}
 
@@ -159,7 +168,7 @@ def test_set_metadata_attribute(repo: OpenAlexWorkRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "input_author, api_author, expected_result, is_ambiguous",
+    ("input_author", "api_author", "expected_result", "is_ambiguous"),
     [
         ("Lenard", {"raw_author_name": "S. J. P. Lenard"}, True, False),
         ("Lenard", {"raw_author_name": "Lenard-Smith"}, False, True),
@@ -191,7 +200,7 @@ def test_validate_author(
 
 
 @pytest.mark.parametrize(
-    "authors_txt, expected_filter",
+    ("authors_txt", "expected_filter"),
     [
         ("Lenard", 'raw_author_name.search:"Lenard"'),
         (
@@ -203,14 +212,17 @@ def test_validate_author(
     ],
 )
 def test_build_author_api_filter(
-    repo: OpenAlexWorkRepository, authors_txt: str, expected_filter: str | None,
+    repo: OpenAlexWorkRepository,
+    authors_txt: str,
+    expected_filter: str | None,
 ) -> None:
     """Verify that author filter string is correctly formatted."""
     assert repo._build_author_api_filter(authors_txt) == expected_filter
 
 
 def test_call_work_api_calls_build_author_api_filter(
-    repo: OpenAlexWorkRepository, caplog: pytest.LogCaptureFixture,
+    repo: OpenAlexWorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that _call_work_api calls _build_author_api_filter and validates."""
     caplog.set_level(logging.WARNING)

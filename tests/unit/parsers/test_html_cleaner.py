@@ -1,4 +1,6 @@
 # tests/unit/parsers/test_html_cleaner.py
+"""Unit tests for the HTML cleaner and text normalization utility."""
+
 import pytest
 
 from citecraft.parsers import HtmlCleaner
@@ -6,7 +8,7 @@ from citecraft.utils import AppConfig
 
 
 @pytest.mark.parametrize(
-    "raw_input, expected_output",
+    ("raw_input", "expected_output"),
     [
         # =====================================================================
         # CASES WITH NEWLINES, Standard HTML collapsing behavior: \n + spaces -> 1 space

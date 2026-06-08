@@ -1,4 +1,6 @@
 # tests/unit/parsers/test_journal_parser.py
+"""Unit tests for the journal block parsing engine."""
+
 import pytest
 
 from citecraft.parsers import JournalParser
@@ -11,7 +13,7 @@ def parser() -> JournalParser:
 
 
 @pytest.mark.parametrize(
-    "text, expected",
+    ("text", "expected"),
     [
         # Standard parsing case with introductory headers and footers
         (
@@ -43,7 +45,9 @@ def parser() -> JournalParser:
     ],
 )
 def test_journal_parser_scenarios(
-    parser: JournalParser, text: str, expected: list[str],
+    parser: JournalParser,
+    text: str,
+    expected: list[str],
 ) -> None:
     """Verify structural extraction rules and boundary parsing edge cases."""
     assert parser.extract_all(text) == expected

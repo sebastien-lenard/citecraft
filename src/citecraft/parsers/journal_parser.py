@@ -1,4 +1,6 @@
 # src/citecraft/parsers/journal_parser.py
+"""Parser for isolating and extracting journal title blocks from raw text."""
+
 import logging
 import re
 
@@ -20,7 +22,7 @@ class JournalParser:
             return ""
         t = title.strip().lower()
         t = t.replace("-", " ").replace(":", " ").replace(",", " ")
-        words = [w[:-1] if w.endswith("s") else w for w in t.split()]
+        words = [w.removesuffix("s") if w.endswith("s") else w for w in t.split()]
         return " ".join(words)
 
     def extract_all(self, text: str) -> list[str]:

@@ -1,4 +1,6 @@
 # tests/unit/repositories/test_base_repository.py
+"""Unit tests for the base database repository layer."""
+
 import sqlite3
 from collections.abc import Hashable
 from pathlib import Path
@@ -20,6 +22,7 @@ class MockSchema(BaseSchema):
 
     @property
     def identity_key(self) -> Hashable:
+        """Return the unique identifier for deduplication testing."""
         return self.id
 
 
@@ -49,7 +52,7 @@ def test_deduplicate_removes_repeats(base_repo: MockRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "scenario, expected_records_count, expected_load_failed",
+    ("scenario", "expected_records_count", "expected_load_failed"),
     [
         ("valid", 2, False),
         ("corrupted", 0, True),

@@ -1,4 +1,6 @@
 # src/citecraft/parsers/citation_parser.py
+"""Regex-based parser engine for extracting text citations."""
+
 import logging
 import re
 
@@ -75,6 +77,7 @@ class CitationParser:
 
     def extract_all(self, text: str) -> list[CitationMetadata]:
         """Extract narrative and parenthetical citations from raw text strings.
+
         Extract narrative (e.g. Hamling (2020)) and parenthetical (e.g. (Lenard et al.,
         2020)) citations (can be duplicates).
         Handles complex cases:

@@ -1,8 +1,10 @@
 # src/citecraft/repositories/journal_repository.py
+"""Repository for tracking, fetching, and updating local academic journal metadata."""
+
 import logging
 import time
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal
 
 from citecraft.parsers import JournalParser
@@ -34,12 +36,18 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         api: str = "crossref",
     ) -> None:
         super().__init__(
-            local_filename, model_class=JournalMetadata, config=config, api=api,
+            local_filename,
+            model_class=JournalMetadata,
+            config=config,
+            api=api,
         )
         self.has_pending_updates: bool = False
 
     def _log_heartbeat_if_needed(
-        self, processed: int, total: int, last_time: float,
+        self,
+        processed: int,
+        total: int,
+        last_time: float,
     ) -> float:
         """Log update batch progress status every 10 seconds of processing time."""
         current_time = time.time()
@@ -123,7 +131,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return response.json().get("message", {}).get("items", [])
 
     def _filter_matches(
-        self, input_title: str, items: list[dict[str, Any]],
+        self,
+        input_title: str,
+        items: list[dict[str, Any]],
     ) -> tuple[list[dict[str, Any]], list[str] | None]:
         """Classify Crossref items into exact matches or similar matches."""
         # Filter exact title representations
@@ -278,6 +288,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
     def get_journal_metadata(self, input_title: str) -> list[JournalMetadata]:
         """Retrieve and process journal metadata maps from the remote Crossref API.
+
         Get journal metadata filtered on the exact match or similar matches of the title
         (input_title). A title can correspond to several
         records or none, each of them identified by a unique ISSN.
@@ -317,9 +328,12 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         return self._build_metadata_records(input_title, working_items, similar_titles)
 
     def get_issn_year_endpoint(
-        self, issn: str, order: Literal["asc", "desc"],
+        self,
+        issn: str,
+        order: Literal["asc", "desc"],
     ) -> int | None:
         """Get publication endpoints based on print/online works for the ISSN.
+
         asc: oldest / desc: youngest.
         """
         params = {
@@ -329,7 +343,8 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             "mailto": self.config.user_email,
         }
         url = self.config.crossref_api_journals_issn_url.replace(
-            "{object_name}", str(issn),
+            "{object_name}",
+            str(issn),
         )
 
         response, predicted_url = self.http_client_wrapper.get(
@@ -369,11 +384,14 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
     def get_sync_status(self) -> dict[str, int | bool]:
         """Analyze local records completeness and update status against thresholds.
+
         Returns a status dictionary useful for control flow in core.py.
         TODO: Check if we still need this method (after the development of catching
         metadata from similar titles)
         """
-        expiration_date = date.today() - timedelta(days=self.config.journal_update_days)
+        expiration_date = datetime.now(UTC).date() - timedelta(
+            days=self.config.journal_update_days,
+        )
         missing_count = 0
         expired_count = 0
 
@@ -381,7 +399,13 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             if not record.is_complete:
                 missing_count += 1
             else:
-                last_update = datetime.strptime(record.update, "%Y-%m-%d").date()
+                last_update = (
+                    datetime.strptime(record.update, "%Y-%m-%d")
+                    .astimezone(
+                        UTC,
+                    )
+                    .date()
+                )
                 if last_update < expiration_date:
                     expired_count += 1
 
@@ -393,7 +417,8 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         }
 
     def _partition_records(
-        self, expiration_date: date,
+        self,
+        expiration_date: date,
     ) -> tuple[list[JournalMetadata], list[JournalMetadata], list[JournalMetadata]]:
         """Partition local records into missing, expired, and valid categories."""
         missing: list[JournalMetadata] = []
@@ -401,7 +426,9 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         valid: list[JournalMetadata] = []
 
         for record in self.records:
-            last_update = datetime.strptime(record.update, "%Y-%m-%d").date()
+            last_update = (
+                datetime.strptime(record.update, "%Y-%m-%d").astimezone(UTC).date()
+            )
 
             if not record.is_complete:
                 missing.append(record)
@@ -432,16 +459,22 @@ class JournalRepository(BaseRepository[JournalMetadata]):
 
             state.processed += 1
             state.last_heartbeat = self._log_heartbeat_if_needed(
-                state.processed, state.total, state.last_heartbeat,
+                state.processed,
+                state.total,
+                state.last_heartbeat,
             )
 
     def update_all(self) -> None:
         """Sync and update outdated journal records up to configured limits.
+
         Update the records missing metadata (Priority 1) and records with expired
         metadata (Priority 2) with up-to-date metatata from the remote repo.
         Warning: Update restricted to a max number of journals, doesn't include
-        regular local saving of the updates."""
-        expiration_date = date.today() - timedelta(days=self.config.journal_update_days)
+        regular local saving of the updates.
+        """
+        expiration_date = datetime.now(UTC).date() - timedelta(
+            days=self.config.journal_update_days,
+        )
         logger.info(
             "Updating journals without metadata or metadata older than: %s",
             str(expiration_date),

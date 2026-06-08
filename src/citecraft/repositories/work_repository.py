@@ -1,4 +1,6 @@
 # src/citecraft/repositories/work_repository.py
+"""Repository managing data integration and validation workflows for work metadata."""
+
 import logging
 import time
 
@@ -25,7 +27,10 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         api: str = "crossref",
     ) -> None:
         super().__init__(
-            local_filename, model_class=WorkMetadata, config=config, api=api,
+            local_filename,
+            model_class=WorkMetadata,
+            config=config,
+            api=api,
         )
 
     def _call_work_api(
@@ -37,25 +42,28 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         get_limit: int | None = None,
     ) -> list[dict] | None:
         """Return the list of items fetched by the api call."""
-        raise NotImplementedError("Subclasses must implement call_work_api")
+        err_msg = "Subclasses must implement call_work_api"
+        raise NotImplementedError(err_msg)
 
     def _get_authors_from_api_item(self, item: dict) -> list[dict] | None:
-        """Get authors of an item returned by the api"""
-        raise NotImplementedError(
-            "Subclasses must implement _get_authors_from_api_item",
-        )
+        """Get authors of an item returned by the api."""
+        err_msg = "Subclasses must implement _get_authors_from_api_item"
+        raise NotImplementedError(err_msg)
 
     def _get_doi_from_api_item(self, item: dict) -> str | None:
-        """Get doi of an item returned by the api"""
-        raise NotImplementedError("Subclasses must implement _get_doi_from_api_item")
+        """Get doi of an item returned by the api."""
+        err_msg = "Subclasses must implement _get_doi_from_api_item"
+        raise NotImplementedError(err_msg)
 
     def _get_issns_groups_for_api(self, issns: list[str]) -> list[list[str]]:
         """Split ISSNs in groups that can be used as filters by API."""
-        raise NotImplementedError("Subclasses must implement _get_issns_groups_for_api")
+        err_msg = "Subclasses must implement _get_issns_groups_for_api"
+        raise NotImplementedError(err_msg)
 
     def _get_type_from_api_item(self, item: dict) -> str | None:
-        """Get type of an item returned by the api"""
-        raise NotImplementedError("Subclasses must implement _get_type_from_api_item")
+        """Get type of an item returned by the api."""
+        err_msg = "Subclasses must implement _get_type_from_api_item"
+        raise NotImplementedError(err_msg)
 
     def _get_input_first_authors_and_et_al(
         self,
@@ -81,6 +89,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         get_limit: int | None = None,
     ) -> list[WorkMetadata]:
         """Query API to retrieve and validate metadata for a given citation.
+
         Get work metadata, including dois, from unstructured info combining the
         first_authors of input_citation_metadata and keywords, with results filtered on
         the year of input_citation_metadata and input_issns. Number of results is capped
@@ -91,9 +100,8 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         is essential to circumvent that effect.
         """
         if not input_issns:
-            raise ValueError(
-                "input_issn is an obligatory argument (valid issn of a journal)",
-            )
+            err_msg = "input_issn is an obligatory argument (valid issn of a journal)"
+            raise ValueError(err_msg)
         input_first_authors_txt = input_citation_metadata.first_authors_txt
         input_year_and_suffix = input_citation_metadata.year_and_suffix
         year_int = int("".join(filter(str.isdigit, input_year_and_suffix)))
@@ -101,11 +109,12 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             year_int < self.config.min_publication_year
             or year_int > self.config.max_publication_year
         ):
-            raise ValueError(
+            err_msg = (
                 f"year {year_int} must be in the "
                 f"{self.config.min_publication_year}-"
-                f"{self.config.max_publication_year} range",
+                f"{self.config.max_publication_year} range"
             )
+            raise ValueError(err_msg)
         get_limit = (
             int(get_limit)
             if get_limit is not None
@@ -133,13 +142,14 @@ class WorkRepository(BaseRepository[WorkMetadata]):
 
                 if not self._validate_first_authors_count(
                     len(input_first_authors) if input_first_authors else 0,
-                    input_is_et_al,
                     len(api_authors),
+                    input_is_et_al=input_is_et_al,
                 ):
                     continue
 
                 if not self._validate_first_authors(
-                    input_first_authors or [], api_authors,
+                    input_first_authors or [],
+                    api_authors,
                 ):
                     continue
 
@@ -159,7 +169,10 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         return candidates
 
     def _log_heartbeat_if_needed(
-        self, processed: int, total: int, last_time: float,
+        self,
+        processed: int,
+        total: int,
+        last_time: float,
     ) -> float:
         """Log progress status every 10 seconds of processing time."""
         current_time = time.time()
@@ -184,6 +197,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
 
     def _normalize_string(self, text: str) -> str:
         """Transliterate Unicode strings to lowercase closest ASCII representation.
+
         Example: 'Lénárd' becomes 'lenard', 'Łukasiewicz' becomes 'lukasiewicz'.
         Warning: ü becomes u and not ue (as sometimes found in bibliographies)
         """
@@ -214,10 +228,11 @@ class WorkRepository(BaseRepository[WorkMetadata]):
     def _validate_first_authors_count(
         self,
         input_first_authors_count: int,
-        input_is_et_al: bool,
         api_authors_count: int,
+        *,
+        input_is_et_al: bool,
     ) -> bool:
-        """Validates if the number of first authors are same for api result."""
+        """Validate if the number of first authors are same for api result."""
         # Strict count validation if not an "et al." citation
         if input_first_authors_count and not input_is_et_al:
             if api_authors_count != input_first_authors_count:
@@ -232,7 +247,8 @@ class WorkRepository(BaseRepository[WorkMetadata]):
 
     def _validate_author(self, input_author: str, api_author: dict) -> bool:
         """Verify that input author name matches the api author name."""
-        raise NotImplementedError("Subclasses must implement _validate_author")
+        err_msg = "Subclasses must implement _validate_author"
+        raise NotImplementedError(err_msg)
 
     def _validate_first_authors(
         self,
@@ -244,19 +260,22 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             return False
 
         validate_first_author = self._validate_author(
-            input_first_authors[0], api_authors[0],
+            input_first_authors[0],
+            api_authors[0],
         )
 
         if len(input_first_authors) == self.config.max_count_of_authors_in_citation:
             if len(api_authors) < self.config.max_count_of_authors_in_citation:
                 return False
             validate_first_author = validate_first_author & self._validate_author(
-                input_first_authors[1], api_authors[1],
+                input_first_authors[1],
+                api_authors[1],
             )
         return validate_first_author
 
     def merge_new_works(self, citations: list[CitationMetadata]) -> None:
         """Merge fresh citations into local records as template placeholders.
+
         (placeholders without doi and input_issn).
         Avoids adding a template if a record with the same author/year already exists,
         using a custom identity key.
@@ -291,13 +310,17 @@ class WorkRepository(BaseRepository[WorkMetadata]):
         )
 
     def _set_metadata_attribute(
-        self, work_metadata: WorkMetadata, item: dict,
+        self,
+        work_metadata: WorkMetadata,
+        item: dict,
     ) -> WorkMetadata:
         """Update the metadata correct attribute and returns object."""
-        raise NotImplementedError("Subclasses must implement set_metadata_attribute")
+        err_msg = "Subclasses must implement set_metadata_attribute"
+        raise NotImplementedError(err_msg)
 
     def update_all(self, issns: list[str]) -> None:
         """Query API to find and commit DOIs for unpopulated works.
+
         issns filter API results. Previously queried issns are ignored.
         """
         # 1. Identify templates needing info
@@ -358,7 +381,8 @@ class WorkRepository(BaseRepository[WorkMetadata]):
             groups_of_issns = self._get_issns_groups_for_api(filtered_issns)
             for grp_issns in groups_of_issns:
                 results = self.get_work_metadata(
-                    input_citation_metadata=citation_info, input_issns=grp_issns,
+                    input_citation_metadata=citation_info,
+                    input_issns=grp_issns,
                 )
 
                 if results:
