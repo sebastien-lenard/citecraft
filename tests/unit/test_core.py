@@ -1,4 +1,6 @@
 # tests/unit/test_core.py
+"""Unit tests verifying execution mechanics and fallbacks of the core pipeline."""
+
 import logging
 from collections.abc import Generator
 from dataclasses import dataclass
@@ -24,6 +26,8 @@ from citecraft.utils import AppConfig
 
 @dataclass
 class MockJournalRecord:
+    """Mock record representing database data matching repository shapes."""
+
     input_title: str
     status: str
     issn: str | None
@@ -139,7 +143,13 @@ def test_run_pipeline_with_journal_title_style_lookup(
 
 
 @pytest.mark.parametrize(
-    "skip_journal, skip_work, expect_journal_update, expect_work_update, expected_logs",
+    (
+        "skip_journal",
+        "skip_work",
+        "expect_journal_update",
+        "expect_work_update",
+        "expected_logs",
+    ),
     [
         # Case A: Both pipeline sync scopes are explicitly bypassed
         (
@@ -281,7 +291,9 @@ def test_export_step_extracts_anomalous_journals(
     mock_journal_inst = mock_pipeline_dependencies["journal"].return_value
     mock_journal_inst.records = [
         MockJournalRecord(
-            input_title="Errant Journal", status="NOT_FOUND", issn="1234-5678",
+            input_title="Errant Journal",
+            status="NOT_FOUND",
+            issn="1234-5678",
         ),
     ]
     mock_journal_inst.get_issns_by_input_title.return_value = ["1234-5678"]

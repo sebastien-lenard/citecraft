@@ -1,4 +1,6 @@
 # tests/conftest.py
+"""Global test fixtures and testing configuration."""
+
 import logging
 from collections.abc import Generator
 from pathlib import Path
@@ -14,7 +16,8 @@ from citecraft.utils import AppConfig, create_config, get_config
 
 
 def pytest_collection_modifyitems(
-    config: pytest.Config, items: list[pytest.Item],
+    config: pytest.Config,
+    items: list[pytest.Item],
 ) -> None:
     """Assign 'unit' marker to any test without 'e2e' or 'integration' markers."""
     for item in items:
@@ -31,9 +34,8 @@ def block_network_calls(monkeypatch: pytest.MonkeyPatch) -> None:
     """Guard rails to prevent any outbound network requests during testing."""
 
     def raised_error(*args: object, **kwargs: object) -> NoReturn:
-        raise RuntimeError(
-            "Network call attempted during isolated unit test execution.",
-        )
+        err_msg = "Network call attempted during isolated unit test execution."
+        raise RuntimeError(err_msg)
 
     monkeypatch.setattr("socket.socket.connect", raised_error)
 
@@ -47,10 +49,9 @@ def _clear_config_cache() -> Generator[None, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def _clear_registry_cache() -> Generator[None, None, None]:
+def _clear_registry_cache() -> None:
     """Automatically clear the lru_cache of get_registry before each test."""
     get_http_client_registry.cache_clear()
-    yield
 
 
 @pytest.fixture(autouse=True)
@@ -66,12 +67,13 @@ def assert_logging_integrity(
     logging.getLogger("citecraft").info(canary_message)
 
     if canary_message not in caplog.text:
-        raise AssertionError(
+        err_msg = (
             "CRITICAL: This test broke the global logging propagation! "
             "This usually happens when `setup_logging()` or `logging.basicConfig()` "
             "is called by the production code without being mocked. "
             "Please ensure you apply a proper patch/mock in this test script.",
         )
+        raise AssertionError(err_msg)
 
 
 @pytest.fixture

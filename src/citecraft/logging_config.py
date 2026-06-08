@@ -1,4 +1,6 @@
 # src/citecraft/logging_config.py
+"""System logging configuration management, formatting, and routing workflows."""
+
 import logging
 import logging.config
 import os
@@ -19,6 +21,7 @@ class RunIdFilter(logging.Filter):
     """Filter that automatically injects a unique run_id into logging records."""
 
     def filter(self, record: logging.LogRecord) -> bool:
+        """Inject the static application run identifier into the log record context."""
         record.run_id = RUN_ID
         return True
 

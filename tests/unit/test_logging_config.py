@@ -1,4 +1,6 @@
 # tests/unit/test_logging_config.py
+"""Unit tests verifying custom logging formatting, filtering, and lifecycles."""
+
 import json
 import logging
 import sys
@@ -17,6 +19,8 @@ from citecraft.logging_config import (
 
 
 class TestRunIdFilter:
+    """Validation suite for custom session identifier filter integration."""
+
     def test_run_id_filter_injects_uuid(self) -> None:
         """Verify that RunIdFilter injects a run_id string into the LogRecord."""
         log_filter = RunIdFilter()
@@ -33,6 +37,8 @@ class TestRunIdFilter:
 
 
 class TestColorFormatter:
+    """Validation suite for ANSI sequence injections and record modifications."""
+
     @pytest.fixture
     def basic_record(self) -> logging.LogRecord:
         """Isolated LogRecord fixture for format testing."""
@@ -85,8 +91,10 @@ class TestColorFormatter:
 
 
 class TestLoggingConfigMatrix:
+    """Validation suite evaluating verbosity configurations and log-level thresholds."""
+
     @pytest.mark.parametrize(
-        "verbose_level, expected_console_level",
+        ("verbose_level", "expected_console_level"),
         [
             (0, "WARNING"),
             (1, "INFO"),
@@ -110,6 +118,8 @@ class TestLoggingConfigMatrix:
 
 
 class TestSetupLoggingLifecycles:
+    """Validation suite for system initialization and fallback error loops."""
+
     # patch MUST point directly to the module consuming the function
     @patch("citecraft.logging_config.get_safe_dir")
     @patch("logging.config.dictConfig")
@@ -138,9 +148,7 @@ class TestSetupLoggingLifecycles:
         mock_dict_config: MagicMock,
         mock_get_dir: MagicMock,
     ) -> None:
-        """Edge Case: Verify hard crashes in dictConfig trigger stderr reports and
-        basicConfig.
-        """
+        """Verify hard crashes in dictConfig trigger stderr reports and basicConfig."""
         mock_path = Path("/mock/safe/dir")
         mock_get_dir.return_value = (mock_path, mock_path, True)
 
@@ -163,6 +171,8 @@ class TestSetupLoggingLifecycles:
 
 
 class TestStructuredJsonOutput:
+    """Validation suite verifying JSON serialized schemas conform to specs."""
+
     def test_json_formatter_outputs_valid_structured_data(self) -> None:
         """Verify that the JSON formatter properly extracts and maps log variables."""
         dummy_path = Path("/dummy/path")
