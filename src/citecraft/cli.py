@@ -3,7 +3,6 @@
 
 import io
 import logging
-import os
 import sqlite3
 import sys
 import textwrap
@@ -246,8 +245,8 @@ def _execute_processing_pipeline(
     cache_summary_message: str | None,
 ) -> None:
     """Isolate runtime pipeline logic execution from Click decorator syntax."""
-    valid_text = p_args.text if p_args.text else _read_piped_input()
-    favored_style = p_args.style if p_args.style else config.default_reference_style
+    valid_text = p_args.text or _read_piped_input()
+    favored_style = p_args.style or config.default_reference_style
 
     if not p_args.input_file and not valid_text:
         click.echo("No manuscript file or raw text provided.\nDone.")
@@ -474,10 +473,9 @@ def clear_cache_command(ctx: click.Context, **_kwargs: object) -> None:
                 bold=True,
             )
     except (OSError, sqlite3.Error) as e:
-        logger.error(
-            "Failed to archive cache database %s: %s",
+        logger.exception(
+            "Failed to archive cache database %s.",
             str(db_path),
-            str(e),
         )
         logger.debug(
             "Detailed traceback for database archive failure:",
@@ -543,7 +541,7 @@ def process_command(ctx: click.Context, **kwargs: object) -> None:
 
     # Configure Logging Infrastructure Context
     log_dir, intended_dir, is_fallback = setup_logging(verbose_level=p_args.verbose)
-    logger.debug("Current working directory: %s", os.getcwd())
+    logger.debug("Current working directory: %s", Path.cwd())
     logger.debug("Logs are being written to: %s", str(log_dir))
     if is_fallback:
         logger.debug("⚠️ Warning: Could not create directory at '%s'.", intended_dir)

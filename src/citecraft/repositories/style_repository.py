@@ -1,5 +1,5 @@
 # src/citecraft/repositories/style_repository.py
-"""Repository for managing, fetching, and validating Citation Style Language (CSL) files."""
+"""Repository for managing Citation Style Language (CSL) style files."""
 
 import logging
 from http import HTTPStatus

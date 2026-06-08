@@ -43,7 +43,6 @@ citecraft = "citecraft.cli:cli"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-m unit"
 markers = [
     "e2e: end to end tests (slower)",
     "integration: integration and api tests (slower)",
@@ -59,10 +58,11 @@ target-version = "py312"
 extend-exclude = [
     "uv.lock"
 ]
+unsafe-fixes = false
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "A", "ARG", "C4", "C90", "COM", "ERA", "FLY", "N", "PERF", "PL", "RET", "RUF", "SIM", "UP", "T10", "YTT"]
-ignore = []
+select = ["E", "F", "I", "B", "A", "ANN", "ARG", "BLE", "C4", "C90", "COM", "D", "DTZ", "EM", "ERA", "EXE", "FA", "FBT", "FIX", "FLY", "FURB", "G", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "UP", "T10", "T20", "TC", "TD", "TID", "TRY", "W", "YTT"]
+extend-ignore = ["D107"]
 fixable = ["ALL"]
 unfixable = []
 allowed-confusables = ["ℹ"]
@@ -71,12 +71,22 @@ allowed-confusables = ["ℹ"]
 "tests/**/*.py" = [
     "ARG001", # Allow apparently non accessed arguments
     "ARG005", # Allow apparently non accessed arguments
-    "PLR2004", # Allow numerical values not being constant
     "BLE001",  # Allow broad exception catching (great for checking fallback paths)
-    "S101",    # Allow 'assert' statements (otherwise bandit flags every single test)
+    "FBT001", # Allow boolean positional arguments
+    "FBT002", # Allow boolean default positional arguments
+    "PLR2004", # Allow numerical values not being constant
     "PLW0120", # Allow loose control structures if an LLM generated messy loop edge-case tests
     "PLR0913", # Allow many arguments
+    "S101",    # Allow 'assert' statements (otherwise bandit flags every single test)
+    "SLF001", # Access to private member
 ]
+"__init__.py" = ["D104"]
+"__main__.py" = ["D100", "D104"]
+# citeproc-py doesnt expose internal exceptions
+"src/citecraft/adapters/citeproc_adapter.py" = ["BLE001"]
+"src/citecraft/storage/db_client.py" = ["S608"]
+"src/citecraft/logging_config.py" = ["T20"]
+"tests/e2e/test_cli_pipeline.py" = ["S603"]
 
 
 [tool.ruff.format]

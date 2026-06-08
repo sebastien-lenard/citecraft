@@ -1,4 +1,6 @@
 # tests/integration/test_integ_openalex_work_api_health.py
+"""Integration tests on the real OpenAlex API to fetch work DOI."""
+
 import _socket
 
 import pytest
@@ -46,6 +48,7 @@ def test_integ_openalex_works_api_health(test_config: AppConfig) -> None:
     )
 
     first_candidate = candidates[0]
+    assert first_candidate.doi is not None, "Fetched candidate is missing a DOI."
     assert first_candidate.doi.startswith("10.1038"), (
         f"DOI Formatting error: unexpected prefix in '{first_candidate.doi}'."
     )

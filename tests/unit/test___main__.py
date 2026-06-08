@@ -1,4 +1,6 @@
 # tests/unit/test___main__.py
+"""Unit tests for __main__."""
+
 import runpy
 from unittest.mock import patch
 

@@ -1,4 +1,6 @@
 # tests/integration/test_integ_style_api_health.py
+"""Integration tests to fetch the real CSL style file and validate it."""
+
 import pytest
 
 from citecraft.repositories import StyleRepository
@@ -7,9 +9,7 @@ from citecraft.repositories import StyleRepository
 @pytest.mark.integration
 @pytest.mark.vcr
 def test_style_api_health() -> None:
-    """Verify real CSL file extraction from the remote repository and structure
-    compliance."""
-
+    """Verify real CSL file extraction from the repository and validate it."""
     # --- Validate fetch csl metadata + xml structural constraints for a style name ---
     repo = StyleRepository(favored_style="apa")
 

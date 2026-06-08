@@ -56,7 +56,7 @@ def test_registry_creates_and_caches_client(
 
 
 @pytest.mark.parametrize(
-    "domain, expected_config_attrs",
+    ("domain", "expected_config_attrs"),
     [
         (
             "openalex",
