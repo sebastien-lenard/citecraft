@@ -1,4 +1,6 @@
 # src/citecraft/schemas/crossref_author.py
+"""Type definitions representing author item payloads from the Crossref API."""
+
 from typing import Any, TypedDict
 
 CrossrefAuthor = TypedDict(

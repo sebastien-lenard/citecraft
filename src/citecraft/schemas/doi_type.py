@@ -1,4 +1,6 @@
 # src/citecraft/schemas/doi_type.py
+"""Custom validation types and utilities for Digital Object Identifiers (DOIs)."""
+
 import logging
 import re
 from typing import Annotated
@@ -11,22 +13,25 @@ logger = logging.getLogger(__name__)
 # Doi starting format + any character except spaces (legacy DOIs), match () and <>
 # blocks + no trailing punctuation
 DOI_REGEX = re.compile(
-    r"^10\.\d{4,9}/(?:[^\s()<>]+|\([^)]*\)|<[^>]*>)+(?<![.,;!?:\-])$", re.IGNORECASE,
+    r"^10\.\d{4,9}/(?:[^\s()<>]+|\([^)]*\)|<[^>]*>)+(?<![.,;!?:\-])$",
+    re.IGNORECASE,
 )
 
 
 def validate_doi(doi: str) -> str:
-    """Validates the DOI string. Logs a warning and raises ValueError if invalid."""
+    """Validate the DOI string. Logs a warning and raises ValueError if invalid."""
     if not DOI_REGEX.match(doi):
         logger.warning(
             "DOI Validation Failed: %s",
             doi,
             extra={"event": "invalid_doi", "doi": doi},
         )
-        raise ValueError(
-            "Invalid DOI format. Must start with '10.' followed by a valid suffix and"
-            "no space within and no trailing punctuation.",
+        err_msg = (
+            "Invalid DOI format. Must start with '10.' "
+            "followed by a valid suffix and"
+            "no space within and no trailing punctuation."
         )
+        raise ValueError(err_msg)
     return doi
 
 
@@ -36,9 +41,11 @@ doi_adapter = TypeAdapter(DoiType)
 
 
 def check_standalone_doi(doi: str) -> bool:
-    """Validates a standalone string against the DOI Annotated type rules."""
+    """Validate a standalone string against the DOI Annotated type rules."""
     try:
         doi_adapter.validate_python(doi)
-        return True
+
     except ValidationError:
         return False
+    else:
+        return True

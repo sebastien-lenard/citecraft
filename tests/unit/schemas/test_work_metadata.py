@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_work_metadata.py
+"""Unit tests verifying bibliographic work metadata parsing, states, and DOI mapping."""
+
 import pytest
 
 from citecraft.schemas.work_metadata import WorkMetadata
@@ -96,7 +98,7 @@ def test_work_metadata_doi_normalization() -> None:
 
 
 @pytest.mark.parametrize(
-    "doi, reference, expected_status",
+    ("doi", "reference", "expected_status"),
     [
         ("10.1038/s41561-020-0585-2", "Lenard, S. J. P. (2020)...", "OK"),
         (None, "Lenard, S. J. P. (2020)...", "Missing DOI"),
@@ -105,7 +107,9 @@ def test_work_metadata_doi_normalization() -> None:
     ],
 )
 def test_work_metadata_status_property(
-    doi: str | None, reference: str | None, expected_status: str,
+    doi: str | None,
+    reference: str | None,
+    expected_status: str,
 ) -> None:
     """Verify evaluation transitions of WorkMetadata status states."""
     work = WorkMetadata(

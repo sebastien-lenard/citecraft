@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_doi_type.py
+"""Unit tests validating regular expression matching and Pydantic types for DOIs."""
+
 import pytest
 
 from citecraft.schemas import check_standalone_doi

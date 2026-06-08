@@ -1,11 +1,13 @@
 # src/citecraft/ui/progress_bar_context.py
+"""Asynchronous CLI progress bar visualization and logging interception hooks."""
+
 import logging
 import sys
 import threading
 import time
 from collections.abc import Callable
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 from citecraft.core import ProgressStep
 
@@ -18,13 +20,14 @@ class LogInterceptor(logging.Handler):
         self.draw_callback: Callable[[], None] = draw_callback
 
     def emit(self, record: logging.LogRecord) -> None:
+        """Format and write incoming log records safely above the active bar line."""
         try:
             msg = self.format(record)
             # \r = retour chariot, \033[K = efface le reste de la ligne courante
             sys.stderr.write(f"\r\033[K{msg}\n")
             sys.stderr.flush()
             self.draw_callback()
-        except Exception:
+        except Exception:  # noqa: BLE001 Logging should not crash the application
             self.handleError(record)
 
 
@@ -60,7 +63,7 @@ class ProgressBarContext:
         self._old_handlers: list[logging.Handler] = []
         self._custom_handler: LogInterceptor | None = None
 
-    def __enter__(self) -> "ProgressBarContext":
+    def __enter__(self) -> Self:
         """Start the background progress-bar refresh loop."""
         if self.is_active:
             self._start_time = time.time()
@@ -83,7 +86,8 @@ class ProgressBarContext:
 
             # Start background worker ticker thread
             self._ticker_thread = threading.Thread(
-                target=self._loop_render, daemon=True,
+                target=self._loop_render,
+                daemon=True,
             )
             self._ticker_thread.start()
         return self

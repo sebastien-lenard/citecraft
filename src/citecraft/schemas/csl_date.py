@@ -1,4 +1,6 @@
 # src/citecraft/schemas/csl_date.py
+"""Pydantic schemas mirroring Citation Style Language (CSL) date JSON specifications."""
+
 from pydantic import BaseModel, ConfigDict, Field
 
 

@@ -1,4 +1,6 @@
 # src/citecraft/schemas/citation_metadata.py
+"""Data schema representing structured text citation data from draft manuscripts."""
+
 from typing import Literal, override
 
 from pydantic import ConfigDict, Field

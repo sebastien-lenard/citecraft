@@ -51,7 +51,7 @@ class QueueLogHandler(logging.Handler):
         try:
             msg = self.format(record)
             self.redirector.write(msg + "\n")
-        except Exception:  # noqa BLE001: Custom logging handlers must never allow
+        except Exception:  # noqa: BLE001 Custom logging handlers must never allow
             # an error within the logging pipeline  to crash the application thread.
             self.handleError(record)
 
@@ -59,7 +59,7 @@ class QueueLogHandler(logging.Handler):
 class UIState:
     """Holds and isolates current UI interactive variables and states."""
 
-    def __init__(self, master: ctk.CTk) -> None:
+    def __init__(self) -> None:
         self.api = ctk.StringVar(value="OpenAlex")
         self.journal_title = ctk.StringVar(value="")
         self.style = ctk.StringVar(value="apa")
@@ -76,14 +76,17 @@ class UIState:
 
         in_path = self.input_file_path.get().strip()
         if in_path == "No manuscript file selected" or not in_path:
-            raise ValueError("Manuscript file must be selected before processing.")
+            err_msg = "Manuscript file must be selected before processing."
+            raise ValueError(err_msg)
 
         out_path = self.output_file_path.get().strip()
         if out_path == "No output CSV path selected" or not out_path:
-            raise ValueError("Output CSV destination path must be selected.")
+            err_msg = "Output CSV destination path must be selected."
+            raise ValueError(err_msg)
 
         if not style_val:
-            raise ValueError("Reference Style cannot be empty.")
+            err_msg = "Reference Style cannot be empty."
+            raise ValueError(err_msg)
 
         return PipelineOptions(
             api=api_val,
@@ -123,13 +126,17 @@ class SidebarFrame(ctk.CTkFrame):
         self.lbl_api = ctk.CTkLabel(self, text="API Provider", font=sec_font)
         self.lbl_api.grid(row=1, column=0, padx=20, pady=(10, 5), sticky="w")
         self.cmb_api = ctk.CTkComboBox(
-            self, values=["OpenAlex", "Crossref"], variable=self.state.api,
+            self,
+            values=["OpenAlex", "Crossref"],
+            variable=self.state.api,
         )
         self.cmb_api.grid(row=2, column=0, padx=20, pady=(0, 15), sticky="ew")
 
         # Target Journal Controls
         self.lbl_journal = ctk.CTkLabel(
-            self, text="Target Journal (Optional)", font=sec_font,
+            self,
+            text="Target Journal (Optional)",
+            font=sec_font,
         )
         self.lbl_journal.grid(row=3, column=0, padx=20, pady=(10, 5), sticky="w")
         self.ent_journal = ctk.CTkEntry(
@@ -143,18 +150,24 @@ class SidebarFrame(ctk.CTkFrame):
         self.lbl_style = ctk.CTkLabel(self, text="Reference Style", font=sec_font)
         self.lbl_style.grid(row=5, column=0, padx=20, pady=(10, 5), sticky="w")
         self.ent_style = ctk.CTkEntry(
-            self, placeholder_text="e.g. apa", textvariable=self.state.style,
+            self,
+            placeholder_text="e.g. apa",
+            textvariable=self.state.style,
         )
         self.ent_style.grid(row=6, column=0, padx=20, pady=(0, 20), sticky="ew")
 
         # Boolean Skip Switches
         self.switch_skip_journal = ctk.CTkSwitch(
-            self, text="Skip Journal Update", variable=self.state.skip_journal_update,
+            self,
+            text="Skip Journal Update",
+            variable=self.state.skip_journal_update,
         )
         self.switch_skip_journal.grid(row=7, column=0, padx=20, pady=10, sticky="w")
 
         self.switch_skip_work = ctk.CTkSwitch(
-            self, text="Skip Work Update", variable=self.state.skip_work_update,
+            self,
+            text="Skip Work Update",
+            variable=self.state.skip_work_update,
         )
         self.switch_skip_work.grid(row=8, column=0, padx=20, pady=10, sticky="w")
 
@@ -183,23 +196,31 @@ class MainFrame(ctk.CTkFrame):
 
         # Manuscript Selection Controls
         self.btn_input = ctk.CTkButton(
-            self.io_frame, text="Select Manuscript (.docx)", width=180,
+            self.io_frame,
+            text="Select Manuscript (.docx)",
+            width=180,
         )
         self.btn_input.grid(row=0, column=0, padx=15, pady=15, sticky="w")
 
         self.lbl_input_path = ctk.CTkLabel(
-            self.io_frame, textvariable=self.state.input_file_path, anchor="w",
+            self.io_frame,
+            textvariable=self.state.input_file_path,
+            anchor="w",
         )
         self.lbl_input_path.grid(row=0, column=1, padx=15, pady=15, sticky="ew")
 
         # Output Selection Controls
         self.btn_output = ctk.CTkButton(
-            self.io_frame, text="Choose Output CSV", width=180,
+            self.io_frame,
+            text="Choose Output CSV",
+            width=180,
         )
         self.btn_output.grid(row=1, column=0, padx=15, pady=(0, 15), sticky="w")
 
         self.lbl_output_path = ctk.CTkLabel(
-            self.io_frame, textvariable=self.state.output_file_path, anchor="w",
+            self.io_frame,
+            textvariable=self.state.output_file_path,
+            anchor="w",
         )
         self.lbl_output_path.grid(row=1, column=1, padx=15, pady=(0, 15), sticky="ew")
 
@@ -213,7 +234,10 @@ class MainFrame(ctk.CTkFrame):
 
         # --- Sequential Pipeline Trigger Button ---
         self.btn_run = ctk.CTkButton(
-            self, text="Run Processing Pipeline", font=sec_font, height=40,
+            self,
+            text="Run Processing Pipeline",
+            font=sec_font,
+            height=40,
         )
         self.btn_run.grid(row=3, column=0, padx=20, pady=(0, 20), sticky="ew")
 
@@ -283,7 +307,9 @@ class MainFrame(ctk.CTkFrame):
 
             # Spawn synchronous backend execution in isolated daemon thread
             thread = threading.Thread(
-                target=self._run_pipeline_worker, args=(options,), daemon=True,
+                target=self._run_pipeline_worker,
+                args=(options,),
+                daemon=True,
             )
             thread.start()
 
@@ -303,7 +329,7 @@ class MainFrame(ctk.CTkFrame):
                 export_metadata,
                 None,
             )
-        except Exception as e:  # noqa BLE001
+        except Exception as e:  # noqa: BLE001
             # Safely marshal error back onto main UI thread
             self.after(0, self._on_pipeline_completed, [], None, e)
 
@@ -389,7 +415,7 @@ class CiteCraftApp(ctk.CTk):
         self._setup_grid()
 
         # Initialize Shared Local Reactive State
-        self.ui_state = UIState(self)
+        self.ui_state = UIState()
 
         # Mount Sidebar Left Frame
         self.sidebar = SidebarFrame(self, self.ui_state)

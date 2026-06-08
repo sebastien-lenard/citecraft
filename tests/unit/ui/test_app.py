@@ -23,16 +23,16 @@ class StubStringVar:
 
     def __init__(
         self,
-        master: object = None,
         value: str = "",
-        name: str = None,  # type: ignore[assignment]
     ) -> None:
         self._value = str(value)
 
     def get(self) -> str:
+        """Retrieve the tracked string value state coordinate."""
         return self._value
 
     def set(self, val: str) -> None:
+        """Assign a new string value string state coordinate."""
         self._value = str(val)
 
 
@@ -41,16 +41,16 @@ class StubBooleanVar:
 
     def __init__(
         self,
-        master: object = None,
         value: bool = False,
-        name: str = None,  # type: ignore[assignment]
-    ) -> None:  # type: ignore[assignment]
+    ) -> None:
         self._value = bool(value)
 
     def get(self) -> bool:
+        """Retrieve the tracked boolean toggle validation state coordinate."""
         return self._value
 
     def set(self, val: bool) -> None:
+        """Assign a new truthy boolean execution state coordinate."""
         self._value = bool(val)
 
 
@@ -62,7 +62,7 @@ def test_app_scaffolding_initialization() -> None:
         patch("customtkinter.CTk.geometry") as mock_geometry,
         patch("customtkinter.CTk.minsize") as mock_minsize,
         patch("customtkinter.CTk.grid_columnconfigure") as mock_col,
-        patch("customtkinter.CTk.grid_rowconfigure") as mock_row,
+        patch("customtkinter.CTk.grid_rowconfigure"),
         patch("citecraft.ui.app.UIState") as mock_state_cls,
         patch("citecraft.ui.app.SidebarFrame") as mock_sidebar,
         patch("citecraft.ui.app.MainFrame") as mock_main,
@@ -92,11 +92,11 @@ def test_sidebar_frame_creation() -> None:
     with (
         patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
         patch("customtkinter.CTkFrame.grid_columnconfigure") as mock_col_config,
-        patch("customtkinter.CTkLabel") as mock_label,
+        patch("customtkinter.CTkLabel"),
         patch("customtkinter.CTkComboBox") as mock_combo,
         patch("customtkinter.CTkEntry") as mock_entry,
         patch("customtkinter.CTkSwitch") as mock_switch,
-        patch("customtkinter.CTkFont") as mock_font,
+        patch("customtkinter.CTkFont"),
     ):
         mock_frame_init.return_value = None
         mock_master = MagicMock()
@@ -111,7 +111,9 @@ def test_sidebar_frame_creation() -> None:
 
         # Verify ComboBox for API selection binds the state's API variable
         mock_combo.assert_called_once_with(
-            sidebar, values=["OpenAlex", "Crossref"], variable=mock_state.api,
+            sidebar,
+            values=["OpenAlex", "Crossref"],
+            variable=mock_state.api,
         )
 
         # Check expected text input counts (Journal and Style entries)
@@ -128,10 +130,10 @@ def test_main_frame_creation() -> None:
         patch("customtkinter.CTkFrame.grid") as mock_frame_grid,
         patch("customtkinter.CTkFrame.grid_columnconfigure") as mock_col_config,
         patch("customtkinter.CTkFrame.grid_rowconfigure") as mock_row_config,
-        patch("customtkinter.CTkLabel") as mock_label,
+        patch("customtkinter.CTkLabel"),
         patch("customtkinter.CTkButton") as mock_button,
         patch("customtkinter.CTkTextbox") as mock_textbox,
-        patch("customtkinter.CTkFont") as mock_font,
+        patch("customtkinter.CTkFont"),
     ):
         mock_frame_init.return_value = None
         mock_master = MagicMock()
@@ -148,7 +150,11 @@ def test_main_frame_creation() -> None:
 
         # Ensure grid alignment calls are bypassed on sub-frames
         mock_frame_grid.assert_called_once_with(
-            row=0, column=0, padx=20, pady=(20, 10), sticky="ew",
+            row=0,
+            column=0,
+            padx=20,
+            pady=(20, 10),
+            sticky="ew",
         )
 
         # Checking existence of layout components (3 buttons: Input, Output, Run)
@@ -164,8 +170,8 @@ def test_ui_state_initialization() -> None:
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
     ):
-        mock_master = MagicMock()
-        state = UIState(mock_master)
+        MagicMock()
+        state = UIState()
 
         assert state.api.get() == "OpenAlex"
         assert state.style.get() == "apa"
@@ -196,7 +202,8 @@ def test_select_input_file_updates_state() -> None:
         main_frame._select_input_file()
 
         mock_dialog.assert_called_once_with(
-            title="Select Manuscript Document", filetypes=[("Word Documents", "*.docx")],
+            title="Select Manuscript Document",
+            filetypes=[("Word Documents", "*.docx")],
         )
         mock_state.input_file_path.set.assert_called_once_with(
             "C:/mock/manuscript.docx",
@@ -238,8 +245,8 @@ def test_ui_state_serialization_success(test_config: AppConfig) -> None:
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
     ):
-        mock_master = MagicMock()
-        state = UIState(mock_master)
+        MagicMock()
+        state = UIState()
 
         # Inject real values into Stub classes safely
         state.api.set("OpenAlex")
@@ -267,8 +274,8 @@ def test_ui_state_serialization_validation_errors(test_config: AppConfig) -> Non
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
     ):
-        mock_master = MagicMock()
-        state = UIState(mock_master)
+        MagicMock()
+        state = UIState()
 
         state.api.set("OpenAlex")
         state.journal_title.set("")
@@ -299,7 +306,10 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
     """Validate run event writes success to console log on valid state inputs."""
 
     def mock_after(
-        self: object, delay: int, func: typing.Callable, *args: object,
+        self: object,
+        delay: int,
+        func: typing.Callable,
+        *args: object,
     ) -> None:
         func(*args)
 
@@ -318,7 +328,7 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
     ):
         mock_frame_init.return_value = None
         mock_master = MagicMock()
-        mock_state = UIState(mock_master)
+        mock_state = UIState()
 
         # Set valid variables
         mock_state.api.set("OpenAlex")
@@ -335,7 +345,9 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
 
         # Mock thread to run synchronously inside unit testing context safely
         def mock_thread_init(
-            target: typing.Callable, args: tuple = (), **kwargs: object,
+            target: typing.Callable,
+            args: tuple = (),
+            **kwargs: object,
         ) -> MagicMock:  # type: ignore[type-arg]
             target(*args)
             return MagicMock()
@@ -380,7 +392,7 @@ def test_on_run_pipeline_validation_failure(test_config: AppConfig) -> None:
         mock_sidebar = MagicMock()
         mock_master.sidebar = mock_sidebar
 
-        mock_state = UIState(mock_master)
+        mock_state = UIState()
 
         # Empty style to trigger validation error
         mock_state.api.set("OpenAlex")
@@ -416,13 +428,13 @@ def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
         patch("customtkinter.CTkFrame.grid_columnconfigure"),
         patch("customtkinter.CTkFrame.grid_rowconfigure"),
         patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton") as mock_button_cls,
+        patch("customtkinter.CTkButton"),
         patch("customtkinter.CTkTextbox"),
         patch("customtkinter.CTkFont"),
     ):
         mock_frame_init.return_value = None
         mock_master = MagicMock()
-        mock_state = UIState(mock_master)
+        mock_state = UIState()
 
         # Trigger manuscript validation error
         mock_state.api.set("OpenAlex")
@@ -438,8 +450,9 @@ def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
             main_frame._on_run_pipeline()
 
         # Ensure btn_input configure border_color was highlighted
-        typing.cast(MagicMock, main_frame.btn_input.configure).assert_called_with(
-            border_width=2, border_color="red",
+        typing.cast("MagicMock", main_frame.btn_input.configure).assert_called_with(
+            border_width=2,
+            border_color="red",
         )
 
 
@@ -453,13 +466,13 @@ def test_on_run_pipeline_output_failure(test_config: AppConfig) -> None:
         patch("customtkinter.CTkFrame.grid_columnconfigure"),
         patch("customtkinter.CTkFrame.grid_rowconfigure"),
         patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton") as mock_button_cls,
+        patch("customtkinter.CTkButton"),
         patch("customtkinter.CTkTextbox"),
         patch("customtkinter.CTkFont"),
     ):
         mock_frame_init.return_value = None
         mock_master = MagicMock()
-        mock_state = UIState(mock_master)
+        mock_state = UIState()
 
         # Trigger output destination validation error
         mock_state.api.set("OpenAlex")
@@ -475,8 +488,9 @@ def test_on_run_pipeline_output_failure(test_config: AppConfig) -> None:
             main_frame._on_run_pipeline()
 
         # Ensure btn_output configure border_color was highlighted
-        typing.cast(MagicMock, main_frame.btn_output.configure).assert_called_with(
-            border_width=2, border_color="red",
+        typing.cast("MagicMock", main_frame.btn_output.configure).assert_called_with(
+            border_width=2,
+            border_color="red",
         )
 
 
@@ -548,7 +562,10 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
     """Verify background run thread disables and restores controls on success."""
 
     def mock_after(
-        self: object, delay: int, func: typing.Callable, *args: object,
+        self: object,
+        delay: int,
+        func: typing.Callable,
+        *args: object,
     ) -> None:
         func(*args)  # Emulate main-thread callback dispatcher instantly
 
@@ -567,7 +584,7 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
     ):
         mock_frame_init.return_value = None
         mock_master = MagicMock()
-        mock_state = UIState(mock_master)
+        mock_state = UIState()
 
         mock_state.api.set("OpenAlex")
         mock_state.style.set("apa")
@@ -592,7 +609,9 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
         ):
 
             def mock_thread_init(
-                target: typing.Callable, args: tuple = (), **kwargs: object,
+                target: typing.Callable,
+                args: tuple = (),
+                **kwargs: object,
             ) -> MagicMock:
                 # Force synchronous execution inside mock thread to test flow
                 target(*args)
@@ -604,7 +623,7 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
         # Verify core.run was called
         mock_run.assert_called_once()
         # Verify controls were re-enabled back to normal
-        assert typing.cast(MagicMock, main_frame.btn_run.configure).call_count > 0
+        assert typing.cast("MagicMock", main_frame.btn_run.configure).call_count > 0
 
         # Assert coverage branch for anomalous_journals was executed and logged
         main_frame.txt_console.insert.assert_any_call(
@@ -618,7 +637,10 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
     """Verify background run thread captures and handles backend errors gracefully."""
 
     def mock_after(
-        self: object, delay: int, func: typing.Callable, *args: object,
+        self: object,
+        delay: int,
+        func: typing.Callable,
+        *args: object,
     ) -> None:
         func(*args)
 
@@ -637,7 +659,7 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
     ):
         mock_frame_init.return_value = None
         mock_master = MagicMock()
-        mock_state = UIState(mock_master)
+        mock_state = UIState()
 
         mock_state.api.set("OpenAlex")
         mock_state.style.set("apa")
@@ -657,7 +679,9 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
         ):
 
             def mock_thread_init(
-                target: typing.Callable, args: tuple = (), **kwargs: object,
+                target: typing.Callable,
+                args: tuple = (),
+                **kwargs: object,
             ) -> MagicMock:
                 target(*args)
                 return MagicMock()
@@ -667,5 +691,6 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
 
         # Verify text console printed error log
         main_frame.txt_console.insert.assert_any_call(
-            "end", "❌ Execution Failure: API failure\n",
+            "end",
+            "❌ Execution Failure: API failure\n",
         )

@@ -1,4 +1,6 @@
 # src/citecraft/schemas/work_metadata.py
+"""Data schema for tracked manuscript works, DOI resolutions, and external metadata."""
+
 from typing import Any, override
 
 from pydantic import Field, field_validator

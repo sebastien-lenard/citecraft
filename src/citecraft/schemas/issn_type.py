@@ -1,4 +1,6 @@
 # src/citecraft/schemas/issn_type.py
+"""Custom validation types and Modulus 11 checksum verification for ISSN fields."""
+
 import logging
 import re
 from typing import Annotated
@@ -12,14 +14,15 @@ ISSN_REGEX = re.compile(r"^\d{4}-\d{3}[\dX]$", re.IGNORECASE)
 
 
 def validate_issn(issn: str) -> str:
-    """Validates an ISSN string format and its Modulus 11 checksum."""
+    """Validate an ISSN string format and its Modulus 11 checksum."""
     if not ISSN_REGEX.match(issn):
         logger.warning(
             "ISSN Validation Failed (Format): %s",
             issn,
             extra={"event": "invalid_issn_format", "issn": issn},
         )
-        raise ValueError("Invalid ISSN format. Must be 'YYYY-YYYY' (e.g. 2049-3630).")
+        err_msg = "Invalid ISSN format. Must be 'YYYY-YYYY' (e.g. 2049-3630)."
+        raise ValueError(err_msg)
 
     # --- Modulus 11 Checksum Verification ---
     clean_issn = issn.replace("-", "").upper()
@@ -44,7 +47,8 @@ def validate_issn(issn: str) -> str:
             issn,
             extra={"event": "invalid_issn_checksum", "issn": issn},
         )
-        raise ValueError("Invalid ISSN checksum. The number is fabricated or mistyped.")
+        err_msg = "Invalid ISSN checksum. The number is fabricated or mistyped."
+        raise ValueError(err_msg)
 
     return issn
 
@@ -55,9 +59,10 @@ issn_adapter = TypeAdapter(IssnType)
 
 
 def check_standalone_issn(issn: str) -> bool:
-    """Validates a standalone string against the ISSN Annotated type rules."""
+    """Validate a standalone string against the ISSN Annotated type rules."""
     try:
         issn_adapter.validate_python(issn)
-        return True
     except ValidationError:
         return False
+    else:
+        return True

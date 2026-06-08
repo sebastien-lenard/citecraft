@@ -1,4 +1,6 @@
 # tests/unit/ui/test_progress_bar_context.py
+"""Unit tests validating CLI progress bar layout formatting, lifecycle, and logs."""
+
 import io
 import logging
 import sys
@@ -65,7 +67,11 @@ def test_progress_bar_passive_mode_when_verbose() -> None:
 
         # Callbacks should execute as no-ops safely
         step = ProgressStep(
-            step_name="parsing", current=1, total=4, message="Test", status="started",
+            step_name="parsing",
+            current=1,
+            total=4,
+            message="Test",
+            status="started",
         )
         ctx.update(step)
         assert ctx._state["current_step"] == 0  # State unchanged
@@ -109,6 +115,7 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setattr(sys, "stderr", fake_stderr)
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
+    # ruff: disable[PT012] Converting to PT012 puts the test in fail.
     with pytest.raises(ValueError, match="Pipeline Failure"), ctx:
         ctx.update(
             ProgressStep(
@@ -119,7 +126,9 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
                 status="started",
             ),
         )
-        raise ValueError("Pipeline Failure")
+        err_msg = "Pipeline Failure"
+        raise ValueError(err_msg)
+    # ruff: enable[PT012]
 
     output = fake_stderr.getvalue()
     assert "Completed." not in output
@@ -128,8 +137,7 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> None:
-    """Verify that logging integrations correctly erase progress bar lines before
-    emitting logs."""
+    """Verify that logging correctly erase progress bar lines before emitting logs."""
     # 1. Setup local logging infrastructure connected to root for context interception
     test_logger = logging.getLogger("citecraft.integ_ui")
     test_logger.setLevel(logging.WARNING)
@@ -174,19 +182,19 @@ def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> Non
 
 
 def test_logging_handlers_are_cleaned_on_exception() -> None:
-    """Verify that ProgressBarContext removes intercepting handlers during crash
-    sequences."""
+    """Verify that ProgressBarContext removes handlers during crashes."""
     root_logger = logging.getLogger()
     initial_handlers = list(root_logger.handlers)
 
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
-    with pytest.raises(RuntimeError, match="Forced pipeline crash"), ctx:
-        # Verify when executing: LogInterceptor present in active handlers
+    with ctx:
         assert any(
             x.__class__.__name__ == "LogInterceptor" for x in root_logger.handlers
         )
-        raise RuntimeError("Forced pipeline crash")
+        err_msg = "Forced pipeline crash"
+        with pytest.raises(RuntimeError, match="Forced pipeline crash"):
+            raise RuntimeError(err_msg)
 
     # After-crash verification: initial state must be restored.
     assert root_logger.handlers == initial_handlers

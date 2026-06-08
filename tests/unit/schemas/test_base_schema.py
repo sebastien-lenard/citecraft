@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_base_schema.py
+"""Unit tests verifying the base data schema configuration and behavior lifecycle."""
+
 import pytest
 
 from citecraft.schemas.base_schema import BaseSchema
@@ -12,6 +14,7 @@ class MockSchema(BaseSchema):
 
     @property
     def identity_key(self) -> str:
+        """Provide a test mock implementation of an identity key."""
         return self.name
 
 
@@ -43,6 +46,7 @@ def test_base_schema_identity_key_requirement() -> None:
     obj = BrokenSchema(name="Fail")
 
     with pytest.raises(
-        NotImplementedError, match="Subclasses must implement identity_key",
+        NotImplementedError,
+        match="Subclasses must implement identity_key",
     ):
         _ = obj.identity_key

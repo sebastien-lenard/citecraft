@@ -1,4 +1,6 @@
 # src/citecraft/schemas/csl_name.py
+"""Pydantic schemas mirroring Citation Style Language (CSL) contributor names."""
+
 from pydantic import BaseModel, ConfigDict
 
 

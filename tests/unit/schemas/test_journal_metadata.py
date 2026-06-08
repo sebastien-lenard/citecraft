@@ -1,5 +1,7 @@
 # tests/unit/schemas/test_journal_metadata.py
-from datetime import date
+"""Unit tests validating journal metadata initialization, ranges, and sync statuses."""
+
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -13,7 +15,7 @@ def test_journal_metadata_defaults() -> None:
 
     assert journal.issn is None
     assert journal.similar_titles is None
-    assert journal.update == str(date.today())
+    assert journal.update == str(datetime.now(UTC).strftime("%Y-%m-%d"))
 
 
 def test_journal_metadata_identity_key() -> None:
@@ -58,7 +60,7 @@ def test_journal_metadata_extra_fields_ignored() -> None:
     """Verify that unregistered JSON dictionary values are ignored."""
     data = {"input_title": "Nature", "extra_api_garbage": "should_not_exist"}
 
-    journal = JournalMetadata(**data)
+    journal = JournalMetadata.model_validate(data)
 
     assert journal.input_title == "Nature"
     assert not hasattr(journal, "extra_api_garbage")

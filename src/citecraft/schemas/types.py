@@ -1,4 +1,6 @@
 # src/citecraft/schemas/types.py
+"""Custom Pydantic field types and structural validation rules for API URLs."""
+
 import re
 from typing import Annotated
 from urllib.parse import urlparse, urlunparse
@@ -7,7 +9,7 @@ from pydantic import AfterValidator, BeforeValidator
 
 
 def coerce_and_enforce_https(v: str) -> str:
-    """Cleans up, normalizes, and enforces HTTPS on an incoming URL string."""
+    """Clean up, normalize, and enforce HTTPS on an incoming URL string."""
     if not isinstance(v, str):
         return v
 
@@ -24,9 +26,10 @@ def coerce_and_enforce_https(v: str) -> str:
     if scheme_match:
         possible_scheme = scheme_match.group(1).lower()
         if possible_scheme in ("ftp", "sftp", "gopher", "ws", "wss"):
-            raise ValueError(
-                f"URL must use 'https://' scheme. Got unsupported: '{possible_scheme}'",
+            err_msg = (
+                f"URL must use 'https://' scheme. Got unsupported: '{possible_scheme}'"
             )
+            raise ValueError(err_msg)
 
     # Strip any corrupt leading protocols/colons/slashes cleanly
     # Matches strings starting with http, https, colons, or slashes
@@ -39,12 +42,17 @@ def coerce_and_enforce_https(v: str) -> str:
 
 
 def verify_object_name_placeholder(v: str) -> str:
+    """Verify that the validated URL string contains the object template tag."""
     if "{object_name}" not in v:
-        raise ValueError("URL must contain the mandatory '{object_name}' placeholder.")
+        err_msg = (
+            "URL must contain the mandatory '{object_name}' placeholder."  # No f""
+        )
+        raise ValueError(err_msg)
     return v
 
 
 HttpsUrlStr = Annotated[str, BeforeValidator(coerce_and_enforce_https)]
 UrlWithObjectName = Annotated[
-    HttpsUrlStr, AfterValidator(verify_object_name_placeholder),
+    HttpsUrlStr,
+    AfterValidator(verify_object_name_placeholder),
 ]

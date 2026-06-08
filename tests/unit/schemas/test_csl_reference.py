@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_csl_reference.py
+"""Unit tests for the CSL reference schema and validation rules."""
+
 import logging
 
 import pytest
@@ -58,7 +60,8 @@ def test_validation_error_when_both_id_and_doi_missing() -> None:
     ],
 )
 def test_issn_parsing_variants(
-    issn_input: list[str] | str, expected_issn: str | None,
+    issn_input: list[str] | str,
+    expected_issn: str | None,
 ) -> None:
     """Verify raw ISSN data input variants map onto a singular identifier string."""
     raw_data = {"id": "test_id", "type": "book", "ISSN": issn_input}
@@ -67,8 +70,7 @@ def test_issn_parsing_variants(
 
 
 def test_extra_fields_not_ignored_automatically() -> None:
-    """Verify schema keeps unmapped keys when converting back to dictionary
-    layouts."""
+    """Verify schema keeps unmapped keys during dictionnary conversion."""
     raw_data = {
         "id": "10.1038/s41561-020-0585-2",
         "type": "article-journal",
@@ -99,7 +101,8 @@ def test_validate_csl_type_matching_config(test_config: AppConfig) -> None:
 
 
 def test_validate_csl_type_unknown_triggers_structured_log(
-    test_config: AppConfig, caplog: pytest.LogCaptureFixture,
+    test_config: AppConfig,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that an unlisted type logs a warning with explicit context metadata."""
     test_config = test_config.model_copy(
@@ -114,7 +117,8 @@ def test_validate_csl_type_unknown_triggers_structured_log(
 
     with caplog.at_level(logging.WARNING):
         validated = CSLReference.model_validate(
-            raw_data, context={"config": test_config},
+            raw_data,
+            context={"config": test_config},
         )
 
     assert validated.type == "custom-fallback-type"
@@ -123,8 +127,8 @@ def test_validate_csl_type_unknown_triggers_structured_log(
     log_record = caplog.records[0]
     assert log_record.levelname == "WARNING"
     assert "Unknown CSL reference type encountered" in log_record.message
-    assert log_record.csl_type == "custom-fallback-type"
-    assert log_record.reference_id == "10.1234/test-doi"
+    assert getattr(log_record, "csl_type", None) == "custom-fallback-type"
+    assert getattr(log_record, "reference_id", None) == "10.1234/test-doi"
 
 
 def test_validate_csl_type_missing_context_silence() -> None:
