@@ -1,4 +1,6 @@
 # src/citecraft/services/reference_service.py
+"""Reference fetching and management services coordinating CSL metadata rendering."""
+
 import logging
 import time
 from typing import Any
@@ -28,7 +30,10 @@ class ReferenceService:
         self.config: AppConfig = config or get_config()
 
     def _log_heartbeat_if_needed(
-        self, processed: int, total: int, last_time: float,
+        self,
+        processed: int,
+        total: int,
+        last_time: float,
     ) -> float:
         """Log batch resolution progress every 10 seconds of processing time."""
         current_time = time.time()
@@ -59,6 +64,7 @@ class ReferenceService:
         target_style: str,
     ) -> None:
         """Enrich unpopulated WorkMetadata records with generated references in-place.
+
         Updates in-place if style is mismatched or reference is missing.
 
         Note: If get_reference raises an exception, the execution
@@ -95,7 +101,9 @@ class ReferenceService:
                 record.crossref_metadata = doi_repo.get_metadata(doi)
 
             raw_reference = self.get_reference(
-                record.crossref_metadata, csl_style_content, doi,
+                record.crossref_metadata,
+                csl_style_content,
+                doi,
             )
 
             cleaned_reference = html_cleaner.clean_to_plain_text(raw_reference)
@@ -120,10 +128,15 @@ class ReferenceService:
         )
 
     def get_reference(
-        self, csl_metadata: dict[str, Any] | None, csl_style_content: str, doi: str,
+        self,
+        csl_metadata: dict[str, Any] | None,
+        csl_style_content: str,
+        doi: str,
     ) -> str:
-        """Render a CSL-JSON dictionary into a formatted plain-text bibliography entry.
-        Warning: the metadata must contain an id attribute."""
+        """Render a CSL-JSON dictionary into a formatted bibliography entry.
+
+        Warning: the metadata must contain an id attribute.
+        """
         if not csl_metadata:
             logger.warning(
                 "Missing CSL-JSON metadata for DOI: %s",
@@ -138,7 +151,8 @@ class ReferenceService:
 
         try:
             validated_csl = CSLReference.model_validate(
-                csl_metadata, context={"config": self.config},
+                csl_metadata,
+                context={"config": self.config},
             )
             clean_csl_dict = validated_csl.model_dump(by_alias=True, exclude_none=True)
         except ValidationError as e:
@@ -155,7 +169,8 @@ class ReferenceService:
             return "Reference unavailable in doi.org."
 
         bib_source, err_msg = CiteprocAdapter.create_json_source(
-            clean_csl_dict, doi=doi,
+            clean_csl_dict,
+            doi=doi,
         )
 
         if not bib_source or err_msg:
@@ -166,7 +181,10 @@ class ReferenceService:
             return f"Reference unavailable in doi.org. {err_msg}"
 
         render_output, err_msg = CiteprocAdapter.render_bibliography(
-            bib_style, bib_source, item_id=validated_csl.id, doi=doi,
+            bib_style,
+            bib_source,
+            item_id=validated_csl.id,
+            doi=doi,
         )
         if not render_output or err_msg:
             return f"Reference unavailable in doi.org. {err_msg}"

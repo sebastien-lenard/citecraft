@@ -1,4 +1,6 @@
 # src/citecraft/storage/db_client.py
+"""Database client module providing injection-safe, dynamic SQL operations."""
+
 import sqlite3
 from collections.abc import Iterable
 
@@ -20,7 +22,7 @@ class DbClient:
         *args: object,
         **kwargs: object,
     ) -> sqlite3.Cursor:
-        """Formats a table identifier safely into a SQL template and executes it."""
+        """Format a table identifier safely into a SQL template and executes it."""
         safe_table = cls.quote_identifier(table_name)
 
         # 1. Safely construct the query string
@@ -28,7 +30,7 @@ class DbClient:
 
         # 2. Unify the query parameters to satisfy the Type Checker
         # sqlite3 needs either a sequence (args) or a dict (kwargs)
-        parameters: tuple[object, ...] | dict[str, object] = kwargs if kwargs else args
+        parameters: tuple[object, ...] | dict[str, object] = kwargs or args
 
         # 3. Pass the parameters object directly
         return conn.execute(query, parameters)
@@ -48,7 +50,7 @@ class DbClient:
 
         # All identifiers are safely escaped prior to string generation
         query = (
-            f"INSERT INTO {safe_table} ({', '.join(safe_fields)}) "  # noqa S608
+            f"INSERT INTO {safe_table} ({', '.join(safe_fields)}) "
             f"VALUES ({placeholders});"
         )
         return conn.executemany(query, rows_to_insert)
@@ -67,7 +69,8 @@ class DbClient:
         for name, sql_type in column_definitions:
             # Safely allow alphanumeric characters, spaces, and size descriptors
             if not all(c.isalnum() or c.isspace() or c in "()," for c in sql_type):
-                raise ValueError(f"Unsafe SQL type definition detected: {sql_type}")
+                err_msg = f"Unsafe SQL type definition detected: {sql_type}"
+                raise ValueError(err_msg)
 
             safe_col_name = cls.quote_identifier(name)
             columns_sql.append(f"{safe_col_name} {sql_type}")
@@ -84,16 +87,16 @@ class DbClient:
         *args: object,
         **kwargs: object,
     ) -> list[sqlite3.Row]:
-        """Formats table identifier safely into a read query and fetches all rows."""
+        """Format table identifier safely into a read query and fetches all rows."""
         safe_table = cls.quote_identifier(table_name)
         query = sql_template.format(table_name=safe_table)
-        parameters: tuple[object, ...] | dict[str, object] = kwargs if kwargs else args
+        parameters: tuple[object, ...] | dict[str, object] = kwargs or args
         cursor = conn.execute(query, parameters)
         return cursor.fetchall()
 
     @classmethod
     def table_exists(cls, conn: sqlite3.Connection, table_name: str) -> bool:
-        """Uses a parameterized schema query to safely check if a table exists."""
+        """Use a parameterized schema query to safely check if a table exists."""
         cursor = conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?;",
             (table_name,),

@@ -1,4 +1,6 @@
 # src/citecraft/services/bibliography_service.py
+"""Bibliography generation services for parsing, validating, and exporting citations."""
+
 import csv
 import logging
 import re
@@ -17,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class ExportResult:
-    """Data carrier representing metric aggregations and structural outputs of
-    bibliography exports."""
+    """Metric aggregations and structural outputs of bibliography exports."""
 
     total_rows: int
     output_filepath: Path
@@ -37,8 +38,7 @@ class ExportResult:
 
 
 class BibliographyService:
-    """Coordinates clean reference resolution and automated file export of
-    bibliographies."""
+    """Coordinate reference resolution and bibliography export."""
 
     def __init__(
         self,
@@ -52,8 +52,7 @@ class BibliographyService:
         works: list[WorkMetadata],
         output_path: Path,
     ) -> ExportResult:
-        """Construct, validate, sort, and serialize a manuscript bibliography to a
-        CSV file."""
+        """Construct, validate, sort a bibliography to a CSV file."""
         works_by_citation: dict[tuple[str, str], list[WorkMetadata]] = {}
         for work in works:
             if work.status == "OK":
@@ -134,7 +133,7 @@ class BibliographyService:
 
         fieldnames = ["Citation", "Status", "Reference"]
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(output_path, mode="w", encoding="utf-8-sig", newline="") as f:
+        with Path.open(output_path, mode="w", encoding="utf-8-sig", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)

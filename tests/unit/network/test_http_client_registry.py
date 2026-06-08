@@ -1,4 +1,6 @@
 # tests/unit/network/test_http_client_registry.py
+"""Unit tests verifying lifecycle isolation and configuration in the HTTP registry."""
+
 from typing import Any
 from unittest.mock import MagicMock, patch
 
