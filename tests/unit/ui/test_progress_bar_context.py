@@ -118,8 +118,7 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
     # Converting to PT012 puts the test in fail.
-    # ruff: disable[PT012]
-    with pytest.raises(ValueError, match="Pipeline Failure"), ctx:
+    with pytest.raises(ValueError, match="Pipeline Failure"), ctx:  # noqa: PT012
         ctx.update(
             ProgressStep(
                 step_name="parsing",
@@ -131,7 +130,6 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
         )
         err_msg = "Pipeline Failure"
         raise ValueError(err_msg)
-    # ruff: enable[PT012]
 
     output = fake_stderr.getvalue()
     assert "Completed." not in output
