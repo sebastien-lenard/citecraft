@@ -1,9 +1,13 @@
 <!-- README.md -->
 <!-- SPDX-FileCopyrightText: Copyright (C) 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors -->
 <!-- SPDX-License-Identifier: Apache-2.0 -->
+ <picture>
+  <img src="assets/images/citecraft_logo_64.png" alt="CiteCraft Logo" align="left" width="64" height="64" style="margin-right: 15px; margin-bottom: 10px;">
+</picture>
+
 # CiteCraft — Automated Manuscript Bibliography Generator
 
- <img src="citecraft_logo_64.png" alt="CiteCraft automated bibliography generator logo" align="left" width="64" height="72" style="margin-right: 15px; margin-bottom: 10px;"> CiteCraft is a lightweight Python bibliography generator and CLI tool designed for scientists and other users to automatically extract in-text citations from a `.docx` manuscript and format a complete bibliography to a target journal style. By matching cited works against a user-provided list of journals, the tool automates lookups of DOIs using remote academic APIs (OpenAlex or Crossref) and compiles the reference list through a local citation engine.
+CiteCraft is a lightweight Python bibliography generator and CLI tool designed for scientists and other users to automatically extract in-text citations from a `.docx` manuscript and format a complete bibliography to a target journal style. By matching cited works against a user-provided list of journals, the tool automates lookups of DOIs using remote academic APIs (OpenAlex or Crossref) and compiles the reference list through a local citation engine.
 
 Unlike complex reference managers, this project focuses on a streamlined, manuscript-centric workflow that converts raw in-text citations directly into plain-text bibliographic outputs without requiring manual data entry.
 
