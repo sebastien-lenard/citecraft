@@ -224,7 +224,7 @@ def test_log_interceptor_emit_exception_handled() -> None:
 
 
 def test_exit_with_falsy_handlers_and_threads() -> None:
-    """Verify __exit__ successfully clears context even if handles or threads are None."""
+    """Verify __exit__ clears context even if handles or threads are None."""
     ctx = ProgressBarContext(verbose_level=0)
     ctx.is_active = True
     ctx._ticker_thread = None
@@ -245,7 +245,7 @@ def test_loop_render_stops_immediately_if_stop_event_set() -> None:
 
 
 def test_loop_render_breaks_if_not_running() -> None:
-    """Verify background task breaks immediately when context running state is deactivated."""
+    """Verify background task breaks when context running state is deactivated."""
     ctx = ProgressBarContext(verbose_level=0)
     ctx._state["running"] = False
     ctx._stop_event.clear()

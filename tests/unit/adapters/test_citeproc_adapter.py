@@ -50,8 +50,8 @@ def test_create_json_source_unexpected_warning(
 ) -> None:
     """Verify handling of warnings that do not contain the term 'unsupported'."""
 
-    def mock_init(*args: Any, **kwargs: Any) -> None:
-        warnings.warn("Unexpected test warning detail", UserWarning)
+    def mock_init(*args: object, **kwargs: object) -> None:
+        warnings.warn("Unexpected test warning detail", UserWarning, stacklevel=2)
 
     with (
         patch("citeproc.source.json.CiteProcJSON.__init__", side_effect=mock_init),
@@ -93,7 +93,7 @@ def test_create_json_source_malformed_payloads(
 def test_create_json_source_other_exception(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Verify exception handling when non-UnboundLocalError triggers translation fail."""
+    """Check exception handling when non-UnboundLocalError triggers translation fail."""
     with (
         patch(
             "citeproc.source.json.CiteProcJSON.__init__",
