@@ -1,10 +1,10 @@
 ---
-# docs/designs/0002-automated-and-manual-documentation-system-v0.1.md
-# SPDX-FileCopyrightText: Copyright (C) 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
-# SPDX-License-Identifier: Apache-2.0
 status: active  
 date: 2026-06-07
 ---
+<!-- docs/designs/0002-automated-and-manual-documentation-system-v0.1.md -->
+<!-- SPDX-FileCopyrightText: Copyright (C) 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
 # 0002: Automated and Manual Documentation System v0.1
 

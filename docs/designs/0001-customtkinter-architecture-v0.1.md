@@ -1,10 +1,10 @@
 ---
-# docs/designs/0001-customtkinter-architecture-v0.1.md
-# SPDX-FileCopyrightText: Copyright (C) 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
-# SPDX-License-Identifier: Apache-2.0
 status: active  
 date: 2026-06-06
 ---
+<!-- docs/designs/0001-customtkinter-architecture-v0.1.md -->
+<!-- SPDX-FileCopyrightText: Copyright (C) 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 
 # 0001: CustomTkinter Architecture v0.1
 
