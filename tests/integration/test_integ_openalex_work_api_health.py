@@ -1,4 +1,6 @@
 # tests/integration/test_integ_openalex_work_api_health.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Integration tests on the real OpenAlex API to fetch work DOI."""
 
 import _socket

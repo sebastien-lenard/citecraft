@@ -1,4 +1,6 @@
 # tests/unit/network/test_http_client_wrapper.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests verifying request routing and error boundaries for the network client."""
 
 from collections.abc import Generator

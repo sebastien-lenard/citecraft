@@ -1,4 +1,6 @@
 # src/citecraft/schemas/citation_metadata.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Data schema representing structured text citation data from draft manuscripts."""
 
 from typing import Literal, override

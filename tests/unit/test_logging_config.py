@@ -1,4 +1,6 @@
 # tests/unit/test_logging_config.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests verifying custom logging formatting, filtering, and lifecycles."""
 
 import json

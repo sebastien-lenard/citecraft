@@ -1,4 +1,6 @@
 # src/citecraft/schemas/types.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Custom Pydantic field types and structural validation rules for API URLs."""
 
 import re

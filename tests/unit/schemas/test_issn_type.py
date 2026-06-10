@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_issn_type.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests verifying ISSN formats and Modulus 11 checksum verification logic."""
 
 import logging

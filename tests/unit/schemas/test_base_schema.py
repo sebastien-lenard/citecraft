@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_base_schema.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests verifying the base data schema configuration and behavior lifecycle."""
 
 import pytest

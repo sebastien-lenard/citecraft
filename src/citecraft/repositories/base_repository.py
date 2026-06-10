@@ -1,4 +1,6 @@
 # src/citecraft/repositories/base_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Base database repository implementing storage operations and schema enforcement."""
 
 import logging

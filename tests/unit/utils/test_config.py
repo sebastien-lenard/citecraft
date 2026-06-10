@@ -1,4 +1,6 @@
 # tests/unit/utils/test_config.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for Citecraft environment config generation."""
 
 from pathlib import Path

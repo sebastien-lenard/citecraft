@@ -1,4 +1,6 @@
 # tests/unit/repositories/test_work_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for WorkRepository data integration and citation validation workflows."""
 
 import logging

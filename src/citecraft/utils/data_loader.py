@@ -1,4 +1,6 @@
 # src/citecraft/utils/data_loader.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Data loader utilities for importing and parsing JSON and DOCX resources."""
 
 import json

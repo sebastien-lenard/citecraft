@@ -1,4 +1,6 @@
 # src/citecraft/schemas/__init__.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 from .base_schema import BaseSchema
 from .citation_metadata import CitationMetadata
 from .crossref_author import CrossrefAuthor

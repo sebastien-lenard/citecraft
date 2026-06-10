@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_types.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests verifying HTTPS coercion, protocol normalization, and template tags."""
 
 from typing import Any

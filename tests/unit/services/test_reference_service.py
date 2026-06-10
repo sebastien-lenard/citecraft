@@ -1,4 +1,6 @@
 # tests/unit/services/test_reference_service.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for CSL parsing, metadata validation, and citation adapter error rules."""
 
 from typing import Any

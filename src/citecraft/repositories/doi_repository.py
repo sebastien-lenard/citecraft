@@ -1,4 +1,6 @@
 # src/citecraft/repositories/doi_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Repository for fetching and sanitizing metadata records using DOI resolution."""
 
 import json

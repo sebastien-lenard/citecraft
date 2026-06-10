@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_journal_metadata.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests validating journal metadata initialization, ranges, and sync statuses."""
 
 from datetime import UTC, datetime

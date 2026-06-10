@@ -1,4 +1,6 @@
 # src/citecraft/schemas/work_metadata.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Data schema for tracked manuscript works, DOI resolutions, and external metadata."""
 
 from typing import Any, override

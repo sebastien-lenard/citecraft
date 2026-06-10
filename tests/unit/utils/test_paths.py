@@ -1,4 +1,6 @@
 # tests/unit/utils/test_paths.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for path and directory utility functions."""
 
 import os

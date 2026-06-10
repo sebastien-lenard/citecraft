@@ -1,4 +1,6 @@
 # tests/integration/test_integ_journal_api_health.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Integration tests on the real Crossref API to fetch journal ISSN and metadata."""
 
 import pytest

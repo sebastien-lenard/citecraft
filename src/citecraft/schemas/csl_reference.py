@@ -1,4 +1,6 @@
 # src/citecraft/schemas/csl_reference.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """CSL-JSON reference data schema definitions."""
 
 import logging

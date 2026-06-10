@@ -1,4 +1,6 @@
 # src/citecraft/network/http_client_wrapper.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Synchronous HTTP networking clients with retry loops and request parameters."""
 
 import logging

@@ -1,4 +1,6 @@
 # src/citecraft/adapters/citeproc_adapter.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Adapter for interfacing with the citeproc-py bibliography engine."""
 
 import io

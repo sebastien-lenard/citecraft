@@ -1,4 +1,6 @@
 # tests/unit/test___main__.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for __main__."""
 
 import runpy

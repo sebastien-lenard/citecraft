@@ -1,4 +1,6 @@
 # src/citecraft/utils/paths.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Path and directory utilities for the CiteCraft application."""
 
 import os

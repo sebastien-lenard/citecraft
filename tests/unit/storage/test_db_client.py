@@ -1,4 +1,6 @@
 # tests/unit/storage/test_db_client.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for validation limits and safe execution methods in DbClient."""
 
 import sqlite3

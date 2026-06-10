@@ -1,4 +1,6 @@
 # tests/unit/schemas/test_doi_type.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests validating regular expression matching and Pydantic types for DOIs."""
 
 import pytest

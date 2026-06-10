@@ -1,4 +1,6 @@
 # tests/unit/parsers/test_html_cleaner.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for the HTML cleaner and text normalization utility."""
 
 import pytest

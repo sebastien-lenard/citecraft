@@ -1,4 +1,6 @@
 # src/citecraft/schemas/base_schema.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Base validation schema configuration for core domain metadata models."""
 
 from collections.abc import Hashable

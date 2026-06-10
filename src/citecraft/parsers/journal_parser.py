@@ -1,4 +1,6 @@
 # src/citecraft/parsers/journal_parser.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Parser for isolating and extracting journal title blocks from raw text."""
 
 import logging

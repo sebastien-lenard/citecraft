@@ -1,4 +1,6 @@
 # src/citecraft/services/reference_service.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Reference fetching and management services coordinating CSL metadata rendering."""
 
 import logging

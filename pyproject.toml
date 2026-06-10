@@ -45,7 +45,6 @@ citecraft = "citecraft.cli:cli"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "-ra -q --tb=short"
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
@@ -66,7 +65,7 @@ extend-exclude = [
 unsafe-fixes = false
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "A", "ANN", "ARG", "BLE", "C4", "C90", "COM", "D", "DTZ", "EM", "ERA", "EXE", "FA", "FBT", "FIX", "FLY", "FURB", "G", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "UP", "T10", "T20", "TC", "TD", "TID", "TRY", "W", "YTT"]
+select = ["E", "F", "I", "B", "A", "ANN", "ARG", "BLE", "C4", "C90", "COM", "CPY", "D", "DTZ", "EM", "ERA", "EXE", "FA", "FBT", "FIX", "FLY", "FURB", "G", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "UP", "T10", "T20", "TC", "TD", "TID", "TRY", "W", "YTT"]
 extend-ignore = ["D107"]
 fixable = ["ALL"]
 unfixable = []

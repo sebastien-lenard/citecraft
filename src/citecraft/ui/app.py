@@ -1,4 +1,6 @@
 # src/citecraft/ui/app.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Main Application window definition for the CiteCraft UI wrapper."""
 
 import _tkinter

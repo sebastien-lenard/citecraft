@@ -1,4 +1,6 @@
 # tests/e2e/test_cli_pipeline.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """End to end bibliography generation integration testing.
 
 Ruff Lint Rules Ignored File-Wide:

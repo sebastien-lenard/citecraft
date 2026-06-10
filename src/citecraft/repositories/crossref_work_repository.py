@@ -1,4 +1,6 @@
 # src/citecraft/repositories/crossref_work_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Repository for managing academic work lookups via the Crossref API."""
 
 import logging

@@ -1,4 +1,6 @@
 # tests/unit/parsers/test_journal_parser.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for the journal block parsing engine."""
 
 import pytest

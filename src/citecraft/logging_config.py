@@ -1,4 +1,6 @@
 # src/citecraft/logging_config.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """System logging configuration management, formatting, and routing workflows."""
 
 import logging

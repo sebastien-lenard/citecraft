@@ -1,4 +1,6 @@
 # tests/unit/ui/test_app.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for verification of the window layout scaffolding."""
 
 import logging

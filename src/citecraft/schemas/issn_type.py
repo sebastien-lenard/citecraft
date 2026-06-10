@@ -1,4 +1,6 @@
 # src/citecraft/schemas/issn_type.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Custom validation types and Modulus 11 checksum verification for ISSN fields."""
 
 import logging

@@ -1,4 +1,6 @@
 # src/citecraft/schemas/journal_metadata.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Data schema for tracking scientific journal indexing states and lifespans."""
 
 from datetime import UTC, datetime
