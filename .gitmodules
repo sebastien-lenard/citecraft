@@ -1,0 +1,3 @@
+[submodule "docs/history"]
+	path = docs/history
+	url = ../citecraft-history.git
