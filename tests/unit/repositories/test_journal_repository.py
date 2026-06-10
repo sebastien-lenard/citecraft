@@ -1,4 +1,6 @@
 # tests/unit/repositories/test_journal_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for the local journal metadata repository persistence workflows."""
 
 import logging
@@ -199,6 +201,24 @@ def test_get_journal_metadata_similar_matches_found(
             assert len(results) == 2
             assert results[0].issn == "1752-0894"
             assert results[1].issn == "1752-0908"
+
+
+def test_filter_matches_skips_non_matching_and_empty_titles(
+    repo: JournalRepository,
+) -> None:
+    """Verify _filter_matches ignores empty or mismatched titles."""
+    items = [
+        {"title": ""},  # Triggers empty raw_title branch
+        {"title": "Unrelated Title"},  # Triggers unequal normalized title branch
+        {"title": "Nature-Geosciences"},  # Triggers match
+    ]
+    matches, matched_titles = repo._filter_matches(
+        "nature geoscience",
+        items,
+    )
+    assert len(matches) == 1
+    assert matches[0]["title"] == "Nature-Geosciences"
+    assert matched_titles == ["Nature-Geosciences"]
 
 
 def test_get_journal_metadata_missing_issn_handling(repo: JournalRepository) -> None:
@@ -563,6 +583,49 @@ def test_update_all_priority_and_limit(
         assert mock_get.call_count == 1
         mock_get.assert_called_with("Missing")
         assert repo.has_pending_updates is True
+
+
+def test_update_all_no_pending_updates_under_limit(
+    repo: JournalRepository,
+) -> None:
+    """Verify update_all clears has_pending_updates when limit is not exceeded."""
+    repo.config = repo.config.model_copy(
+        update={"journal_update_limit": 10, "journal_update_days": 30},
+    )
+    today = datetime.now(UTC).date()
+    old_date = str(today - timedelta(days=45))
+
+    repo.records = [
+        JournalMetadata(
+            input_title="Expired",
+            true_title="Expired J",
+            publisher="Pub",
+            issn="0036-8075",
+            start_year=2000,
+            end_year=2024,
+            update=old_date,
+        ),
+    ]
+
+    updated_data = [
+        JournalMetadata(
+            input_title="Expired",
+            true_title="Expired J",
+            publisher="Pub",
+            issn="0036-8075",
+            start_year=2000,
+            end_year=2024,
+            update=str(today),
+        ),
+    ]
+
+    with patch.object(
+        JournalRepository,
+        "get_journal_metadata",
+        return_value=updated_data,
+    ):
+        repo.update_all()
+        assert repo.has_pending_updates is False
 
 
 def test_update_all_sorting_logic_strict(repo: JournalRepository) -> None:

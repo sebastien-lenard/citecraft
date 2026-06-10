@@ -7,11 +7,12 @@ import io
 import logging
 import sys
 import time
+from unittest.mock import patch
 
 import pytest
 
 from citecraft.core import ProgressStep
-from citecraft.ui.progress_bar_context import ProgressBarContext
+from citecraft.ui.progress_bar_context import LogInterceptor, ProgressBarContext
 
 
 def test_generate_bar_string_initial_state() -> None:
@@ -199,3 +200,80 @@ def test_logging_handlers_are_cleaned_on_exception() -> None:
 
     # After-crash verification: initial state must be restored.
     assert root_logger.handlers == initial_handlers
+
+
+def test_log_interceptor_emit_exception_handled() -> None:
+    """Verify LogInterceptor safely recovers when standard streams are locked."""
+    interceptor = LogInterceptor(draw_callback=lambda: None)
+    record = logging.LogRecord(
+        name="test",
+        level=logging.INFO,
+        pathname="path",
+        lineno=10,
+        msg="log message content",
+        args=(),
+        exc_info=None,
+    )
+
+    with (
+        patch("sys.stderr.write", side_effect=RuntimeError("Stream blocked")),
+        patch.object(interceptor, "handleError") as mock_handle_error,
+    ):
+        interceptor.emit(record)
+        mock_handle_error.assert_called_once_with(record)
+
+
+def test_exit_with_falsy_handlers_and_threads() -> None:
+    """Verify __exit__ successfully clears context even if handles or threads are None."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx.is_active = True
+    ctx._ticker_thread = None
+    ctx._custom_handler = None
+
+    # This call should finalize cleanly and execute zero-ops on falsy values
+    ctx.__exit__(None, None, None)
+
+
+def test_loop_render_stops_immediately_if_stop_event_set() -> None:
+    """Verify loop exits instantly if the shutdown signal was pre-configured."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx._stop_event.set()
+
+    with patch.object(ctx, "_draw_line") as mock_draw:
+        ctx._loop_render()
+        mock_draw.assert_not_called()
+
+
+def test_loop_render_breaks_if_not_running() -> None:
+    """Verify background task breaks immediately when context running state is deactivated."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx._state["running"] = False
+    ctx._stop_event.clear()
+
+    with patch.object(ctx, "_draw_line") as mock_draw:
+        ctx._loop_render()
+        mock_draw.assert_not_called()
+
+
+def test_loop_render_continues_on_wait_timeout() -> None:
+    """Verify background task processes next loop iteration if wait timeout expires."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx._state["running"] = True
+    ctx._stop_event.clear()
+
+    call_count = 0
+
+    def mock_draw() -> None:
+        nonlocal call_count
+        call_count += 1
+        if call_count >= 2:
+            # Safely trigger loop break on next iteration
+            ctx._state["running"] = False
+
+    with (
+        patch.object(ctx, "_draw_line", side_effect=mock_draw),
+        patch.object(ctx._stop_event, "wait", return_value=False) as mock_wait,
+    ):
+        ctx._loop_render()
+        assert call_count == 2
+        mock_wait.assert_called()

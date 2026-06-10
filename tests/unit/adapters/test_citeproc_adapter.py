@@ -1,10 +1,13 @@
 # tests/unit/adapters/test_citeproc_adapter.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for the citeproc adapter layer."""
 
 import logging
+import warnings
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -42,6 +45,25 @@ def test_create_json_source_success_with_unsupported_warning(
     )
 
 
+def test_create_json_source_unexpected_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Verify handling of warnings that do not contain the term 'unsupported'."""
+
+    def mock_init(*args: Any, **kwargs: Any) -> None:
+        warnings.warn("Unexpected test warning detail", UserWarning)
+
+    with (
+        patch("citeproc.source.json.CiteProcJSON.__init__", side_effect=mock_init),
+        caplog.at_level(logging.WARNING),
+    ):
+        _, _ = CiteprocAdapter.create_json_source(
+            {"id": "10.1000/xyz", "type": "article-journal"},
+            doi="10.1000/xyz",
+        )
+        assert "unexpected citeproc-py warning" in caplog.text.lower()
+
+
 @pytest.mark.parametrize(
     "broken_csl_payload",
     [
@@ -66,6 +88,27 @@ def test_create_json_source_malformed_payloads(
     assert err is not None
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "WARNING"
+
+
+def test_create_json_source_other_exception(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Verify exception handling when non-UnboundLocalError triggers translation fail."""
+    with (
+        patch(
+            "citeproc.source.json.CiteProcJSON.__init__",
+            side_effect=KeyError("Missing key detail"),
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        source, err = CiteprocAdapter.create_json_source(
+            {"id": "10.1000/xyz", "type": "article-journal"},
+            doi="10.1000/xyz",
+        )
+        assert source is None
+        assert err is not None
+        assert "Missing key detail" in err
+        assert "UnboundLocalError" not in err
 
 
 def test_parse_csl_style_success() -> None:
@@ -168,3 +211,69 @@ def test_render_bibliography_corrupted_github_style_handles_attribute_error(
     assert record.levelname == "WARNING"
     assert getattr(record, "event", "") == "citeproc_github_style_file_corrupted"
     assert getattr(record, "doi", "") == doi_key
+
+
+def test_render_bibliography_unrelated_attribute_error_bubbles_up() -> None:
+    """Verify that unrelated AttributeErrors are not intercepted."""
+    style = MagicMock()
+    source = MagicMock()
+
+    with (
+        patch(
+            "citeproc.CitationStylesBibliography.bibliography",
+            side_effect=AttributeError("Unrelated AttributeError trigger"),
+        ),
+        pytest.raises(AttributeError, match="Unrelated AttributeError trigger"),
+    ):
+        CiteprocAdapter.render_bibliography(
+            style,
+            source,
+            item_id="10.1000/unrelated",
+            doi="10.1000/unrelated",
+        )
+
+
+def test_render_bibliography_empty_output_returns_error() -> None:
+    """Verify fallback returning specific explanation when outputs list is empty."""
+    style = MagicMock()
+    source = MagicMock()
+
+    with patch(
+        "citeproc.CitationStylesBibliography.bibliography",
+        return_value=[],
+    ):
+        rendered_text, err = CiteprocAdapter.render_bibliography(
+            style,
+            source,
+            item_id="10.1000/empty",
+            doi="10.1000/empty",
+        )
+
+    assert rendered_text is None
+    assert err == "Empty layout produced by bibliography generator."
+
+
+def test_render_bibliography_generic_exception_caught(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Verify that general rendering exceptions are gracefully caught and reported."""
+    style = MagicMock()
+    source = MagicMock()
+
+    with (
+        patch(
+            "citeproc.CitationStylesBibliography.bibliography",
+            side_effect=RuntimeError("Generic pipeline exception"),
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        rendered_text, err = CiteprocAdapter.render_bibliography(
+            style,
+            source,
+            item_id="10.1000/crash",
+            doi="10.1000/crash",
+        )
+
+    assert rendered_text is None
+    assert err == "Generic pipeline exception"
+    assert "rendering pipeline crashed" in caplog.text.lower()

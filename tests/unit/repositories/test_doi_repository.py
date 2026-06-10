@@ -1,4 +1,6 @@
 # tests/unit/repositories/test_doi_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests for validating DOI metadata resolution and filtering operations."""
 
 import json
@@ -43,6 +45,17 @@ def test_get_metadata_success(repo: DoiRepository) -> None:
         _, kwargs = mock_get.call_args
         assert "headers" in kwargs
         assert kwargs["headers"]["Accept"] == "application/vnd.citationstyles.csl+json"
+
+
+def test_get_metadata_client_returns_none(repo: DoiRepository) -> None:
+    """Verify that get_metadata returns an empty dictionary when client returns None."""
+    with patch.object(
+        repo.http_client_wrapper,
+        "get",
+        return_value=(None, None),
+    ):
+        result = repo.get_metadata("10.1000/none-response")
+        assert result == {}
 
 
 @pytest.mark.parametrize(
@@ -241,3 +254,27 @@ def test_apply_blacklists_delegate(repo: DoiRepository) -> None:
 
     assert "unwanted_work_key" not in payload
     assert "unwanted_author_key" not in payload["author"][0]
+
+
+def test_apply_blacklists_with_non_dict_author_entry(test_config: AppConfig) -> None:
+    """Check that author blacklisting bypasses non-dictionary author elements safely."""
+    test_config = test_config.model_copy(
+        update={
+            "author_crossref_schema_blacklist_fields": ["unwanted_author_key"],
+        },
+    )
+    repo = DoiRepository(config=test_config)
+    doi = "10.1111/test"
+    payload = {
+        "id": "10.1111/test",
+        "author": [
+            "Literal string author representation",
+            {"family": "Smith", "unwanted_author_key": "strip_me"},
+        ],
+    }
+
+    repo._apply_blacklists(doi, payload)
+
+    assert payload["author"][0] == "Literal string author representation"
+    assert isinstance(payload["author"][1], dict)
+    assert "unwanted_author_key" not in payload["author"][1]
