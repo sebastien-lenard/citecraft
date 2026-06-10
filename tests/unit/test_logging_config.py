@@ -1,4 +1,8 @@
 # tests/unit/test_logging_config.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests verifying custom logging formatting, filtering, and lifecycles."""
+
 import json
 import logging
 import sys
@@ -17,6 +21,8 @@ from citecraft.logging_config import (
 
 
 class TestRunIdFilter:
+    """Validation suite for custom session identifier filter integration."""
+
     def test_run_id_filter_injects_uuid(self) -> None:
         """Verify that RunIdFilter injects a run_id string into the LogRecord."""
         log_filter = RunIdFilter()
@@ -33,6 +39,8 @@ class TestRunIdFilter:
 
 
 class TestColorFormatter:
+    """Validation suite for ANSI sequence injections and record modifications."""
+
     @pytest.fixture
     def basic_record(self) -> logging.LogRecord:
         """Isolated LogRecord fixture for format testing."""
@@ -47,7 +55,8 @@ class TestColorFormatter:
         )
 
     def test_color_formatter_applies_ansi_and_truncates_name(
-        self, basic_record: logging.LogRecord
+        self,
+        basic_record: logging.LogRecord,
     ) -> None:
         """Verify ANSI escapes are injected and package prefixes are truncated."""
         formatter = ColorFormatter(fmt="%(name)s: %(message)s")
@@ -63,7 +72,8 @@ class TestColorFormatter:
         assert basic_record.name == "citecraft.core.engine"  # Verify restoration
 
     def test_color_formatter_restores_name_on_formatting_exception(
-        self, basic_record: logging.LogRecord
+        self,
+        basic_record: logging.LogRecord,
     ) -> None:
         """Edge Case: Ensure record.name restoration even if rendering throws error."""
         formatter = ColorFormatter(fmt="%(name)s: %(message)s")
@@ -71,7 +81,8 @@ class TestColorFormatter:
         # Force an exception during formatting by mocking super().format
         with (
             patch(
-                "logging.Formatter.format", side_effect=ValueError("Formatting failed")
+                "logging.Formatter.format",
+                side_effect=ValueError("Formatting failed"),
             ),
             pytest.raises(ValueError, match="Formatting failed"),
         ):
@@ -82,8 +93,10 @@ class TestColorFormatter:
 
 
 class TestLoggingConfigMatrix:
+    """Validation suite evaluating verbosity configurations and log-level thresholds."""
+
     @pytest.mark.parametrize(
-        "verbose_level, expected_console_level",
+        ("verbose_level", "expected_console_level"),
         [
             (0, "WARNING"),
             (1, "INFO"),
@@ -92,7 +105,9 @@ class TestLoggingConfigMatrix:
         ],
     )
     def test_get_logging_config_levels(
-        self, verbose_level: int, expected_console_level: str
+        self,
+        verbose_level: int,
+        expected_console_level: str,
     ) -> None:
         """Verify that the console log level scales correctly with verbosity."""
         dummy_path = Path("/dummy/path")
@@ -100,16 +115,20 @@ class TestLoggingConfigMatrix:
 
         assert config["handlers"]["console"]["level"] == expected_console_level
         assert config["handlers"]["file"]["filename"] == str(
-            dummy_path / "app.json.log"
+            dummy_path / "app.json.log",
         )
 
 
 class TestSetupLoggingLifecycles:
+    """Validation suite for system initialization and fallback error loops."""
+
     # patch MUST point directly to the module consuming the function
     @patch("citecraft.logging_config.get_safe_dir")
     @patch("logging.config.dictConfig")
     def test_setup_logging_success(
-        self, mock_dict_config: MagicMock, mock_get_dir: MagicMock
+        self,
+        mock_dict_config: MagicMock,
+        mock_get_dir: MagicMock,
     ) -> None:
         """Verify successful initialization loop with proper 3-tuple path unpacking."""
         mock_path = Path("/mock/safe/dir")
@@ -131,8 +150,7 @@ class TestSetupLoggingLifecycles:
         mock_dict_config: MagicMock,
         mock_get_dir: MagicMock,
     ) -> None:
-        """Edge Case: Verify hard crashes in dictConfig trigger stderr reports and
-        basicConfig."""
+        """Verify hard crashes in dictConfig trigger stderr reports and basicConfig."""
         mock_path = Path("/mock/safe/dir")
         mock_get_dir.return_value = (mock_path, mock_path, True)
 
@@ -149,11 +167,14 @@ class TestSetupLoggingLifecycles:
             assert log_dir == mock_path
             mock_traceback.assert_called_once_with(file=sys.stderr)
             mock_basic_config.assert_called_once_with(
-                level=logging.WARNING, stream=sys.stderr
+                level=logging.WARNING,
+                stream=sys.stderr,
             )
 
 
 class TestStructuredJsonOutput:
+    """Validation suite verifying JSON serialized schemas conform to specs."""
+
     def test_json_formatter_outputs_valid_structured_data(self) -> None:
         """Verify that the JSON formatter properly extracts and maps log variables."""
         dummy_path = Path("/dummy/path")
@@ -161,7 +182,8 @@ class TestStructuredJsonOutput:
         formatter_spec = config["formatters"]["json"]
 
         formatter = JsonFormatter(
-            fmt=formatter_spec["fmt"], rename_fields=formatter_spec["rename_fields"]
+            fmt=formatter_spec["fmt"],
+            rename_fields=formatter_spec["rename_fields"],
         )
         record = logging.LogRecord(
             name="citecraft.http",

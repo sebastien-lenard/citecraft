@@ -1,4 +1,8 @@
 # tests/unit/repositories/test_work_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for WorkRepository data integration and citation validation workflows."""
+
 import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -20,7 +24,7 @@ def repo(test_config: AppConfig) -> WorkRepository:
         update={
             "min_publication_year": 1800,
             "max_publication_year": 2100,
-        }
+        },
     )
     return WorkRepository(config=test_config)
 
@@ -57,7 +61,8 @@ def test_get_work_metadata_raises_on_missing_issns(repo: WorkRepository) -> None
 
 @pytest.mark.parametrize("year", ["1799", "2101"])
 def test_get_work_metadata_raises_on_invalid_year_range(
-    repo: WorkRepository, year: str
+    repo: WorkRepository,
+    year: str,
 ) -> None:
     """Verify get_work_metadata raises ValueError if year is out of range."""
     with pytest.raises(ValueError, match="must be in the"):
@@ -82,7 +87,7 @@ def test_get_work_metadata_skips_invalid_candidates(repo: WorkRepository) -> Non
 
     repo._call_work_api = MagicMock(return_value=items)
     repo._get_authors_from_api_item = MagicMock(
-        side_effect=lambda item: item.get("author")
+        side_effect=lambda item: item.get("author"),
     )
     repo._get_doi_from_api_item = MagicMock(side_effect=lambda item: item.get("DOI"))
     repo._get_type_from_api_item = MagicMock(side_effect=lambda item: item.get("type"))
@@ -97,7 +102,7 @@ def test_get_work_metadata_skips_invalid_candidates(repo: WorkRepository) -> Non
 
 
 @pytest.mark.parametrize(
-    "inputs, apis",
+    ("inputs", "apis"),
     [
         ([], [{"family": "Lenard"}]),
         (["Lenard"], []),
@@ -105,7 +110,9 @@ def test_get_work_metadata_skips_invalid_candidates(repo: WorkRepository) -> Non
     ],
 )
 def test_validate_first_authors_empty_boundaries(
-    repo: WorkRepository, inputs: list[str], apis: list[dict]
+    repo: WorkRepository,
+    inputs: list[str],
+    apis: list[dict],
 ) -> None:
     """Verify that _validate_first_authors returns False if either array is empty."""
     assert repo._validate_first_authors(inputs, apis) is False
@@ -164,7 +171,7 @@ def test_clean_metadata(repo: WorkRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "input_str, expected_str",
+    ("input_str", "expected_str"),
     [
         ("Van Dijk", "van dijk"),
         ("Lénárd", "lenard"),
@@ -176,14 +183,16 @@ def test_clean_metadata(repo: WorkRepository) -> None:
     ],
 )
 def test_normalize_string(
-    repo: WorkRepository, input_str: str, expected_str: str
+    repo: WorkRepository,
+    input_str: str,
+    expected_str: str,
 ) -> None:
     """Verify string transliteration and casing normalization."""
     assert repo._normalize_string(input_str) == expected_str
 
 
 @pytest.mark.parametrize(
-    "api_items, expected_length, expected_first_doi, expected_first_type",
+    ("api_items", "expected_length", "expected_first_doi", "expected_first_type"),
     [
         # Case A: Empty item payloads return empty result sets
         ([], 0, None, None),
@@ -225,7 +234,7 @@ def test_get_work_metadata_parsing_scenarios(
     """Verify get_work_metadata parses raw API payloads into WorkMetadata."""
     repo._call_work_api = MagicMock(return_value=api_items)
     repo._get_authors_from_api_item = MagicMock(
-        side_effect=lambda item: item.get("author", [])
+        side_effect=lambda item: item.get("author", []),
     )
     repo._get_doi_from_api_item = MagicMock(side_effect=lambda item: item.get("DOI"))
     repo._get_type_from_api_item = MagicMock(side_effect=lambda item: item.get("type"))
@@ -246,13 +255,13 @@ def test_get_work_metadata_parsing_scenarios(
 def test_get_work_metadata_verifies_internal_calls(repo: WorkRepository) -> None:
     """Verify that all required hook methods are called during metadata extraction."""
     repo._get_input_first_authors_and_et_al = MagicMock(
-        return_value=(["Lenard"], False)
+        return_value=(["Lenard"], False),
     )
     repo._call_work_api = MagicMock(
-        return_value=[{"DOI": "10.1029/98jb00510", "type": "journal-article"}]
+        return_value=[{"DOI": "10.1029/98jb00510", "type": "journal-article"}],
     )
     repo._get_authors_from_api_item = MagicMock(
-        return_value=[{"family": "Lenard", "sequence": "first"}]
+        return_value=[{"family": "Lenard", "sequence": "first"}],
     )
     repo._validate_first_authors_count = MagicMock(return_value=True)
     repo._validate_first_authors = MagicMock(return_value=True)
@@ -268,7 +277,11 @@ def test_get_work_metadata_verifies_internal_calls(repo: WorkRepository) -> None
     assert len(results) == 1
     repo._get_input_first_authors_and_et_al.assert_called_once_with("Lenard")
     repo._call_work_api.assert_called_once_with(
-        "Lenard", 2020, ["0361-0160"], "", get_limit=20
+        "Lenard",
+        2020,
+        ["0361-0160"],
+        "",
+        get_limit=20,
     )
     repo._get_authors_from_api_item.assert_called_once()
     repo._validate_first_authors_count.assert_called_once()
@@ -304,13 +317,13 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
 
     repo._call_work_api = MagicMock(return_value=items)
     repo._get_authors_from_api_item = MagicMock(
-        side_effect=lambda item: item.get("author", [])
+        side_effect=lambda item: item.get("author", []),
     )
     repo._get_doi_from_api_item = MagicMock(side_effect=lambda item: item.get("DOI"))
     repo._get_type_from_api_item = MagicMock(side_effect=lambda item: item.get("type"))
     repo._set_metadata_attribute = MagicMock(side_effect=lambda work, item: work)
     repo._validate_author = MagicMock(
-        side_effect=lambda inp, api: inp == api.get("family")
+        side_effect=lambda inp, api: inp == api.get("family"),
     )
 
     results = repo.get_work_metadata(
@@ -326,7 +339,7 @@ def test_author_validation_filtering(repo: WorkRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "api_authors, input_first_authors, expected_result",
+    ("api_authors", "input_first_authors", "expected_result"),
     [
         ([{"family": "Lenard"}], ["Lenard"], True),
         ([{"family": "Zappa"}], ["Hendrix"], False),
@@ -356,7 +369,7 @@ def test_validate_first_authors_logic(
 ) -> None:
     """Directly test _validate_first_authors logic by mocking _validate_author."""
     repo._validate_author = MagicMock(
-        side_effect=lambda input_auth, api_auth: input_auth == api_auth.get("family")
+        side_effect=lambda input_auth, api_auth: input_auth == api_auth.get("family"),
     )
     assert (
         repo._validate_first_authors(input_first_authors, api_authors)
@@ -371,7 +384,7 @@ def test_validate_author_raises_not_implemented(repo: WorkRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "input_count, input_is_et_al, api_count, expected_result",
+    ("input_count", "input_is_et_al", "api_count", "expected_result"),
     [
         (1, False, 1, True),
         (1, False, 2, False),
@@ -390,15 +403,22 @@ def test_validate_first_authors_count(
 ) -> None:
     """Directly test author count validation logic."""
     assert (
-        repo._validate_first_authors_count(input_count, input_is_et_al, api_count)
+        repo._validate_first_authors_count(
+            input_count,
+            api_count,
+            input_is_et_al=input_is_et_al,
+        )
         == expected_result
     )
 
 
 @pytest.mark.parametrize(
     (
-        "initial_records, new_citations, expected_final_count, expected_first_doi, "
-        "expected_first_issn"
+        "initial_records",
+        "new_citations",
+        "expected_final_count",
+        "expected_first_doi",
+        "expected_first_issn",
     ),
     [
         # Scenario A: Identical incoming citation targets are deduplicated onto a single
@@ -407,10 +427,12 @@ def test_validate_first_authors_count(
             [],
             [
                 CitationMetadata(
-                    first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+                    first_authors_txt="Lenard et al.",
+                    year_and_suffix="2020a",
                 ),
                 CitationMetadata(
-                    first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+                    first_authors_txt="Lenard et al.",
+                    year_and_suffix="2020a",
                 ),
             ],
             1,
@@ -426,12 +448,13 @@ def test_validate_first_authors_count(
                     input_year_and_suffix="2020a",
                     input_issns=["1752-0894"],
                     doi="10.1038/s41561-020-0585-2",
-                )
+                ),
             ],
             [
                 CitationMetadata(
-                    first_authors_txt="Lenard et al.", year_and_suffix="2020a"
-                )
+                    first_authors_txt="Lenard et al.",
+                    year_and_suffix="2020a",
+                ),
             ],
             1,
             "10.1038/s41561-020-0585-2",
@@ -467,14 +490,16 @@ def test_merge_new_works_scenarios(
 
 
 def test_update_all_replaces_template_with_rich_record(
-    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+    repo: WorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that a record without a DOI is updated when get_work_metadata returns."""
     caplog.set_level(logging.INFO)
     repo._get_issns_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
 
     template = WorkMetadata(
-        input_first_authors_txt="Lenard et al.", input_year_and_suffix="2020a"
+        input_first_authors_txt="Lenard et al.",
+        input_year_and_suffix="2020a",
     )
     existing_rich = WorkMetadata(
         input_first_authors_txt="Other Author",
@@ -492,7 +517,9 @@ def test_update_all_replaces_template_with_rich_record(
     )
 
     with patch.object(
-        repo, "get_work_metadata", return_value=[mock_rich_result]
+        repo,
+        "get_work_metadata",
+        return_value=[mock_rich_result],
     ) as mock_get:
         repo.update_all(issns=["1752-0894"])
 
@@ -512,14 +539,16 @@ def test_update_all_replaces_template_with_rich_record(
 
 
 def test_update_all_skips_if_no_results_found(
-    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+    repo: WorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that if get_work_metadata returns nothing, template is untouched."""
     caplog.set_level(logging.INFO)
     repo._get_issns_groups_for_api = MagicMock(side_effect=lambda issns: [issns])
 
     template = WorkMetadata(
-        input_first_authors_txt="Unknown", input_year_and_suffix="2024"
+        input_first_authors_txt="Unknown",
+        input_year_and_suffix="2024",
     )
     repo.records = [template]
 
@@ -533,7 +562,8 @@ def test_update_all_skips_if_no_results_found(
 
 
 def test_update_all_filters_already_queried_issns(
-    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+    repo: WorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that update_all queries only the new ISSNs."""
     caplog.set_level(logging.INFO)
@@ -556,7 +586,9 @@ def test_update_all_filters_already_queried_issns(
     )
 
     with patch.object(
-        repo, "get_work_metadata", return_value=[mock_rich_result]
+        repo,
+        "get_work_metadata",
+        return_value=[mock_rich_result],
     ) as mock_get:
         # Call update_all with both old and new ISSNs
         repo.update_all(issns=["0361-0160", "1752-0894"])
@@ -564,7 +596,8 @@ def test_update_all_filters_already_queried_issns(
         # Check that get_work_metadata was called exactly once, with the new ISSN
         mock_get.assert_called_once_with(
             input_citation_metadata=CitationMetadata(
-                first_authors_txt="Lenard et al.", year_and_suffix="2020a"
+                first_authors_txt="Lenard et al.",
+                year_and_suffix="2020a",
             ),
             input_issns=["1752-0894"],
         )
@@ -578,7 +611,8 @@ def test_update_all_filters_already_queried_issns(
 
 
 def test_update_all_skips_when_all_issns_previously_queried(
-    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+    repo: WorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify update_all skips lookup if all ISSNs were already searched."""
     caplog.set_level(logging.WARNING)
@@ -605,7 +639,8 @@ def test_update_all_skips_when_all_issns_previously_queried(
 
 
 def test_update_all_updates_history_on_failure(
-    repo: WorkRepository, caplog: pytest.LogCaptureFixture
+    repo: WorkRepository,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify queried ISSNs are appended to history on failure."""
     caplog.set_level(logging.INFO)

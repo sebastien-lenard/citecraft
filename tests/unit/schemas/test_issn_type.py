@@ -1,4 +1,8 @@
 # tests/unit/schemas/test_issn_type.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests verifying ISSN formats and Modulus 11 checksum verification logic."""
+
 import logging
 
 import pytest
@@ -23,7 +27,7 @@ def test_check_standalone_issn_valid(valid_issn: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "invalid_issn, expected_log_snippet",
+    ("invalid_issn", "expected_log_snippet"),
     [
         ("2049-3631", "ISSN Validation Failed (Checksum)"),
         ("12345678", "ISSN Validation Failed (Format)"),
@@ -31,7 +35,9 @@ def test_check_standalone_issn_valid(valid_issn: str) -> None:
     ],
 )
 def test_check_standalone_issn_invalid(
-    caplog: pytest.LogCaptureFixture, invalid_issn: str, expected_log_snippet: str
+    caplog: pytest.LogCaptureFixture,
+    invalid_issn: str,
+    expected_log_snippet: str,
 ) -> None:
     """Verify that invalid strings return False and trigger a structural warning log."""
     with caplog.at_level(logging.WARNING):

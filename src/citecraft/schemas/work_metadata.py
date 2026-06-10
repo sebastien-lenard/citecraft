@@ -1,4 +1,8 @@
 # src/citecraft/schemas/work_metadata.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Data schema for tracked manuscript works, DOI resolutions, and external metadata."""
+
 from typing import Any, override
 
 from pydantic import Field, field_validator
@@ -11,7 +15,7 @@ class WorkMetadata(BaseSchema):
     """Represents validated metadata for a published work."""
 
     input_first_authors_txt: str = Field(
-        min_length=1
+        min_length=1,
     )  # e.g. Lenard et al., Guns and Vanacker
     input_year_and_suffix: str = Field(min_length=1)  # e.g. 2020a
     input_issns: list[str] | None = None  # e.g. ["1752-0894"]

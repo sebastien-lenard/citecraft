@@ -1,4 +1,8 @@
 # tests/integration/test_integ_journal_api_health.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Integration tests on the real Crossref API to fetch journal ISSN and metadata."""
+
 import pytest
 
 from citecraft.repositories import JournalRepository
@@ -10,7 +14,7 @@ def test_integ_journals_api_health() -> None:
     """Check Crossref API Journals health, schema, and Rate Limit status."""
     repo = JournalRepository()
     headers = {
-        "User-Agent": f"ManuscriptRefLister/1.0 (mailto:{repo.config.user_email})"
+        "User-Agent": f"ManuscriptRefLister/1.0 (mailto:{repo.config.user_email})",
     }
     input_title = "The Journal of Geology"
 
@@ -20,6 +24,7 @@ def test_integ_journals_api_health() -> None:
         headers=headers,
     )
 
+    assert response is not None, "HTTP client returned None instead of a Response."
     limit = response.headers.get("X-Rate-Limit-Limit")
     assert limit is not None, "Rate limit headers (X-Rate-Limit-Limit) not found."
 

@@ -1,4 +1,8 @@
 # src/citecraft/parsers/html_cleaner.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""HTML parsing and sanitization utility for cleaning reference strings."""
+
 import html
 import re
 from html.parser import HTMLParser
@@ -51,6 +55,7 @@ class HtmlCleaner(HTMLParser):
 
     def clean_to_plain_text(self, raw_reference: str) -> str:
         """Transform an HTML-polluted reference into formatted plain text.
+
         Extracts text, strips generic styling tags, preserves structural
         sub/superscripts, converts HTML entities back to UTF-8 characters, and
         collapses all consecutive whitespaces (including newlines) into a single space.

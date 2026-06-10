@@ -1,4 +1,8 @@
 # src/citecraft/logging_config.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""System logging configuration management, formatting, and routing workflows."""
+
 import logging
 import logging.config
 import os
@@ -19,7 +23,8 @@ class RunIdFilter(logging.Filter):
     """Filter that automatically injects a unique run_id into logging records."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        record.run_id = RUN_ID  # type: ignore[attr-defined]
+        """Inject the static application run identifier into the log record context."""
+        record.run_id = RUN_ID
         return True
 
 
@@ -122,8 +127,11 @@ def get_logging_config(log_dir: Path, verbose_level: int = 0) -> dict[str, Any]:
 
 
 def setup_logging(verbose_level: int = 0) -> tuple[Path, Path, bool]:
-    """Set up system loggers and return log directory path, original intended path,
-    and a boolean = True if it had to resort to a temp directory."""
+    """Set up system loggers.
+
+    Return log directory path, original intended path,
+    and a boolean = True if it had to resort to a temp directory.
+    """
     log_dir, intended_dir, is_fallback = get_safe_dir("logs")
 
     try:

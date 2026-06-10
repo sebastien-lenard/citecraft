@@ -1,4 +1,8 @@
 # tests/unit/utils/test_data_loader.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for the DataLoader configuration, file validation, and parsing."""
+
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -56,7 +60,8 @@ def test_extract_text_matches_input(env: EnvPaths) -> None:
 
 
 def test_extract_text_corrupted_docx(
-    env: EnvPaths, caplog: pytest.LogCaptureFixture
+    env: EnvPaths,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify clean propagation or logging fallbacks for malformed zip archives."""
     corrupt_path = env.dir_path / "corrupt.docx"
@@ -81,7 +86,8 @@ def test_load_json_success(env: EnvPaths) -> None:
 
 
 @pytest.mark.parametrize(
-    "raise_flag, expected_behavior", [(True, "raise"), (False, None)]
+    ("raise_flag", "expected_behavior"),
+    [(True, "raise"), (False, None)],
 )
 def test_load_json_invalid_format(
     env: EnvPaths,
@@ -110,14 +116,16 @@ def test_load_json_with_validator_success(env: EnvPaths) -> None:
     list_path.write_text(json.dumps(list_data), encoding="utf-8")
 
     loader = DataLoader(list_path)
-    result = loader.load_json(validator=lambda x: "id" in x)
+    result = loader.load_json(validator=lambda x: isinstance(x, dict) and "id" in x)
 
     assert result == list_data
 
 
 @pytest.mark.parametrize("raise_flag", [True, False])
 def test_load_json_with_validator_failure(
-    env: EnvPaths, caplog: pytest.LogCaptureFixture, raise_flag: bool
+    env: EnvPaths,
+    caplog: pytest.LogCaptureFixture,
+    raise_flag: bool,
 ) -> None:
     """Verify that validation schema exceptions or suppression logs execute safely."""
     list_path = env.dir_path / "invalid_list.json"
@@ -141,7 +149,8 @@ def test_load_json_with_validator_failure(
 
 
 @pytest.mark.parametrize(
-    "raise_flag, expected_behavior", [(True, "raise"), (False, "log")]
+    ("raise_flag", "expected_behavior"),
+    [(True, "raise"), (False, "log")],
 )
 def test_file_not_found_behavior(
     env: EnvPaths,

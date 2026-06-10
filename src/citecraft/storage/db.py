@@ -1,9 +1,13 @@
 # src/citecraft/storage/db.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Database management utilities for converting and saving Pydantic records."""
+
 import json
 import logging
 import sqlite3
 from contextlib import closing
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from types import UnionType
 from typing import Any, Union, get_args, get_origin
@@ -26,7 +30,8 @@ def _is_collection_type(type_annotation: object) -> bool:
         return any(_is_collection_type(arg) for arg in get_args(type_annotation))
 
     return isinstance(type_annotation, type) and issubclass(
-        type_annotation, list | dict | set
+        type_annotation,
+        list | dict | set,
     )
 
 
@@ -51,7 +56,9 @@ def _get_sqlite_type(type_annotation: object) -> str:
 
 
 def create_table_for_model(
-    conn: sqlite3.Connection, table_name: str, model_class: type[BaseModel]
+    conn: sqlite3.Connection,
+    table_name: str,
+    model_class: type[BaseModel],
 ) -> None:
     """Create a table dynamically based on Pydantic model fields."""
     column_definitions = [
@@ -96,7 +103,10 @@ def deserialize_row[T: BaseModel](row_dict: dict[str, Any], model_class: type[T]
 
 
 def save_records[T: BaseModel](
-    db_path: Path, table_name: str, records: list[T], model_class: type[T]
+    db_path: Path,
+    table_name: str,
+    records: list[T],
+    model_class: type[T],
 ) -> None:
     """Atomically save records to the database within a transaction."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -115,18 +125,19 @@ def save_records[T: BaseModel](
                     ]
                     DbClient.safe_execute_many(conn, table_name, fields, rows_to_insert)
 
-        except sqlite3.Error as e:
-            logger.error(
-                "Transaction failed for table %s. State rolled back: %s",
+        except sqlite3.Error:
+            logger.exception(
+                "Transaction failed for table %s. State rolled back.",
                 table_name,
-                str(e),
-                exc_info=True,
+                extra={"table_name": table_name},
             )
-            raise e
+            raise
 
 
 def load_records[T: BaseModel](
-    db_path: Path, table_name: str, model_class: type[T]
+    db_path: Path,
+    table_name: str,
+    model_class: type[T],
 ) -> list[T]:
     """Retrieve all records for a given model from the SQLite database."""
     if not db_path.exists():
@@ -153,7 +164,7 @@ def archive_database_cache(db_path: Path) -> Path | None:
         )
         return None
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     backup_name = f"{db_path.name}.bak_{timestamp}"
     backup_path = db_path.with_name(backup_name)
 
@@ -169,17 +180,17 @@ def archive_database_cache(db_path: Path) -> Path | None:
                 "db_backup_path": backup_name,
             },
         )
-        return backup_path
+
     except OSError as e:
-        logger.error(
-            "Failed to archive database cache file %s: %s",
+        logger.exception(
+            "Failed to archive database cache file %s",
             str(db_path),
-            str(e),
-            exc_info=True,
             extra={
                 "event": "db_not_archived",
                 "db_path": str(db_path),
                 "error": str(e),
             },
         )
-        raise e
+        raise
+    else:
+        return backup_path

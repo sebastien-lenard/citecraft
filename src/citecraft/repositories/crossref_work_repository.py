@@ -1,4 +1,8 @@
 # src/citecraft/repositories/crossref_work_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Repository for managing academic work lookups via the Crossref API."""
+
 import logging
 from typing import override
 
@@ -69,7 +73,9 @@ class CrossrefWorkRepository(WorkRepository):
         }
 
         response, _ = self.http_client_wrapper.get(
-            str(self.config.crossref_api_works_url), headers=self.headers, params=params
+            str(self.config.crossref_api_works_url),
+            headers=self.headers,
+            params=params,
         )
         if response is None:
             return []
@@ -81,12 +87,12 @@ class CrossrefWorkRepository(WorkRepository):
 
     @override
     def _get_authors_from_api_item(self, item: dict) -> list[dict] | None:
-        """Get authors of an item returned by the api"""
+        """Get authors of an item returned by the api."""
         return item.get("author")
 
     @override
     def _get_doi_from_api_item(self, item: dict) -> str | None:
-        """Get doi of an item returned by the api"""
+        """Get doi of an item returned by the api."""
         return item.get("DOI")
 
     @override
@@ -96,12 +102,14 @@ class CrossrefWorkRepository(WorkRepository):
 
     @override
     def _get_type_from_api_item(self, item: dict) -> str | None:
-        """Get type of an item returned by the api"""
+        """Get type of an item returned by the api."""
         return item.get("type")
 
     @override
     def _set_metadata_attribute(
-        self, work_metadata: WorkMetadata, item: dict
+        self,
+        work_metadata: WorkMetadata,
+        item: dict,
     ) -> WorkMetadata:
         """Clean and update the metadata attribute and returns object."""
         work_metadata.crossref_metadata = self._clean_metadata(
@@ -115,8 +123,10 @@ class CrossrefWorkRepository(WorkRepository):
     @override
     def _validate_author(self, input_author: str, api_author: dict) -> bool:
         """Verify that input input and api authors are similar.
+
         Warning: For crossref, strict comparison, case insensitive. If name slightly
-        differs (e.g. VanDijk vs Van Dijk, comparison returns False)"""
+        differs (e.g. VanDijk vs Van Dijk, comparison returns False)
+        """
         if not input_author:
             return False
         if "family" in api_author:
@@ -128,5 +138,5 @@ class CrossrefWorkRepository(WorkRepository):
         else:
             return False
         return self._normalize_string(input_author) == self._normalize_string(
-            api_author_name
+            api_author_name,
         )

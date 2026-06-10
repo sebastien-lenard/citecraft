@@ -1,4 +1,8 @@
 # tests/unit/services/test_reference_service.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for CSL parsing, metadata validation, and citation adapter error rules."""
+
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -59,7 +63,9 @@ def mock_doi_repo() -> MagicMock:
 
 
 def test_fill_missing_references_success(
-    mock_doi_repo: MagicMock, test_config: AppConfig, sample_csl_style: str
+    mock_doi_repo: MagicMock,
+    test_config: AppConfig,
+    sample_csl_style: str,
 ) -> None:
     """Verify that records are updated correctly on successful reference formatting."""
     records = [
@@ -99,13 +105,13 @@ def test_fill_missing_references_success(
 
     with (
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source",
         ) as mock_src,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style",
         ) as mock_style,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography",
         ) as mock_render,
     ):
         mock_src.return_value = (MagicMock(), None)
@@ -130,10 +136,11 @@ def test_fill_missing_references_success(
 
 
 def test_fill_missing_references_raises_on_repository_error(
-    mock_doi_repo: MagicMock, test_config: AppConfig, sample_csl_style: str
+    mock_doi_repo: MagicMock,
+    test_config: AppConfig,
+    sample_csl_style: str,
 ) -> None:
-    """Verify that an exception in the repository metadata collection stops the
-    service."""
+    """Verify that an exception in  metadata collection stops the service."""
     mock_doi_repo.get_metadata.side_effect = Exception("API Connection Failed")
     records = [
         WorkMetadata(
@@ -141,11 +148,11 @@ def test_fill_missing_references_raises_on_repository_error(
             input_year_and_suffix="2020",
             doi="10.5194/esurf-8-447-2020",
             reference=None,
-        )
+        ),
     ]
     reference_service = ReferenceService(config=test_config)
 
-    with pytest.raises(Exception) as excinfo:
+    with pytest.raises(Exception, match="API Connection Failed") as excinfo:
         reference_service.fill_missing_references(
             records,
             mock_doi_repo,
@@ -157,7 +164,7 @@ def test_fill_missing_references_raises_on_repository_error(
 
 
 @pytest.mark.parametrize(
-    "csl_metadata, doi, expected_result, should_mock_success",
+    ("csl_metadata", "doi", "expected_result", "should_mock_success"),
     [
         # Happy path: Complete, valid CSL-JSON metadata
         (
@@ -219,13 +226,13 @@ def test_get_reference_scenarios(
 
     with (
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source",
         ) as mock_src,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style",
         ) as mock_style,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography",
         ) as mock_render,
     ):
         if should_mock_success:
@@ -237,14 +244,16 @@ def test_get_reference_scenarios(
             mock_src.return_value = (None, "Should not be reached")
 
         result = reference_service.get_reference(
-            csl_metadata, sample_csl_style, doi=doi
+            csl_metadata,
+            sample_csl_style,
+            doi=doi,
         )
 
         assert result == expected_result
 
 
 @pytest.mark.parametrize(
-    "source_ret, style_ret, render_ret, expected_substr",
+    ("source_ret", "style_ret", "render_ret", "expected_substr"),
     [
         (
             (None, "Source error"),
@@ -304,13 +313,13 @@ def test_get_reference_adapter_failures(
 
     with (
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.create_json_source"
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source",
         ) as mock_src,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style"
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style",
         ) as mock_style,
         patch(
-            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography"
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography",
         ) as mock_render,
     ):
         mock_src.return_value = source_ret
@@ -318,7 +327,9 @@ def test_get_reference_adapter_failures(
         mock_render.return_value = render_ret
 
         result = reference_service.get_reference(
-            csl_metadata, sample_csl_style, doi="10.1000/182"
+            csl_metadata,
+            sample_csl_style,
+            doi="10.1000/182",
         )
 
         assert expected_substr in result

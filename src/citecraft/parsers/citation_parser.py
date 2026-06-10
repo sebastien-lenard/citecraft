@@ -1,4 +1,8 @@
 # src/citecraft/parsers/citation_parser.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Regex-based parser engine for extracting text citations."""
+
 import logging
 import re
 
@@ -53,7 +57,7 @@ class CitationParser:
 
         # Pre-compiled regular expressions for runtime efficiency
         self._narrative_regex = re.compile(
-            rf"({self.author_pattern})\s*\((({self.year_pattern})(?:,\s*{self.year_pattern})*)\)"
+            rf"({self.author_pattern})\s*\((({self.year_pattern})(?:,\s*{self.year_pattern})*)\)",
         )
         self._year_regex = re.compile(self.year_pattern)
         self._author_comma_regex = re.compile(rf"({self.author_pattern})\s*,")
@@ -75,6 +79,7 @@ class CitationParser:
 
     def extract_all(self, text: str) -> list[CitationMetadata]:
         """Extract narrative and parenthetical citations from raw text strings.
+
         Extract narrative (e.g. Hamling (2020)) and parenthetical (e.g. (Lenard et al.,
         2020)) citations (can be duplicates).
         Handles complex cases:
@@ -105,7 +110,7 @@ class CitationParser:
                         type="narrative",
                     )
                     for y in years
-                ]
+                ],
             )
 
         # 2. PARENTHETICAL CITATIONS: (Hovius et al., 1997; Parker and Smith, 2011)
@@ -147,7 +152,7 @@ class CitationParser:
                                 type="parenthetical",
                             )
                             for y in years
-                        ]
+                        ],
                     )
 
         logger.info(

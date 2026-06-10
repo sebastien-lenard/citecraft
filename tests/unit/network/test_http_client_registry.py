@@ -1,4 +1,8 @@
 # tests/unit/network/test_http_client_registry.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests verifying lifecycle isolation and configuration in the HTTP registry."""
+
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -32,7 +36,7 @@ def configured_test_config(test_config: AppConfig) -> AppConfig:
             "default_api_max_retry": 2,
             "default_api_timeout": 15.0,
             "default_api_url_max_character_length": 2048,
-        }
+        },
     )
 
 
@@ -44,7 +48,7 @@ def test_registry_creates_and_caches_client(
     registry.config = configured_test_config
 
     with patch(
-        "citecraft.network.http_client_registry.HTTPClientWrapper"
+        "citecraft.network.http_client_registry.HTTPClientWrapper",
     ) as mock_wrapper_cls:
         client_first = registry.get_client("openalex")
         client_second = registry.get_client("openalex")
@@ -54,7 +58,7 @@ def test_registry_creates_and_caches_client(
 
 
 @pytest.mark.parametrize(
-    "domain, expected_config_attrs",
+    ("domain", "expected_config_attrs"),
     [
         (
             "openalex",
@@ -91,7 +95,7 @@ def test_registry_applies_correct_domain_configurations(
     registry = HTTPClientRegistry(config=configured_test_config)
 
     with patch(
-        "citecraft.network.http_client_registry.HTTPClientWrapper"
+        "citecraft.network.http_client_registry.HTTPClientWrapper",
     ) as mock_wrapper_cls:
         registry.get_client(domain)
 
@@ -118,7 +122,7 @@ def test_registry_close_all_clears_and_closes_resources(
     registry = HTTPClientRegistry(config=configured_test_config)
 
     with patch(
-        "citecraft.network.http_client_registry.HTTPClientWrapper"
+        "citecraft.network.http_client_registry.HTTPClientWrapper",
     ) as mock_wrapper_cls:
         mock_openalex = MagicMock()
         mock_default = MagicMock()

@@ -1,4 +1,8 @@
 # src/citecraft/network/http_client_registry.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Registry management container for caching and retrieving HTTP client wrappers."""
+
 from functools import lru_cache
 
 from citecraft.utils import AppConfig, get_config
@@ -7,6 +11,8 @@ from .http_client_wrapper import HTTPClientConfig, HTTPClientWrapper
 
 
 class HTTPClientRegistry:
+    """Registry to persistent domain-specific HTTPClientWrapper instances."""
+
     def __init__(self, config: AppConfig | None = None) -> None:
         self.config: AppConfig = config or get_config()
         self._registry: dict[str, HTTPClientWrapper] = {}

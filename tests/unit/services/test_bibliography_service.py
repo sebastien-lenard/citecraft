@@ -1,4 +1,8 @@
 # tests/unit/services/test_bibliography_service.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for reference compilation status rules and CSV export formats."""
+
 import csv
 import logging
 from pathlib import Path
@@ -13,13 +17,14 @@ from citecraft.utils import AppConfig
 
 
 @pytest.mark.parametrize(
-    "citations, works, expected_rows, expected_logs",
+    ("citations", "works", "expected_rows", "expected_logs"),
     [
         # Scenario 1: Standard Multi-Match Sorting and Status Determination
         (
             [
                 CitationMetadata(
-                    first_authors_txt="Lenard et al.", year_and_suffix="2020"
+                    first_authors_txt="Lenard et al.",
+                    year_and_suffix="2020",
                 ),
                 CitationMetadata(first_authors_txt="Smith", year_and_suffix="2021"),
                 CitationMetadata(first_authors_txt="Alpha", year_and_suffix="2019"),
@@ -77,10 +82,12 @@ from citecraft.utils import AppConfig
         (
             [
                 CitationMetadata(
-                    first_authors_txt="MissingDOI", year_and_suffix="2024"
+                    first_authors_txt="MissingDOI",
+                    year_and_suffix="2024",
                 ),
                 CitationMetadata(
-                    first_authors_txt="MissingRef", year_and_suffix="2025"
+                    first_authors_txt="MissingRef",
+                    year_and_suffix="2025",
                 ),
             ],
             [
@@ -126,8 +133,7 @@ def test_export_to_csv_computes_statuses_and_sorts_correctly(
     expected_rows: list[dict[str, str]],
     expected_logs: list[tuple[str, str]],
 ) -> None:
-    """Verify standard status assignment, record exclusion boundaries, and multi-key
-    sorting."""
+    """Verify status assignment, record exclusion boundaries, and multi-key sorting."""
     caplog.set_level(logging.INFO)
     output_csv = tmp_path / "output.csv"
 
@@ -142,7 +148,7 @@ def test_export_to_csv_computes_statuses_and_sorts_correctly(
         )
 
     # Read written rows back for assertion checking
-    with open(output_csv, encoding="utf-8-sig") as f:
+    with Path.open(output_csv, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
 
@@ -154,10 +160,11 @@ def test_export_to_csv_computes_statuses_and_sorts_correctly(
 
 
 def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture, test_config: AppConfig
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    test_config: AppConfig,
 ) -> None:
-    """Verify export processes populate structured result schemas with precise
-    statistics."""
+    """Verify export populates structured result schemas with statistics."""
     caplog.set_level(logging.INFO)
     output_csv = tmp_path / "output.csv"
 
@@ -224,7 +231,8 @@ def test_export_to_csv_emits_structured_logs_and_returns_valid_result(
 
 
 def test_export_to_csv_strips_only_preserved_tags(
-    tmp_path: Path, test_config: AppConfig
+    tmp_path: Path,
+    test_config: AppConfig,
 ) -> None:
     """Verify that only configured preserved HTML tags are stripped from references."""
     output_csv = tmp_path / "output.csv"
@@ -242,13 +250,13 @@ def test_export_to_csv_strips_only_preserved_tags(
                 "Analysis of CO<sub>2</sub> within <unsupported-tag>text"
                 "</unsupported-tag>."
             ),
-        )
+        ),
     ]
 
     biblio_service = BibliographyService(config=test_config)
     biblio_service.export_to_csv(citations, works, output_csv)
 
-    with open(output_csv, encoding="utf-8-sig") as f:
+    with Path.open(output_csv, encoding="utf-8-sig") as f:
         rows = list(csv.DictReader(f))
 
     expected_reference = (

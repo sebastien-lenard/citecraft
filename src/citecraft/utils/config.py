@@ -1,4 +1,8 @@
 # src/citecraft/utils/config.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Citecraft environment configuration."""
+
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -140,6 +144,8 @@ def create_config(**kwargs: Any) -> AppConfig:  # noqa: ANN401
 @lru_cache(maxsize=1)
 def get_config() -> AppConfig:
     """Retrieve the globally cached configuration configuration.
+
     WARNING: Should either be called in cli.py or inside class methods, not outside, so
-    as to make tests not interfering with production directories."""
+    as to make tests not interfering with production directories.
+    """
     return create_config()

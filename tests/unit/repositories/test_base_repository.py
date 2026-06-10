@@ -1,4 +1,8 @@
 # tests/unit/repositories/test_base_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for the base database repository layer."""
+
 import sqlite3
 from collections.abc import Hashable
 from pathlib import Path
@@ -20,6 +24,7 @@ class MockSchema(BaseSchema):
 
     @property
     def identity_key(self) -> Hashable:
+        """Return the unique identifier for deduplication testing."""
         return self.id
 
 
@@ -49,7 +54,7 @@ def test_deduplicate_removes_repeats(base_repo: MockRepository) -> None:
 
 
 @pytest.mark.parametrize(
-    "scenario, expected_records_count, expected_load_failed",
+    ("scenario", "expected_records_count", "expected_load_failed"),
     [
         ("valid", 2, False),
         ("corrupted", 0, True),
@@ -127,11 +132,6 @@ def test_save_all_preserves_utf8(base_repo: MockRepository) -> None:
     assert base_repo.records[0].content == special_content
 
 
-# =============================================================================
-# COV TESTS: SPECIFIC IF/ELSE AND FALLBACK BRANCH COVERAGE
-# =============================================================================
-
-
 def test_load_all_backup_os_error_unlinks_file(
     base_repo: MockRepository,
 ) -> None:
@@ -155,6 +155,25 @@ def test_load_all_with_raise_exception(base_repo: MockRepository) -> None:
 
     with pytest.raises((sqlite3.Error, TypeError, ValueError)):
         base_repo.load_all(raise_exception=True)
+
+
+def test_load_all_when_path_is_not_file(
+    base_repo: MockRepository,
+    tmp_path: Path,
+) -> None:
+    """Verify load_all skips backup logic if database path is not a file."""
+    # A directory path is not a file (path.is_file() == False)
+    dir_path = tmp_path / "not_a_file_directory"
+    dir_path.mkdir()
+
+    base_repo.load_all(input_filepath=dir_path)
+
+    assert base_repo._load_failed is True
+    assert len(base_repo.records) == 0
+
+    # No backup files should exist because is_file() evaluated to False
+    backup_files = list(dir_path.parent.glob("*_corrupted_*.db"))
+    assert len(backup_files) == 0
 
 
 def test_save_all_exception_raises_and_logs(

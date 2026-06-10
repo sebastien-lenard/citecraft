@@ -1,4 +1,8 @@
 # src/citecraft/utils/data_loader.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Data loader utilities for importing and parsing JSON and DOCX resources."""
+
 import json
 import logging
 from collections.abc import Callable
@@ -19,6 +23,7 @@ class DataLoader:
         file_path: Path to the source file.
         raise_exception: If True, invalid files trigger errors;
             otherwise, logs a warning.
+
     """
 
     def __init__(self, file_path: str | Path, *, raise_exception: bool = True) -> None:
@@ -61,7 +66,8 @@ class DataLoader:
             return None
 
     def load_json[T](
-        self, validator: Callable[[T], bool] | None = None
+        self,
+        validator: Callable[[T], bool] | None = None,
     ) -> list[T] | dict[str, Any] | None:
         """Load, parse, and optionally validate list item schemas from a JSON source."""
         if not self.file_path.is_file():

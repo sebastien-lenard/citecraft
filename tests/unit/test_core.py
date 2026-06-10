@@ -1,4 +1,8 @@
 # tests/unit/test_core.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests verifying execution mechanics and fallbacks of the core pipeline."""
+
 import logging
 from collections.abc import Generator
 from dataclasses import dataclass
@@ -24,6 +28,8 @@ from citecraft.utils import AppConfig
 
 @dataclass
 class MockJournalRecord:
+    """Mock record representing database data matching repository shapes."""
+
     input_title: str
     status: str
     issn: str | None
@@ -42,7 +48,7 @@ def configured_core_config(test_config: AppConfig) -> AppConfig:
             "crossref_api_styles_url": "https://mock-crossref/styles",
             "crossref_api_works_url": "https://mock-crossref/works",
             "doi_api_url": "https://mock-doi/{object_name}",
-        }
+        },
     )
 
 
@@ -92,7 +98,7 @@ def test_run_pipeline_progress_callback_sequences(
             input_text=None,
             config=configured_core_config,
             progress_callback=sample_callback,
-        )
+        ),
     )
 
     # 5 steps, each having a 'started' and 'completed' trigger
@@ -126,7 +132,7 @@ def test_run_pipeline_with_journal_title_style_lookup(
                 input_text=None,
                 journal_title="Geomorphology",
                 config=configured_core_config,
-            )
+            ),
         )
 
         mock_style_repo.assert_called_once_with(
@@ -139,7 +145,13 @@ def test_run_pipeline_with_journal_title_style_lookup(
 
 
 @pytest.mark.parametrize(
-    "skip_journal, skip_work, expect_journal_update, expect_work_update, expected_logs",
+    (
+        "skip_journal",
+        "skip_work",
+        "expect_journal_update",
+        "expect_work_update",
+        "expected_logs",
+    ),
     [
         # Case A: Both pipeline sync scopes are explicitly bypassed
         (
@@ -200,7 +212,7 @@ def test_run_pipeline_bypass_controls(
                 config=configured_core_config,
                 skip_journal_update=skip_journal,
                 skip_work_update=skip_work,
-            )
+            ),
         )
 
     # Verify update trigger parameters
@@ -230,7 +242,7 @@ def test_run_pipeline_no_input_raises_value_error(
                 input_file_path=None,
                 input_text=None,
                 config=configured_core_config,
-            )
+            ),
         )
 
 
@@ -249,7 +261,7 @@ def test_run_pipeline_invalid_style_raises_value_error(
                     input_file_path="dummy.docx",
                     style="unsupported-style",
                     config=configured_core_config,
-                )
+                ),
             )
 
 
@@ -281,8 +293,10 @@ def test_export_step_extracts_anomalous_journals(
     mock_journal_inst = mock_pipeline_dependencies["journal"].return_value
     mock_journal_inst.records = [
         MockJournalRecord(
-            input_title="Errant Journal", status="NOT_FOUND", issn="1234-5678"
-        )
+            input_title="Errant Journal",
+            status="NOT_FOUND",
+            issn="1234-5678",
+        ),
     ]
     mock_journal_inst.get_issns_by_input_title.return_value = ["1234-5678"]
 
@@ -320,7 +334,7 @@ def test_run_pipeline_with_crossref_api(
             input_file_path="dummy.docx",
             api="Crossref",
             config=configured_core_config,
-        )
+        ),
     )
     mock_pipeline_dependencies["crossref"].assert_called_once()
 
@@ -336,7 +350,7 @@ def test_logging_contains_structured_extras(
             PipelineOptions(
                 input_file_path="dummy.docx",
                 config=configured_core_config,
-            )
+            ),
         )
 
     parsing_logs = [

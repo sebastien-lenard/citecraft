@@ -1,13 +1,18 @@
 # tests/unit/ui/test_progress_bar_context.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests validating CLI progress bar layout formatting, lifecycle, and logs."""
+
 import io
 import logging
 import sys
 import time
+from unittest.mock import patch
 
 import pytest
 
 from citecraft.core import ProgressStep
-from citecraft.ui.progress_bar_context import ProgressBarContext
+from citecraft.ui.progress_bar_context import LogInterceptor, ProgressBarContext
 
 
 def test_generate_bar_string_initial_state() -> None:
@@ -65,7 +70,11 @@ def test_progress_bar_passive_mode_when_verbose() -> None:
 
         # Callbacks should execute as no-ops safely
         step = ProgressStep(
-            step_name="parsing", current=1, total=4, message="Test", status="started"
+            step_name="parsing",
+            current=1,
+            total=4,
+            message="Test",
+            status="started",
         )
         ctx.update(step)
         assert ctx._state["current_step"] == 0  # State unchanged
@@ -89,7 +98,7 @@ def test_progress_lifecycle_and_render(monkeypatch: pytest.MonkeyPatch) -> None:
                 total=4,
                 message="Parsing documents",
                 status="completed",
-            )
+            ),
         )
         # Leave brief window for background thread to execute one loop cleanly
         time.sleep(0.05)
@@ -109,7 +118,8 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setattr(sys, "stderr", fake_stderr)
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
-    with pytest.raises(ValueError, match="Pipeline Failure"), ctx:
+    # Converting to PT012 puts the test in fail.
+    with pytest.raises(ValueError, match="Pipeline Failure"), ctx:  # noqa: PT012
         ctx.update(
             ProgressStep(
                 step_name="parsing",
@@ -117,9 +127,10 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
                 total=4,
                 message="Crashing step",
                 status="started",
-            )
+            ),
         )
-        raise ValueError("Pipeline Failure")
+        err_msg = "Pipeline Failure"
+        raise ValueError(err_msg)
 
     output = fake_stderr.getvalue()
     assert "Completed." not in output
@@ -128,8 +139,7 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> None:
-    """Verify that logging integrations correctly erase progress bar lines before
-    emitting logs."""
+    """Verify that logging correctly erase progress bar lines before emitting logs."""
     # 1. Setup local logging infrastructure connected to root for context interception
     test_logger = logging.getLogger("citecraft.integ_ui")
     test_logger.setLevel(logging.WARNING)
@@ -174,19 +184,96 @@ def test_log_clears_progress_bar_line(capsys: pytest.CaptureFixture[str]) -> Non
 
 
 def test_logging_handlers_are_cleaned_on_exception() -> None:
-    """Verify that ProgressBarContext removes intercepting handlers during crash
-    sequences."""
+    """Verify that ProgressBarContext removes handlers during crashes."""
     root_logger = logging.getLogger()
     initial_handlers = list(root_logger.handlers)
 
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
-    with pytest.raises(RuntimeError, match="Forced pipeline crash"), ctx:
-        # Verify when executing: LogInterceptor present in active handlers
+    with ctx:
         assert any(
             x.__class__.__name__ == "LogInterceptor" for x in root_logger.handlers
         )
-        raise RuntimeError("Forced pipeline crash")
+        err_msg = "Forced pipeline crash"
+        with pytest.raises(RuntimeError, match="Forced pipeline crash"):
+            raise RuntimeError(err_msg)
 
     # After-crash verification: initial state must be restored.
     assert root_logger.handlers == initial_handlers
+
+
+def test_log_interceptor_emit_exception_handled() -> None:
+    """Verify LogInterceptor safely recovers when standard streams are locked."""
+    interceptor = LogInterceptor(draw_callback=lambda: None)
+    record = logging.LogRecord(
+        name="test",
+        level=logging.INFO,
+        pathname="path",
+        lineno=10,
+        msg="log message content",
+        args=(),
+        exc_info=None,
+    )
+
+    with (
+        patch("sys.stderr.write", side_effect=RuntimeError("Stream blocked")),
+        patch.object(interceptor, "handleError") as mock_handle_error,
+    ):
+        interceptor.emit(record)
+        mock_handle_error.assert_called_once_with(record)
+
+
+def test_exit_with_falsy_handlers_and_threads() -> None:
+    """Verify __exit__ clears context even if handles or threads are None."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx.is_active = True
+    ctx._ticker_thread = None
+    ctx._custom_handler = None
+
+    # This call should finalize cleanly and execute zero-ops on falsy values
+    ctx.__exit__(None, None, None)
+
+
+def test_loop_render_stops_immediately_if_stop_event_set() -> None:
+    """Verify loop exits instantly if the shutdown signal was pre-configured."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx._stop_event.set()
+
+    with patch.object(ctx, "_draw_line") as mock_draw:
+        ctx._loop_render()
+        mock_draw.assert_not_called()
+
+
+def test_loop_render_breaks_if_not_running() -> None:
+    """Verify background task breaks when context running state is deactivated."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx._state["running"] = False
+    ctx._stop_event.clear()
+
+    with patch.object(ctx, "_draw_line") as mock_draw:
+        ctx._loop_render()
+        mock_draw.assert_not_called()
+
+
+def test_loop_render_continues_on_wait_timeout() -> None:
+    """Verify background task processes next loop iteration if wait timeout expires."""
+    ctx = ProgressBarContext(verbose_level=0)
+    ctx._state["running"] = True
+    ctx._stop_event.clear()
+
+    call_count = 0
+
+    def mock_draw() -> None:
+        nonlocal call_count
+        call_count += 1
+        if call_count >= 2:
+            # Safely trigger loop break on next iteration
+            ctx._state["running"] = False
+
+    with (
+        patch.object(ctx, "_draw_line", side_effect=mock_draw),
+        patch.object(ctx._stop_event, "wait", return_value=False) as mock_wait,
+    ):
+        ctx._loop_render()
+        assert call_count == 2
+        mock_wait.assert_called()

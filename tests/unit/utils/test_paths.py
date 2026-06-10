@@ -1,6 +1,12 @@
 # tests/unit/utils/test_paths.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for path and directory utility functions."""
+
 import os
+from collections.abc import Generator
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +15,7 @@ from citecraft.utils import paths
 
 
 @pytest.fixture(autouse=True)
-def clear_env_cache():
+def clear_env_cache() -> Generator[Any, Any, Any]:
     """Reset the internal module _ENV before each test for isolation."""
     with patch.dict(os.environ, {}, clear=True):
         paths._ENV = {"APP_NAME": "citecraft"}
@@ -17,6 +23,8 @@ def clear_env_cache():
 
 
 class TestAppNaming:
+    """Tests for application name extraction and fallback rules."""
+
     def test_default_app_name(self) -> None:
         """Should fall back to standard app name if nothing is configured."""
         assert paths.get_app_name() == "citecraft"
@@ -28,8 +36,10 @@ class TestAppNaming:
 
 
 class TestOSBaseDirectories:
+    """Tests for operating system-specific root directory mapping."""
+
     @pytest.mark.parametrize(
-        "target_os, mock_home, extra_env, expected_subpath",
+        ("target_os", "mock_home", "extra_env", "expected_subpath"),
         [
             # 1. Windows Configuration
             (
@@ -56,7 +66,11 @@ class TestOSBaseDirectories:
         ids=["windows_default", "macos_default", "linux_default"],
     )
     def test_default_os_paths(
-        self, target_os, mock_home, extra_env, expected_subpath
+        self,
+        target_os: str,
+        mock_home: str,
+        extra_env: dict[str, str],
+        expected_subpath: str,
     ) -> None:
         """Should map to the correct OS-specific data directory structure."""
         # Dynamically apply any specific environment variables required for the platform
@@ -75,6 +89,8 @@ class TestOSBaseDirectories:
 
 
 class TestSafeDirectoryResolutionRealErrors:
+    """Tests for directory generation safety limits and fallback mechanisms."""
+
     def test_successful_directory_creation(self, tmp_path: Path) -> None:
         """REAL TEST: Verifies successful path creation on the actual filesystem."""
         # Point the app base directory to a valid, writable real temp location
@@ -91,7 +107,9 @@ class TestSafeDirectoryResolutionRealErrors:
 
     def test_fallback_triggered_by_invalid_parent_type(self, tmp_path: Path) -> None:
         """Force an OS error by using a file as a parent directory path.
-        Test cannot work using os.chmod because it only affects files on Windows."""
+
+        Test cannot work using os.chmod because it only affects files on Windows.
+        """
         # 1. Create a regular file where the base dir is expected to be
         bad_parent = tmp_path / "blocked_file_root"
         bad_parent.touch()

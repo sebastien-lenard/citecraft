@@ -1,4 +1,6 @@
 # tests/unit/test_cli.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit and integration testing matrix for the Click CLI entry points."""
 
 import runpy
@@ -89,7 +91,7 @@ def test_cli_gui_flag_routing() -> None:
         # Target the class inside the module where it is actually invoked
         # Isolate only the GUI App class lookup to prevent window instantiation
         patch("citecraft.cli.CiteCraftApp") as mock_app_cls,
-        patch("sys.exit") as mock_exit,
+        patch("sys.exit"),
     ):
         mock_app = MagicMock()
         mock_app_cls.return_value = mock_app
@@ -364,9 +366,13 @@ def test_execute_pipeline_catches_generic_exceptions(test_config: AppConfig) -> 
 
 def test_handle_execution_failure_verbose_traceback() -> None:
     """Verify debug system captures call frames explicitly under verbose level flags."""
-    try:
+
+    def _cause_error() -> None:
         err_msg = "Deep core tracking error"
         raise ValueError(err_msg)
+
+    try:
+        _cause_error()
     except ValueError as err:
         with (
             patch("click.echo"),
@@ -386,9 +392,13 @@ def test_handle_execution_failure_verbose_traceback() -> None:
 
 def test_handle_execution_failure_non_verbose() -> None:
     """Verify output reminds users about available debug verbosity switches when low."""
-    try:
+
+    def _cause_error() -> None:
         err_msg = "Standard muted dependency crash"
         raise ValueError(err_msg)
+
+    try:
+        _cause_error()
     except ValueError as err:
         with (
             patch("click.echo") as mock_echo,
@@ -430,9 +440,10 @@ def test_cli_root_intercepts_clear_cache_and_returns(
     test_config: AppConfig,
     mock_setup_logging: MagicMock,
 ) -> None:
-    """Verify that the root cli group intercepts the --clear-cache flag, forwards
-    execution to clear_cache_command, and returns immediately without running
-    the main manuscript pipeline logic.
+    """Verify that the root cli group intercepts the --clear-cache flag.
+
+    And forwards execution to clear_cache_command, and returns immediately without
+    running the main manuscript pipeline logic.
     """
     with (
         patch("citecraft.cli.archive_database_cache") as mock_archive,
@@ -457,6 +468,7 @@ def test_cli_root_intercepts_clear_cache_and_returns(
 
 def test_cli_clear_cache_hit_explicit_return_statement() -> None:
     """Force execution past ctx.forward to explicitly cover the return statement.
+
     By patching the clear_cache_command to behave like a standard normal function
     instead of calling sys.exit(0), execution returns to the parent framework block
     and steps directly onto the trailing return guard.

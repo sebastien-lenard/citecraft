@@ -1,4 +1,8 @@
 # tests/integration/test_integ_crossref_work_api_health.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Integration tests on the real Crossref API to fetch work DOI and metadata."""
+
 import _socket
 
 import pytest
@@ -44,8 +48,8 @@ def test_integ_crossref_works_api_health(test_config: AppConfig) -> None:
         f"max_results limit not respected: got {len(candidates)} records, "
         f"expected maximum of {requested_limit}."
     )
-
     first_candidate = candidates[0]
+    assert first_candidate.doi is not None, "Fetched candidate is missing a DOI."
     assert first_candidate.doi.startswith("10.1038"), (
         f"DOI Formatting error: unexpected prefix in '{first_candidate.doi}'."
     )

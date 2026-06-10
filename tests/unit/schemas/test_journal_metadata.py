@@ -1,5 +1,9 @@
 # tests/unit/schemas/test_journal_metadata.py
-from datetime import date
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests validating journal metadata initialization, ranges, and sync statuses."""
+
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -13,7 +17,7 @@ def test_journal_metadata_defaults() -> None:
 
     assert journal.issn is None
     assert journal.similar_titles is None
-    assert journal.update == str(date.today())
+    assert journal.update == str(datetime.now(UTC).strftime("%Y-%m-%d"))
 
 
 def test_journal_metadata_identity_key() -> None:
@@ -42,7 +46,7 @@ def test_journal_metadata_year_range_logic() -> None:
         JournalMetadata(input_title="Test", start_year=2025, end_year=2020)
 
     assert "start_year (2025) should be lower than end_year (2020)" in str(
-        excinfo.value
+        excinfo.value,
     )
 
 
@@ -58,7 +62,7 @@ def test_journal_metadata_extra_fields_ignored() -> None:
     """Verify that unregistered JSON dictionary values are ignored."""
     data = {"input_title": "Nature", "extra_api_garbage": "should_not_exist"}
 
-    journal = JournalMetadata(**data)
+    journal = JournalMetadata.model_validate(data)
 
     assert journal.input_title == "Nature"
     assert not hasattr(journal, "extra_api_garbage")

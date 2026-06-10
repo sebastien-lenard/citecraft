@@ -1,4 +1,8 @@
 # src/citecraft/network/http_client_wrapper.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Synchronous HTTP networking clients with retry loops and request parameters."""
+
 import logging
 import time
 from dataclasses import dataclass
@@ -45,7 +49,7 @@ class HTTPClientWrapper:
         self.email: str = email
 
         cfg = client_config or HTTPClientConfig()
-        self.api_key: str | None = cfg.api_key if cfg.api_key else None
+        self.api_key: str | None = cfg.api_key or None
         self.timeout: float = (
             cfg.timeout if cfg.timeout is not None else self.config.default_api_timeout
         )
@@ -64,14 +68,17 @@ class HTTPClientWrapper:
             else self.config.default_api_url_max_character_length
         )
         self.client: httpx.Client = httpx.Client(
-            timeout=httpx.Timeout(self.timeout), follow_redirects=True
+            timeout=httpx.Timeout(self.timeout),
+            follow_redirects=True,
         )
 
     def _is_transient_error(self, exception: BaseException) -> bool:
-        """Determine if the exception warrants an automatic retry attempt.
+        """Determine if the exception warrants a retry attempt.
+
         Examples:
         - Transport errors: Timeout, deconnection
         - Status errors: HTTP 429 response (Rate Limited) or server error (5xx).
+
         """
         if isinstance(exception, httpx.TransportError):
             return True
@@ -119,7 +126,9 @@ class HTTPClientWrapper:
         headers: dict[str, str] | None = None,
         max_retries: int | None = None,
     ) -> tuple[httpx.Response | None, str]:
-        """Perform a retried GET request with status verification. Returns response
+        """Perform a retried GET request with status verification.
+
+        Returns response
         and predicted url.
         Fatal errors (like 401, 403, 404) raise immediately.
         """
@@ -148,7 +157,10 @@ class HTTPClientWrapper:
 
         # Get and check request length
         request = httpx.Request(
-            method="GET", url=target_url, params=query_params, headers=request_headers
+            method="GET",
+            url=target_url,
+            params=query_params,
+            headers=request_headers,
         )
         predicted_url_length = len(str(request.url))
         if (
@@ -191,10 +203,9 @@ class HTTPClientWrapper:
             return (response, str(request.url))
 
         except httpx.HTTPStatusError as e:
-            logger.error(
-                "Fatal or unresolved HTTP Error for URL %s: %s",
+            logger.exception(
+                "Fatal or unresolved HTTP Error for URL %s",
                 target_url,
-                str(e),
                 extra={
                     "status": "KO",
                     "event": "http_request_fatal_status",
@@ -203,14 +214,12 @@ class HTTPClientWrapper:
                     "error_type": type(e).__name__,
                 },
             )
-            raise e
+            raise
 
         except Exception as e:
-            logger.error(
-                "Unexpected or unrecoverable error during request to %s: %s",
+            logger.exception(
+                "Unexpected or unrecoverable error during request to %s",
                 target_url,
-                str(e),
-                exc_info=True,
                 extra={
                     "status": "KO",
                     "event": "http_request_unexpected_crash",
@@ -218,7 +227,7 @@ class HTTPClientWrapper:
                     "error_type": type(e).__name__,
                 },
             )
-            raise e
+            raise
 
     def close(self) -> None:
         """Close the underlying synchronous HTTPX client."""

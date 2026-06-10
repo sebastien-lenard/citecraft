@@ -1,4 +1,8 @@
 # tests/unit/parsers/test_citation_parser.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for the text citation parsing engine."""
+
 import pytest
 
 from citecraft.parsers import CitationParser
@@ -11,7 +15,7 @@ def parser() -> CitationParser:
 
 
 @pytest.mark.parametrize(
-    "text, expected_authors",
+    ("text", "expected_authors"),
     [
         # Coauthor formats
         (
@@ -57,7 +61,9 @@ def parser() -> CitationParser:
     ],
 )
 def test_citation_parser_extractions(
-    parser: CitationParser, text: str, expected_authors: list[str]
+    parser: CitationParser,
+    text: str,
+    expected_authors: list[str],
 ) -> None:
     """Verify successful citation parsings across diverse formatting combinations."""
     res = parser.extract_all(text)

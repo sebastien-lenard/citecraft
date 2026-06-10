@@ -1,4 +1,8 @@
 # src/citecraft/schemas/citation_metadata.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Data schema representing structured text citation data from draft manuscripts."""
+
 from typing import Literal, override
 
 from pydantic import ConfigDict, Field
@@ -12,7 +16,7 @@ class CitationMetadata(BaseSchema):
     model_config = ConfigDict(frozen=True)
 
     first_authors_txt: str = Field(
-        min_length=1
+        min_length=1,
     )  # e.g. Lenard et al., Guns and Vanacker
     year_and_suffix: str = Field(pattern=r"^\d{4}[a-z]?$")  # e.g. 2020a
     type: Literal["narrative", "parenthetical"] = "narrative"

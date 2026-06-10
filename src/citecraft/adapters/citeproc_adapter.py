@@ -1,4 +1,8 @@
 # src/citecraft/adapters/citeproc_adapter.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Adapter for interfacing with the citeproc-py bibliography engine."""
+
 import io
 import logging
 import warnings
@@ -17,16 +21,15 @@ logger = logging.getLogger(__name__)
 
 
 class CiteprocAdapter:
-    """Encapsulates citeproc-py orchestration, filtering logs and standardizing
-    failures."""
+    """Encapsulates citeproc-py use, filtering logs and standardizing failures."""
 
     @staticmethod
     def create_json_source(
-        csl_dict: dict[str, Any], *, doi: str
+        csl_dict: dict[str, Any],
+        *,
+        doi: str,
     ) -> tuple[CiteProcJSON | None, str | None]:
-        """Instantiate CiteProcJSON source while silencing and converting unsupported
-        field warnings."""
-
+        """Instantiate CiteProcJSON source and handle unsupported field warnings."""
         try:
             with warnings.catch_warnings(record=True) as captured_warnings:
                 warnings.simplefilter("always", UserWarning)
@@ -89,14 +92,16 @@ class CiteprocAdapter:
 
     @staticmethod
     def parse_csl_style(
-        style_content: str, *, doi: str
+        style_content: str,
+        *,
+        doi: str,
     ) -> tuple[CitationStylesStyle | None, str | None]:
         """Parse XML CSL style sheet definitions safely without external XSD checks."""
         try:
             style_bytes = style_content.encode("utf-8")
             style_file = io.BytesIO(style_bytes)
             bib_style = CitationStylesStyle(style_file, validate=False)
-            return bib_style, None
+
         except Exception as e:
             error_msg = str(e)
             logger.warning(
@@ -110,6 +115,8 @@ class CiteprocAdapter:
                 },
             )
             return None, error_msg
+        else:
+            return bib_style, None
 
     @staticmethod
     def render_bibliography(
@@ -119,11 +126,12 @@ class CiteprocAdapter:
         item_id: str,
         doi: str,
     ) -> tuple[str | None, str | None]:
-        """Execute layout rendering pipeline to produce final text bibliography
-        strings."""
+        """Produce final text bibliography strings."""
         try:
             bibliography = CitationStylesBibliography(
-                bib_style, bib_source, citeproc.formatter.plain
+                bib_style,
+                bib_source,
+                citeproc.formatter.plain,
             )
             citation = Citation([CitationItem(item_id)])
             bibliography.register(citation)
@@ -145,8 +153,6 @@ class CiteprocAdapter:
                     },
                 )
                 return rendered_text, None
-
-            return None, "Empty layout produced by bibliography generator."
 
         except AttributeError as e:
             if "'NoneType' object has no attribute 'render'" in str(e):
@@ -186,3 +192,5 @@ class CiteprocAdapter:
                 },
             )
             return None, error_msg
+        else:
+            return None, "Empty layout produced by bibliography generator."

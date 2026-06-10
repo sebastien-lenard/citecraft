@@ -1,4 +1,8 @@
 # src/citecraft/core.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Core execution pipeline engine and context orchestration for CiteCraft."""
+
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, is_dataclass, replace
@@ -37,6 +41,8 @@ class AnomalousJournal:
 
 
 class ProgressStep(NamedTuple):
+    """Immutable data record representing the progress of a pipeline step."""
+
     step_name: str  # Ex: "parsing", "journals", "works", "references"
     current: int  # Count of processed elements
     total: int  # Total count of elements
@@ -96,10 +102,14 @@ class PipelineStep(Protocol):
     """Structural contract to define a pipeline step (PEP 544 Protocol)."""
 
     @property
-    def name(self) -> str: ...
+    def name(self) -> str:
+        """The unique identifier string for the pipeline step execution."""
+        ...
 
     @property
-    def message(self) -> str: ...
+    def message(self) -> str:
+        """The user-facing message string describing the active step."""
+        ...
 
     def execute(self, ctx: PipelineContext) -> None:
         """Run standard step logic and update state context."""
@@ -112,10 +122,13 @@ class PipelineStep(Protocol):
 
 
 class ParsingStep:
+    """Pipeline step responsible for extracting citations and validating styles."""
+
     name: str = "parsing"
     message: str = "Parsing manuscript and checking style..."
 
     def execute(self, ctx: PipelineContext) -> None:
+        """Parse manuscript texts and resolve target metadata configurations."""
         logger.info(
             "Executing ParsingStep: loading and parsing manuscript input.",
             extra={"step": self.name, "input_path": ctx.input_file_path},
@@ -128,7 +141,8 @@ class ParsingStep:
             )
             ctx.input_text = DataLoader(ctx.input_file_path).extract_text_from_docx()
         if not ctx.input_text:
-            raise ValueError("No manuscript text or input file provided.")
+            err_msg = "No manuscript text or input file provided."
+            raise ValueError(err_msg)
 
         logger.info(
             "Resolving and validating CSL style: %s",
@@ -145,10 +159,11 @@ class ParsingStep:
 
         if not ctx.style_repo.favored_style_is_valid:
             style_id = ctx.style_repo.favored_style or ctx.journal_title or ctx.style
-            raise ValueError(
+            err_msg = (
                 f"Style '{style_id}' is not found in CSL repository "
                 "https://github.com/citation-style-language/styles."
             )
+            raise ValueError(err_msg)
 
         ctx.journal_required_titles = JournalParser().extract_all(ctx.input_text)
         ctx.citations = CitationParser(config=ctx.config).extract_all(ctx.input_text)
@@ -163,10 +178,13 @@ class ParsingStep:
 
 
 class JournalUpdateStep:
+    """Pipeline step handling database sync for missing or outdated journals."""
+
     name: str = "journals"
     message: str = "Updating journal metadata..."
 
     def execute(self, ctx: PipelineContext) -> None:
+        """Execute cross-referencing sequences against global journal registries."""
         logger.info(
             "Executing JournalUpdateStep: updating journal registry databases.",
             extra={
@@ -197,10 +215,13 @@ class JournalUpdateStep:
 
 
 class WorkUpdateStep:
+    """Pipeline step that fetches, aligns, and merges metadata for target works."""
+
     name: str = "works"
     message: str = "Finding and linking work DOI to citations..."
 
     def execute(self, ctx: PipelineContext) -> None:
+        """Match and update target citations using designated service providers."""
         logger.info(
             "Executing WorkUpdateStep: matching citations against target works.",
             extra={"step": self.name, "api_engine": ctx.api},
@@ -228,7 +249,7 @@ class WorkUpdateStep:
 
         if not ctx.skip_work_update:
             issns = ctx.journal_repo.get_unique_issns_for_titles(
-                ctx.journal_required_titles
+                ctx.journal_required_titles,
             )
             logger.info(
                 "Updating local works database for target ISSNs.",
@@ -247,10 +268,13 @@ class WorkUpdateStep:
 
 
 class ReferenceFormattingStep:
+    """Pipeline step rendering the final bibliography through CSL engines."""
+
     name: str = "references"
     message: str = "Formatting bibliographic references..."
 
     def execute(self, ctx: PipelineContext) -> None:
+        """Apply style metadata transformations to produce valid references."""
         logger.info(
             "Executing ReferenceFormattingStep: formatting citation output.",
             extra={"step": self.name},
@@ -315,10 +339,13 @@ class ReferenceFormattingStep:
 
 
 class ExportStep:
+    """Pipeline step outputting structured bibliographic entries to disk."""
+
     name: str = "export"
     message: str = "Exporting bibliography to CSV..."
 
     def execute(self, ctx: PipelineContext) -> None:
+        """Commit structural bibliography collections down to flat data streams."""
         logger.info(
             "Executing ExportStep: writing output files.",
             extra={"step": self.name, "output_path": str(ctx.output_filepath)},
@@ -363,7 +390,7 @@ class ExportStep:
             for j in ctx.journal_repo.records:
                 if j.status != "OK":
                     all_found_issns = ctx.journal_repo.get_issns_by_input_title(
-                        j.input_title
+                        j.input_title,
                     )
                     ctx.anomalous_journals.append(
                         AnomalousJournal(
@@ -373,7 +400,7 @@ class ExportStep:
                             issns_found=", ".join(all_found_issns)
                             if all_found_issns
                             else "",
-                        )
+                        ),
                     )
             logger.info(
                 "Anomalous journals verification complete.",
@@ -426,7 +453,7 @@ def run(options: PipelineOptions) -> tuple[list[AnomalousJournal], ExportResult 
                         total=total_steps,
                         message=step.message,
                         status="started",
-                    )
+                    ),
                 )
 
             step.execute(ctx)
@@ -439,7 +466,7 @@ def run(options: PipelineOptions) -> tuple[list[AnomalousJournal], ExportResult 
                         total=total_steps,
                         message=f"Finished: {step.message}",
                         status="completed",
-                    )
+                    ),
                 )
     finally:
         get_http_client_registry().close_all()

@@ -1,4 +1,8 @@
 # tests/integration/test_integ_doi_api_health.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Integration tests of the DOI negotiation service to fetch work metadata."""
+
 import pytest
 
 from citecraft.repositories import DoiRepository
@@ -7,8 +11,7 @@ from citecraft.repositories import DoiRepository
 @pytest.mark.integration
 @pytest.mark.vcr  # Activates VCR interception and automated YAML cassette management
 def test_doi_api_service_health() -> None:
-    """Verify the health of the doi.org content negotiation service and CSL-JSON
-    payload format."""
+    """Verify doi.org content negotiation service and CSL-JSON payload format."""
     repo = DoiRepository()
 
     # DOI: Steady erosion rates in the Himalayas through late Cenozoic climatic changes
@@ -65,8 +68,7 @@ def test_doi_api_service_health() -> None:
 @pytest.mark.integration
 @pytest.mark.vcr
 def test_doi_api_service_not_found() -> None:
-    """Verify elegant fallback behavior (empty dict return) when encountering a
-    HTTP 404 error."""
+    """Verify fallback behavior when encountering aHTTP 404 error."""
     repo = DoiRepository()
     invalid_doi = "10.1000/xyz123_non_existent_doi"
 

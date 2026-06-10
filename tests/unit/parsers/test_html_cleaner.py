@@ -1,4 +1,8 @@
 # tests/unit/parsers/test_html_cleaner.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for the HTML cleaner and text normalization utility."""
+
 import pytest
 
 from citecraft.parsers import HtmlCleaner
@@ -6,7 +10,7 @@ from citecraft.utils import AppConfig
 
 
 @pytest.mark.parametrize(
-    "raw_input, expected_output",
+    ("raw_input", "expected_output"),
     [
         # =====================================================================
         # CASES WITH NEWLINES, Standard HTML collapsing behavior: \n + spaces -> 1 space
@@ -95,7 +99,7 @@ def test_html_cleaner_uses_injected_config(test_config: AppConfig) -> None:
         update={
             "preserved_html_tags": {"custom-sup"},
             "discarded_html_tags": {"custom-i"},
-        }
+        },
     )
 
     cleaner = HtmlCleaner(config=test_config)

@@ -1,4 +1,8 @@
 # tests/unit/storage/test_db.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for Pydantic schema relational mapping and serialization."""
+
 import sqlite3
 from pathlib import Path
 from typing import Union
@@ -34,16 +38,22 @@ class SimpleMockModel(BaseModel):
 
 
 class MismatchedMockModel(BaseModel):
+    """Mock schema simulating a mismatched structural change scenario."""
+
     id: int
     name: str
     non_existent_column: str
 
 
 class PathMockModel(BaseModel):
+    """Mock schema validating dynamic path conversion properties."""
+
     file_path: Path
 
 
 class FlexibleCollectionModel(BaseModel):
+    """Mock schema containing raw alternative processing parameters."""
+
     items: list[str] | str
 
 
@@ -92,7 +102,9 @@ def test_serialize_model_path_type(tmp_path: Path) -> None:
 
 def test_deserialize_row_coverage() -> None:
     """Verify various deserialize_row logic branches and fallbacks.
-    Organically triggers the 'field is None' continue path via ghost_column."""
+
+    Organically triggers the 'field is None' continue path via ghost_column.
+    """
     # 1. JSONDecodeError fallback branch
     row_invalid_json = {"items": "invalid_json_string_value"}
     deserialized_fallback = deserialize_row(row_invalid_json, FlexibleCollectionModel)
@@ -134,7 +146,10 @@ def test_load_records_missing_boundaries(tmp_path: Path) -> None:
     # 2. Nonexistent table name within a valid database file
     db_path = tmp_path / "real_file.db"
     save_records(
-        db_path, "actual_table", [SimpleMockModel(id=1, name="A")], SimpleMockModel
+        db_path,
+        "actual_table",
+        [SimpleMockModel(id=1, name="A")],
+        SimpleMockModel,
     )
     assert load_records(db_path, "nonexistent_table", SimpleMockModel) == []
 
@@ -196,7 +211,7 @@ def test_transaction_rollback_integrity(tmp_path: Path) -> None:
     # We bypass schema creation by calling save_records with our mismatched model.
     # This forces SQLite to raise a real sqlite3.OperationalError (no such column).
     bad_records = [
-        MismatchedMockModel(id=2, name="Failure", non_existent_column="test")
+        MismatchedMockModel(id=2, name="Failure", non_existent_column="test"),
     ]
 
     with pytest.raises(sqlite3.Error) as exc_info:
@@ -309,7 +324,6 @@ def test_architectural_shield_no_direct_connection_execute() -> None:
 
 def test_architectural_shield_db_client_dispatches() -> None:
     """Verify that DbClient classmethods are called during database operations."""
-
     with (
         patch.object(DbClient, "safe_create_table") as mock_create,
         patch.object(DbClient, "safe_execute") as mock_execute,

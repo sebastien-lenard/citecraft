@@ -1,4 +1,6 @@
 # src/citecraft/utils/__init__.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 from .config import AppConfig, create_config, get_config
 from .data_loader import DataLoader
 from .paths import get_app_base_dir, get_app_name, get_safe_dir

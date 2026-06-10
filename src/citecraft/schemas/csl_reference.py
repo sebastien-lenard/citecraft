@@ -1,6 +1,9 @@
 # src/citecraft/schemas/csl_reference.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""CSL-JSON reference data schema definitions."""
+
 import logging
-from typing import Any
 
 from pydantic import (
     AliasChoices,
@@ -70,7 +73,8 @@ class CSLReference(BaseModel):
     URL: str | None = None
     ISBN: str | None = None
     issn: str | None = Field(
-        default=None, validation_alias=AliasChoices("ISSN", "issn")
+        default=None,
+        validation_alias=AliasChoices("ISSN", "issn"),
     )
 
     # Miscellaneous Metadata
@@ -80,15 +84,15 @@ class CSLReference(BaseModel):
 
     @field_validator("issn", mode="before")
     @classmethod
-    def handle_crossref_issn_array(cls, value: Any) -> str | None:
+    def handle_crossref_issn_array(cls, value: object) -> str | None:
         """Intercept the incoming ISSN data and extract the first element if a list."""
         if isinstance(value, list):
             return str(value[0]) if value else None
-        return value
+        return str(value) if value is not None else None
 
     @model_validator(mode="before")
     @classmethod
-    def clean_crossref_metadata(cls, data: Any) -> Any:
+    def clean_crossref_metadata(cls, data: object) -> object:
         """Run sanitize routine to assign ID from DOI if missing."""
         if isinstance(data, dict):
             if "id" not in data and "DOI" in data:
@@ -99,7 +103,7 @@ class CSLReference(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_type_against_config(cls, data: Any, info: ValidationInfo) -> Any:
+    def validate_type_against_config(cls, data: object, info: ValidationInfo) -> object:
         """Validate standard CSL types via context, logging unknown categories."""
         if not isinstance(data, dict):
             return data

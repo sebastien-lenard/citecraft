@@ -1,4 +1,8 @@
 # tests/unit/repositories/test_doi_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests for validating DOI metadata resolution and filtering operations."""
+
 import json
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -12,8 +16,7 @@ from citecraft.utils import AppConfig
 
 @pytest.fixture
 def repo(test_config: AppConfig) -> DoiRepository:
-    """Provide DoiRepository instance utilizing the isolated global test
-    configuration."""
+    """Provide DoiRepository testing instance."""
     return DoiRepository(config=test_config)
 
 
@@ -30,7 +33,9 @@ def test_get_metadata_success(repo: DoiRepository) -> None:
     mock_response.json.return_value = mock_json_data
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, None)
+        repo.http_client_wrapper,
+        "get",
+        return_value=(mock_response, None),
     ) as mock_get:
         result = repo.get_metadata("10.1000/182")
 
@@ -42,8 +47,19 @@ def test_get_metadata_success(repo: DoiRepository) -> None:
         assert kwargs["headers"]["Accept"] == "application/vnd.citationstyles.csl+json"
 
 
+def test_get_metadata_client_returns_none(repo: DoiRepository) -> None:
+    """Verify that get_metadata returns an empty dictionary when client returns None."""
+    with patch.object(
+        repo.http_client_wrapper,
+        "get",
+        return_value=(None, None),
+    ):
+        result = repo.get_metadata("10.1000/none-response")
+        assert result == {}
+
+
 @pytest.mark.parametrize(
-    "side_effect, json_val, expected_log_sub",
+    ("side_effect", "json_val", "expected_log_sub"),
     [
         # Case A: Missing required keys (id and DOI)
         (
@@ -75,8 +91,7 @@ def test_get_metadata_safe_fallbacks(
     json_val: dict[str, Any] | None,
     expected_log_sub: str,
 ) -> None:
-    """Verify that API errors, formatting issues, or missing keys fall back to empty
-    records."""
+    """Verify that errors fall back to empty records."""
     mock_response = MagicMock()
     mock_response.status_code = 200
     if json_val is not None:
@@ -107,7 +122,9 @@ def test_get_metadata_server_error_500_bubbles_up(repo: DoiRepository) -> None:
     mock_request = httpx.Request("GET", "https://doi.org/10.1000/broken")
     mock_response = httpx.Response(status_code=500, request=mock_request)
     error = httpx.HTTPStatusError(
-        "500 Internal Server Error", request=mock_request, response=mock_response
+        "500 Internal Server Error",
+        request=mock_request,
+        response=mock_response,
     )
 
     with (
@@ -118,8 +135,7 @@ def test_get_metadata_server_error_500_bubbles_up(repo: DoiRepository) -> None:
 
 
 def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) -> None:
-    """Verify that configured schema blacklists strip fields from work and author
-    scopes."""
+    """Verify that blacklists strip fields from work and author scopes."""
     test_config = test_config.model_copy(
         update={
             "work_crossref_schema_blacklist_fields": [
@@ -132,7 +148,7 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
                 "authenticated-orcid",
                 "role",
             ],
-        }
+        },
     )
     repo = DoiRepository(config=test_config)
 
@@ -158,7 +174,9 @@ def test_get_metadata_applies_blacklists_successfully(test_config: AppConfig) ->
     mock_response.json.return_value = mock_raw_csl
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, None)
+        repo.http_client_wrapper,
+        "get",
+        return_value=(mock_response, None),
     ):
         filtered_result = repo.get_metadata("10.1038/s41561-020-0585-2")
 
@@ -187,7 +205,7 @@ def test_get_metadata_with_empty_or_missing_blacklists(test_config: AppConfig) -
         update={
             "work_crossref_schema_blacklist_fields": [],
             "author_crossref_schema_blacklist_fields": [],
-        }
+        },
     )
     repo = DoiRepository(config=test_config)
     mock_json_data = {
@@ -199,8 +217,64 @@ def test_get_metadata_with_empty_or_missing_blacklists(test_config: AppConfig) -
     mock_response.json.return_value = mock_json_data
 
     with patch.object(
-        repo.http_client_wrapper, "get", return_value=(mock_response, None)
+        repo.http_client_wrapper,
+        "get",
+        return_value=(mock_response, None),
     ):
         result = repo.get_metadata("10.1000/182")
         assert result == mock_json_data
         assert "ORCID" in result["author"][0]
+
+
+def test_is_valid_csl_delegate(repo: DoiRepository) -> None:
+    """Directly test the structural validation helper rule."""
+    valid_record = {"id": "10.1234/test"}
+    invalid_record = {"title": "Missing ID"}
+
+    assert repo._is_valid_csl(valid_record, "10.1234/test") is True
+    assert repo._is_valid_csl(invalid_record, "10.1234/test") is False
+
+
+def test_apply_blacklists_delegate(repo: DoiRepository) -> None:
+    """Directly test that internal blacklist manipulation strips keys safely."""
+    repo.config = repo.config.model_copy(
+        update={
+            "work_crossref_schema_blacklist_fields": ["unwanted_work_key"],
+            "author_crossref_schema_blacklist_fields": ["unwanted_author_key"],
+        },
+    )
+    doi = "10.1111/test"
+    payload = {
+        "id": "10.1111/test",
+        "unwanted_work_key": "delete_me",
+        "author": [{"family": "Smith", "unwanted_author_key": "strip_me"}],
+    }
+
+    repo._apply_blacklists(doi, payload)
+
+    assert "unwanted_work_key" not in payload
+    assert "unwanted_author_key" not in payload["author"][0]
+
+
+def test_apply_blacklists_with_non_dict_author_entry(test_config: AppConfig) -> None:
+    """Check that author blacklisting bypasses non-dictionary author elements safely."""
+    test_config = test_config.model_copy(
+        update={
+            "author_crossref_schema_blacklist_fields": ["unwanted_author_key"],
+        },
+    )
+    repo = DoiRepository(config=test_config)
+    doi = "10.1111/test"
+    payload = {
+        "id": "10.1111/test",
+        "author": [
+            "Literal string author representation",
+            {"family": "Smith", "unwanted_author_key": "strip_me"},
+        ],
+    }
+
+    repo._apply_blacklists(doi, payload)
+
+    assert payload["author"][0] == "Literal string author representation"
+    assert isinstance(payload["author"][1], dict)
+    assert "unwanted_author_key" not in payload["author"][1]

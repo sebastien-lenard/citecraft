@@ -1,5 +1,9 @@
 # src/citecraft/schemas/journal_metadata.py
-from datetime import date
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Data schema for tracking scientific journal indexing states and lifespans."""
+
+from datetime import UTC, datetime
 from typing import Self, override
 
 from pydantic import AliasChoices, ConfigDict, Field, model_validator
@@ -17,7 +21,8 @@ class JournalMetadata(BaseSchema):
     true_title: str | None = None  # e.g. Nature Geoscience
     publisher: str | None = None  # e.g. Nature Portfolio / Springer Nature
     issn: IssnType | None = Field(
-        default=None, validation_alias=AliasChoices("ISSN", "issn")
+        default=None,
+        validation_alias=AliasChoices("ISSN", "issn"),
     )  # e.g. 1752-0894
     start_year: int | None = Field(default=None, ge=1600, le=2099)  # e.g. 2008
     end_year: int | None = Field(default=None, ge=1600, le=2099)  # e.g. 2026
@@ -25,7 +30,7 @@ class JournalMetadata(BaseSchema):
         None  # Titles in the remote repository (crossref) similar to input_title
     )
     update: str = Field(
-        default_factory=lambda: str(date.today())
+        default_factory=lambda: str(datetime.now(UTC).strftime("%Y-%m-%d")),
     )  # ISO format: YYYY-MM-DD
 
     @property
@@ -60,9 +65,10 @@ class JournalMetadata(BaseSchema):
         """Assert that start year is chronologically before end year."""
         if self.start_year and self.end_year:
             if self.start_year > self.end_year:
-                raise ValueError(
+                err_msg = (
                     f"start_year ({self.start_year}) should be lower than end_year"
                     f" ({self.end_year})"
                 )
+                raise ValueError(err_msg)
             return self
         return self

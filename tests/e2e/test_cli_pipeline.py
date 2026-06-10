@@ -1,4 +1,15 @@
 # tests/e2e/test_cli_pipeline.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""End to end bibliography generation integration testing.
+
+Ruff Lint Rules Ignored File-Wide:
+    # noqa: S603 - Subprocess execution is required here to conduct genuine,
+    out-of-process, black-box integration testing on environment streams, disk
+    layouts, and shell exit states.
+    All command arrays are hardcoded strings safely isolated within the test block.
+"""
+
 import csv
 import os
 import subprocess
@@ -10,8 +21,7 @@ from docx import Document
 
 @pytest.mark.e2e
 def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
-    """Validation of full pipeline from a temporary .docx and check structure of CSV
-    generated, using an explicit style flag."""
+    """Validation of full pipeline from a .docx to output CSV."""
     input_file = tmp_path / "test_manuscript.docx"
     output_csv = tmp_path / "output_test_references.csv"
     doc = Document()
@@ -19,12 +29,12 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
     doc.add_paragraph(
         "Le voila (Lenard et al., 2020), sans parler des erreurs oubliées "
         "(e.g. Fig. 7 in Guns and Vanacker, 2014). Jeu de donnees de Croissant et al. "
-        "(2019)."
+        "(2019).",
     )
 
     doc.add_paragraph("Journals\nGeology\nNature Geoscience\nAnthropocene")
 
-    doc.save(input_file)
+    doc.save(str(input_file))
 
     cmd = [
         "uv",
@@ -59,7 +69,7 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
 
     assert result.returncode == 0, f"Failed .docx pipeline:\n{result.stderr}"
     assert output_csv.exists(), f"No output file generated: {output_csv}"
-    with open(output_csv, encoding="utf-8-sig") as f:
+    with Path.open(output_csv, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
 
         assert reader.fieldnames == ["Citation", "Status", "Reference"], (
@@ -77,8 +87,7 @@ def test_docx_file_pipeline_execution(tmp_path: Path) -> None:
 
 @pytest.mark.e2e
 def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
-    """Validation of full pipeline from a temporary .docx using the journal style
-    lookup option (-j)."""
+    """Validate bibliography generation using the journal style lookup option (-j)."""
     input_file = tmp_path / "test_manuscript_j.docx"
     output_csv = tmp_path / "output_test_references_j.csv"
     doc = Document()
@@ -86,12 +95,12 @@ def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
     doc.add_paragraph(
         "Le voila (Lenard et al., 2020), sans parler des erreurs oubliées "
         "(e.g. Fig. 7 in Guns and Vanacker, 2014). Jeu de donnees de Croissant et al. "
-        "(2019)."
+        "(2019).",
     )
 
     doc.add_paragraph("Journals\nGeology\nNature Geoscience\nAnthropocene")
 
-    doc.save(input_file)
+    doc.save(str(input_file))
 
     cmd = [
         "uv",
@@ -126,7 +135,7 @@ def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
 
     assert result.returncode == 0, f"Failed journal style pipeline:\n{result.stderr}"
     assert output_csv.exists(), f"No output file generated: {output_csv}"
-    with open(output_csv, encoding="utf-8-sig") as f:
+    with Path.open(output_csv, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         assert reader.fieldnames == ["Citation", "Status", "Reference"]
         rows = list(reader)
@@ -135,9 +144,7 @@ def test_journal_style_lookup_pipeline_execution(tmp_path: Path) -> None:
 
 @pytest.mark.e2e
 def test_stdin_pipeline_execution(tmp_path: Path) -> None:
-    """Validation of full pipeline from stdin, relying on the default style
-    configured via environment variables."""
-
+    """Validate the full pipeline from stdin, relying on the default style."""
     input_data = "Text (Lenard et al., 2020)\r\nJournals\r\nNature Geoscience"
     output_csv = tmp_path / "stdin_output.csv"
     cmd = ["uv", "run", "citecraft", "-v", "-o", str(output_csv)]
@@ -161,6 +168,6 @@ def test_stdin_pipeline_execution(tmp_path: Path) -> None:
 
     assert result.returncode == 0, f"Failed stdin pipeline:\n{result.stderr}"
     assert output_csv.exists(), f"No output file generated: {output_csv}"
-    with open(output_csv, encoding="utf-8-sig") as f:
+    with Path.open(output_csv, encoding="utf-8-sig") as f:
         content = f.read()
         assert "Lenard et al., 2020" in content

@@ -1,11 +1,15 @@
 # src/citecraft/ui/progress_bar_context.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Asynchronous CLI progress bar visualization and logging interception hooks."""
+
 import logging
 import sys
 import threading
 import time
 from collections.abc import Callable
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 from citecraft.core import ProgressStep
 
@@ -18,13 +22,14 @@ class LogInterceptor(logging.Handler):
         self.draw_callback: Callable[[], None] = draw_callback
 
     def emit(self, record: logging.LogRecord) -> None:
+        """Format and write incoming log records safely above the active bar line."""
         try:
             msg = self.format(record)
             # \r = retour chariot, \033[K = efface le reste de la ligne courante
             sys.stderr.write(f"\r\033[K{msg}\n")
             sys.stderr.flush()
             self.draw_callback()
-        except Exception:
+        except Exception:  # noqa: BLE001 Logging should not crash the application
             self.handleError(record)
 
 
@@ -60,7 +65,7 @@ class ProgressBarContext:
         self._old_handlers: list[logging.Handler] = []
         self._custom_handler: LogInterceptor | None = None
 
-    def __enter__(self) -> "ProgressBarContext":
+    def __enter__(self) -> Self:
         """Start the background progress-bar refresh loop."""
         if self.is_active:
             self._start_time = time.time()
@@ -76,14 +81,15 @@ class ProgressBarContext:
             self._custom_handler = LogInterceptor(draw_callback=self._draw_line)
             self._custom_handler.setFormatter(
                 logging.Formatter(
-                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-                )
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                ),
             )
             root_logger.addHandler(self._custom_handler)
 
             # Start background worker ticker thread
             self._ticker_thread = threading.Thread(
-                target=self._loop_render, daemon=True
+                target=self._loop_render,
+                daemon=True,
             )
             self._ticker_thread.start()
         return self
@@ -164,7 +170,7 @@ class ProgressBarContext:
         else:
             remaining_steps = total - current
             estimated_remaining_seconds = int(
-                (remaining_steps * elapsed_time) / current
+                (remaining_steps * elapsed_time) / current,
             )
             eta_min, eta_sec = divmod(estimated_remaining_seconds, 60)
             eta_str = f"{eta_min:02d}:{eta_sec:02d}"

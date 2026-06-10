@@ -1,4 +1,8 @@
 # tests/unit/network/test_http_client_wrapper.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
+"""Unit tests verifying request routing and error boundaries for the network client."""
+
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -43,10 +47,12 @@ def test_get_success(wrapper: HTTPClientWrapper) -> None:
         # Scenario A: Network timeout retry sequences
         [
             httpx.ReadTimeout(
-                "Timeout", request=httpx.Request("GET", "https://api.test.com")
+                "Timeout",
+                request=httpx.Request("GET", "https://api.test.com"),
             ),
             httpx.ReadTimeout(
-                "Timeout 2", request=httpx.Request("GET", "https://api.test.com")
+                "Timeout 2",
+                request=httpx.Request("GET", "https://api.test.com"),
             ),
         ],
         # Scenario B: Transient HTTP status errors (429, 503)
@@ -65,7 +71,8 @@ def test_get_success(wrapper: HTTPClientWrapper) -> None:
     ],
 )
 def test_get_retry_on_transient_failures(
-    wrapper: HTTPClientWrapper, errors_to_simulate: list[Exception]
+    wrapper: HTTPClientWrapper,
+    errors_to_simulate: list[Exception],
 ) -> None:
     """Verify wrapper retries transient failures before returning success."""
     mock_response_ok = MagicMock(spec=httpx.Response)
@@ -102,13 +109,16 @@ def test_get_max_retries_reached(wrapper: HTTPClientWrapper) -> None:
 
 @pytest.mark.parametrize("fatal_status_code", [400, 401, 403, 404])
 def test_get_fatal_http_errors_raise_immediately(
-    wrapper: HTTPClientWrapper, fatal_status_code: int
+    wrapper: HTTPClientWrapper,
+    fatal_status_code: int,
 ) -> None:
     """Verify that fatal HTTP errors do not trigger retry attempts and fail loudly."""
     mock_response = httpx.Response(fatal_status_code)
     request_obj = httpx.Request("GET", "https://api.test.com")
     error_fatal = httpx.HTTPStatusError(
-        f"Error {fatal_status_code}", request=request_obj, response=mock_response
+        f"Error {fatal_status_code}",
+        request=request_obj,
+        response=mock_response,
     )
 
     with (
@@ -204,7 +214,8 @@ def test_get_accepts_and_converts_pydantic_http_url(
 
 
 def test_get_max_url_length_exceeded(
-    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+    wrapper: HTTPClientWrapper,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that exceeding the URL limit prevents the request and logs a warning."""
     wrapper.url_max_character_length = 10
@@ -217,14 +228,16 @@ def test_get_max_url_length_exceeded(
 
 
 def test_get_retry_on_transient_failures_logging(
-    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+    wrapper: HTTPClientWrapper,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that retries on transient errors log warning messages."""
     mock_response_ok = MagicMock(spec=httpx.Response)
     mock_response_ok.status_code = 200
 
     error = httpx.ReadTimeout(
-        "Timeout", request=httpx.Request("GET", "https://api.test.com")
+        "Timeout",
+        request=httpx.Request("GET", "https://api.test.com"),
     )
 
     with (
@@ -239,13 +252,16 @@ def test_get_retry_on_transient_failures_logging(
 
 
 def test_get_fatal_http_errors_logging(
-    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+    wrapper: HTTPClientWrapper,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that fatal HTTP status errors log error messages."""
     mock_response = httpx.Response(404)
     request_obj = httpx.Request("GET", "https://api.test.com")
     error_fatal = httpx.HTTPStatusError(
-        "Not Found", request=request_obj, response=mock_response
+        "Not Found",
+        request=request_obj,
+        response=mock_response,
     )
 
     with patch.object(wrapper.client, "send", side_effect=error_fatal):
@@ -258,7 +274,8 @@ def test_get_fatal_http_errors_logging(
 
 
 def test_get_unexpected_errors_logging(
-    wrapper: HTTPClientWrapper, caplog: pytest.LogCaptureFixture
+    wrapper: HTTPClientWrapper,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Verify that unexpected exceptions log errors with traceback info."""
     with patch.object(wrapper.client, "send", side_effect=RuntimeError("Crash")):
