@@ -1,4 +1,6 @@
 # tests/unit/ui/test_progress_bar_context.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Unit tests validating CLI progress bar layout formatting, lifecycle, and logs."""
 
 import io
@@ -115,7 +117,8 @@ def test_progress_lifecycle_on_exception(monkeypatch: pytest.MonkeyPatch) -> Non
     monkeypatch.setattr(sys, "stderr", fake_stderr)
     ctx = ProgressBarContext(verbose_level=0, bar_width=10)
 
-    # ruff: disable[PT012] Converting to PT012 puts the test in fail.
+    # Converting to PT012 puts the test in fail.
+    # ruff: disable[PT012]
     with pytest.raises(ValueError, match="Pipeline Failure"), ctx:
         ctx.update(
             ProgressStep(

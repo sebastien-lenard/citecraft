@@ -1,4 +1,6 @@
 # src/citecraft/repositories/journal_repository.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Repository for tracking, fetching, and updating local academic journal metadata."""
 
 import logging
@@ -399,13 +401,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             if not record.is_complete:
                 missing_count += 1
             else:
-                last_update = (
-                    datetime.strptime(record.update, "%Y-%m-%d")
-                    .astimezone(
-                        UTC,
-                    )
-                    .date()
-                )
+                last_update = date.fromisoformat(record.update)
                 if last_update < expiration_date:
                     expired_count += 1
 
@@ -426,9 +422,7 @@ class JournalRepository(BaseRepository[JournalMetadata]):
         valid: list[JournalMetadata] = []
 
         for record in self.records:
-            last_update = (
-                datetime.strptime(record.update, "%Y-%m-%d").astimezone(UTC).date()
-            )
+            last_update = date.fromisoformat(record.update)
 
             if not record.is_complete:
                 missing.append(record)

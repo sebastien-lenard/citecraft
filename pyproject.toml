@@ -14,6 +14,9 @@ license-files = ["LICENSE"]
 description = "Generates bibliography of manuscripts"
 readme = "README.md"
 requires-python = ">=3.12.9"
+authors = [
+    { name = "Sebastien Lenard", email = "sebastien.lenard@gmail.com" }
+]
 dependencies = [
     "citeproc-py>=0.9.3",
     "click>=8.3.3",
@@ -41,6 +44,8 @@ dev = [
 citecraft = "citecraft.cli:cli"
 
 [tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --tb=short"
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [

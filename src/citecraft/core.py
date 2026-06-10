@@ -1,4 +1,6 @@
 # src/citecraft/core.py
+# SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
+# SPDX-License-Identifier: Apache-2.0
 """Core execution pipeline engine and context orchestration for CiteCraft."""
 
 import logging
@@ -159,7 +161,7 @@ class ParsingStep:
             style_id = ctx.style_repo.favored_style or ctx.journal_title or ctx.style
             err_msg = (
                 f"Style '{style_id}' is not found in CSL repository "
-                "https://github.com/citation-style-language/styles.",
+                "https://github.com/citation-style-language/styles."
             )
             raise ValueError(err_msg)
 
