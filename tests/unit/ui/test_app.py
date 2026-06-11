@@ -5,6 +5,7 @@
 
 import logging
 import typing
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,6 +19,23 @@ from citecraft.ui.app import (
     UIState,
 )
 from citecraft.utils.config import AppConfig
+
+
+class MockThread:
+    """Synchronous thread simulator."""
+
+    def __init__(
+        self,
+        target: typing.Callable,
+        args: tuple = (),
+        **kwargs: object,  # noqa: ARG002
+    ) -> None:
+        self.target = target
+        self.args = args
+
+    def start(self) -> None:
+        """Start thread."""
+        self.target(*self.args)
 
 
 class StubStringVar:
@@ -56,6 +74,37 @@ class StubBooleanVar:
         self._value = bool(val)
 
 
+@pytest.fixture
+def mock_ctk_widgets() -> Generator[dict[str, MagicMock], None, None]:
+    """Globally patch CustomTkinter widgets to avoid window rendering."""
+    with (
+        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
+        patch("customtkinter.CTkFrame.grid") as mock_grid,
+        patch("customtkinter.CTkFrame.grid_columnconfigure") as mock_col_config,
+        patch("customtkinter.CTkFrame.grid_rowconfigure") as mock_row_config,
+        patch("customtkinter.CTkLabel") as mock_label,
+        patch("customtkinter.CTkButton") as mock_button,
+        patch("customtkinter.CTkTextbox") as mock_textbox,
+        patch("customtkinter.CTkFont") as mock_font,
+    ):
+        mock_frame_init.return_value = None
+        yield {
+            "frame_init": mock_frame_init,
+            "grid": mock_grid,
+            "col_config": mock_col_config,
+            "row_config": mock_row_config,
+            "label": mock_label,
+            "button": mock_button,
+            "textbox": mock_textbox,
+            "font": mock_font,
+        }
+
+
+# =============================================================================
+# TESTS
+# =============================================================================
+
+
 def test_app_scaffolding_initialization() -> None:
     """Validate window configurations bypass display constraints on headless systems."""
     with (
@@ -89,27 +138,26 @@ def test_app_scaffolding_initialization() -> None:
         mock_col.assert_any_call(1, weight=1)
 
 
-def test_sidebar_frame_creation() -> None:
+def test_sidebar_frame_creation(mock_ctk_widgets: dict[str, MagicMock]) -> None:
     """Validate sidebar sub-components and elements configuration are initialized."""
     with (
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid_columnconfigure") as mock_col_config,
-        patch("customtkinter.CTkLabel"),
         patch("customtkinter.CTkComboBox") as mock_combo,
         patch("customtkinter.CTkEntry") as mock_entry,
         patch("customtkinter.CTkSwitch") as mock_switch,
-        patch("customtkinter.CTkFont"),
     ):
-        mock_frame_init.return_value = None
         mock_master = MagicMock()
         mock_state = MagicMock()
 
         sidebar = SidebarFrame(mock_master, mock_state)
 
-        mock_frame_init.assert_called_once_with(mock_master, width=280, corner_radius=0)
+        mock_ctk_widgets["frame_init"].assert_called_once_with(
+            mock_master,
+            width=280,
+            corner_radius=0,
+        )
 
         # Verify grid layout constraints are called without hitting real tk engine
-        mock_col_config.assert_called_once_with(0, weight=1)
+        mock_ctk_widgets["col_config"].assert_called_once_with(0, weight=1)
 
         # Verify ComboBox for API selection binds the state's API variable
         mock_combo.assert_called_once_with(
@@ -125,45 +173,34 @@ def test_sidebar_frame_creation() -> None:
         assert mock_switch.call_count == 2
 
 
-def test_main_frame_creation() -> None:
+def test_main_frame_creation(mock_ctk_widgets: dict[str, MagicMock]) -> None:
     """Validate main dashboard elements are initialized with expected layouts."""
-    with (
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid") as mock_frame_grid,
-        patch("customtkinter.CTkFrame.grid_columnconfigure") as mock_col_config,
-        patch("customtkinter.CTkFrame.grid_rowconfigure") as mock_row_config,
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton") as mock_button,
-        patch("customtkinter.CTkTextbox") as mock_textbox,
-        patch("customtkinter.CTkFont"),
-    ):
-        mock_frame_init.return_value = None
-        mock_master = MagicMock()
-        mock_state = MagicMock()
+    mock_master = MagicMock()
+    mock_state = MagicMock()
 
-        main_frame = MainFrame(mock_master, mock_state)
+    main_frame = MainFrame(mock_master, mock_state)
 
-        # Frame should be transparent-backed
-        mock_frame_init.assert_any_call(mock_master, fg_color="transparent")
+    # Frame should be transparent-backed
+    mock_ctk_widgets["frame_init"].assert_any_call(mock_master, fg_color="transparent")
 
-        # Main frame layout alignments
-        mock_col_config.assert_any_call(0, weight=1)
-        mock_row_config.assert_any_call(2, weight=1)
+    # Main frame layout alignments
+    mock_ctk_widgets["col_config"].assert_any_call(0, weight=1)
+    mock_ctk_widgets["row_config"].assert_any_call(2, weight=1)
 
-        # Ensure grid alignment calls are bypassed on sub-frames
-        mock_frame_grid.assert_called_once_with(
-            row=0,
-            column=0,
-            padx=20,
-            pady=(20, 10),
-            sticky="ew",
-        )
+    # Ensure grid alignment calls are bypassed on sub-frames
+    mock_ctk_widgets["grid"].assert_called_once_with(
+        row=0,
+        column=0,
+        padx=20,
+        pady=(20, 10),
+        sticky="ew",
+    )
 
-        # Checking existence of layout components (3 buttons: Input, Output, Run)
-        assert mock_button.call_count == 3
+    # Checking existence of layout components (3 buttons: Input, Output, Run)
+    assert mock_ctk_widgets["button"].call_count == 3
 
-        # Check console log panel instantiation
-        mock_textbox.assert_called_once_with(main_frame)
+    # Check console log panel instantiation
+    mock_ctk_widgets["textbox"].assert_called_once_with(main_frame)
 
 
 def test_ui_state_initialization() -> None:
@@ -172,7 +209,6 @@ def test_ui_state_initialization() -> None:
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
     ):
-        MagicMock()
         state = UIState()
 
         assert state.api.get() == "OpenAlex"
@@ -182,20 +218,11 @@ def test_ui_state_initialization() -> None:
         assert state.skip_journal_update.get() is False
 
 
-def test_select_input_file_updates_state() -> None:
+def test_select_input_file_updates_state(
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Validate input file dialog successfully updates the UIState."""
-    with (
-        patch("customtkinter.CTkFrame.__init__") as mock_init,
-        patch("customtkinter.CTkFrame.grid"),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
-        patch("customtkinter.filedialog.askopenfilename") as mock_dialog,
-    ):
-        mock_init.return_value = None
+    with patch("customtkinter.filedialog.askopenfilename") as mock_dialog:
         mock_dialog.return_value = "C:/mock/manuscript.docx"
 
         mock_state = MagicMock()
@@ -212,20 +239,22 @@ def test_select_input_file_updates_state() -> None:
         )
 
 
-def test_select_output_file_updates_state() -> None:
+def test_select_input_file_cancel(mock_ctk_widgets: dict[str, MagicMock]) -> None:
+    """Validate input file selection does not update state if canceled."""
+    with patch("customtkinter.filedialog.askopenfilename", return_value=""):
+        mock_state = MagicMock()
+        main_frame = MainFrame(MagicMock(), mock_state)
+
+        main_frame._select_input_file()
+
+        mock_state.input_file_path.set.assert_not_called()
+
+
+def test_select_output_file_updates_state(
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Validate output file selection successfully updates the UIState."""
-    with (
-        patch("customtkinter.CTkFrame.__init__") as mock_init,
-        patch("customtkinter.CTkFrame.grid"),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
-        patch("customtkinter.filedialog.asksaveasfilename") as mock_dialog,
-    ):
-        mock_init.return_value = None
+    with patch("customtkinter.filedialog.asksaveasfilename") as mock_dialog:
         mock_dialog.return_value = "C:/mock/output.csv"
 
         mock_state = MagicMock()
@@ -241,13 +270,23 @@ def test_select_output_file_updates_state() -> None:
         mock_state.output_file_path.set.assert_called_once_with("C:/mock/output.csv")
 
 
+def test_select_output_file_cancel(mock_ctk_widgets: dict[str, MagicMock]) -> None:
+    """Validate output file selection does not update state if canceled."""
+    with patch("customtkinter.filedialog.asksaveasfilename", return_value=""):
+        mock_state = MagicMock()
+        main_frame = MainFrame(MagicMock(), mock_state)
+
+        main_frame._select_output_file()
+
+        mock_state.output_file_path.set.assert_not_called()
+
+
 def test_ui_state_serialization_success(test_config: AppConfig) -> None:
     """Validate UIState translates cleanly to strong typed PipelineOptions."""
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
     ):
-        MagicMock()
         state = UIState()
 
         # Inject real values into Stub classes safely
@@ -276,7 +315,6 @@ def test_ui_state_serialization_validation_errors(test_config: AppConfig) -> Non
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
     ):
-        MagicMock()
         state = UIState()
 
         state.api.set("OpenAlex")
@@ -304,7 +342,10 @@ def test_ui_state_serialization_validation_errors(test_config: AppConfig) -> Non
             state.to_pipeline_options(test_config)
 
 
-def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
+def test_on_run_pipeline_validation_success(
+    test_config: AppConfig,
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Validate run event writes success to console log on valid state inputs."""
 
     def mock_after(
@@ -318,17 +359,8 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid"),
         patch("customtkinter.CTkFrame.after", mock_after),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
     ):
-        mock_frame_init.return_value = None
         mock_master = MagicMock()
         mock_state = UIState()
 
@@ -375,21 +407,15 @@ def test_on_run_pipeline_validation_success(test_config: AppConfig) -> None:
         assert "apa" in write_args
 
 
-def test_on_run_pipeline_validation_failure(test_config: AppConfig) -> None:
+def test_on_run_pipeline_validation_failure(
+    test_config: AppConfig,
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Validate run event highlights widgets on validation value failures."""
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid"),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
     ):
-        mock_frame_init.return_value = None
         mock_master = MagicMock()
         mock_sidebar = MagicMock()
         mock_master.sidebar = mock_sidebar
@@ -420,21 +446,15 @@ def test_on_run_pipeline_validation_failure(test_config: AppConfig) -> None:
         mock_sidebar.ent_style.configure.assert_any_call(border_color="red")
 
 
-def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
+def test_on_run_pipeline_manuscript_failure(
+    test_config: AppConfig,
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Validate manuscript path validation failure highlights btn_input."""
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid"),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
     ):
-        mock_frame_init.return_value = None
         mock_master = MagicMock()
         mock_state = UIState()
 
@@ -448,6 +468,9 @@ def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
         main_frame.master = mock_master
         main_frame.txt_console = MagicMock()
 
+        # Reset button mock configured on initialization
+        typing.cast("MagicMock", main_frame.btn_input.configure).reset_mock()
+
         with patch("citecraft.ui.app.get_config", return_value=test_config):
             main_frame._on_run_pipeline()
 
@@ -458,21 +481,15 @@ def test_on_run_pipeline_manuscript_failure(test_config: AppConfig) -> None:
         )
 
 
-def test_on_run_pipeline_output_failure(test_config: AppConfig) -> None:
+def test_on_run_pipeline_output_failure(
+    test_config: AppConfig,
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Validate output path validation failure highlights btn_output."""
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid"),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
     ):
-        mock_frame_init.return_value = None
         mock_master = MagicMock()
         mock_state = UIState()
 
@@ -485,6 +502,9 @@ def test_on_run_pipeline_output_failure(test_config: AppConfig) -> None:
         main_frame = MainFrame(mock_master, mock_state)
         main_frame.master = mock_master
         main_frame.txt_console = MagicMock()
+
+        # Reset button mock configured on initialization
+        typing.cast("MagicMock", main_frame.btn_output.configure).reset_mock()
 
         with patch("citecraft.ui.app.get_config", return_value=test_config):
             main_frame._on_run_pipeline()
@@ -513,6 +533,16 @@ def test_text_redirector_safe_write() -> None:
     mock_textbox.insert.assert_called_with("end", "Hello Log")
     mock_textbox.configure.assert_any_call(state="disabled")
     mock_textbox.see.assert_called_with("end")
+
+
+def test_text_redirector_write_empty() -> None:
+    """Validate TextRedirector ignores empty write requests."""
+    mock_textbox = MagicMock()
+    redirector = TextRedirector(mock_textbox)
+
+    redirector.write("")
+
+    mock_textbox.after.assert_not_called()
 
 
 def test_queue_log_handler_redirection() -> None:
@@ -560,7 +590,10 @@ def test_queue_log_handler_error_handling() -> None:
     handler.handleError.assert_called_once_with(record)
 
 
-def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None:
+def test_pipeline_asynchronous_execution_success(
+    test_config: AppConfig,
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Verify background run thread disables and restores controls on success."""
 
     def mock_after(
@@ -574,17 +607,8 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid"),
         patch("customtkinter.CTkFrame.after", mock_after),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
     ):
-        mock_frame_init.return_value = None
         mock_master = MagicMock()
         mock_state = UIState()
 
@@ -607,20 +631,10 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
 
         with (
             patch("citecraft.ui.app.run", mock_run),
+            patch("threading.Thread", MockThread),
             patch("citecraft.ui.app.get_config", return_value=test_config),
         ):
-
-            def mock_thread_init(
-                target: typing.Callable,
-                args: tuple = (),
-                **kwargs: object,
-            ) -> MagicMock:
-                # Force synchronous execution inside mock thread to test flow
-                target(*args)
-                return MagicMock()
-
-            with patch("threading.Thread", side_effect=mock_thread_init):
-                main_frame._on_run_pipeline()
+            main_frame._on_run_pipeline()
 
         # Verify core.run was called
         mock_run.assert_called_once()
@@ -635,7 +649,10 @@ def test_pipeline_asynchronous_execution_success(test_config: AppConfig) -> None
         )
 
 
-def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
+def test_pipeline_asynchronous_execution_error(
+    test_config: AppConfig,
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
     """Verify background run thread captures and handles backend errors gracefully."""
 
     def mock_after(
@@ -649,17 +666,8 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
     with (
         patch("customtkinter.StringVar", StubStringVar),
         patch("customtkinter.BooleanVar", StubBooleanVar),
-        patch("customtkinter.CTkFrame.__init__") as mock_frame_init,
-        patch("customtkinter.CTkFrame.grid"),
         patch("customtkinter.CTkFrame.after", mock_after),
-        patch("customtkinter.CTkFrame.grid_columnconfigure"),
-        patch("customtkinter.CTkFrame.grid_rowconfigure"),
-        patch("customtkinter.CTkLabel"),
-        patch("customtkinter.CTkButton"),
-        patch("customtkinter.CTkTextbox"),
-        patch("customtkinter.CTkFont"),
     ):
-        mock_frame_init.return_value = None
         mock_master = MagicMock()
         mock_state = UIState()
 
@@ -677,22 +685,80 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
 
         with (
             patch("citecraft.ui.app.run", mock_run),
+            patch("threading.Thread", MockThread),
             patch("citecraft.ui.app.get_config", return_value=test_config),
         ):
-
-            def mock_thread_init(
-                target: typing.Callable,
-                args: tuple = (),
-                **kwargs: object,
-            ) -> MagicMock:
-                target(*args)
-                return MagicMock()
-
-            with patch("threading.Thread", side_effect=mock_thread_init):
-                main_frame._on_run_pipeline()
+            main_frame._on_run_pipeline()
 
         # Verify text console printed error log
         main_frame.txt_console.insert.assert_any_call(
             "end",
             "❌ Execution Failure: API failure\n",
         )
+
+
+def test_on_pipeline_completed_no_metadata(
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
+    """Validate pipeline completion behavior when export metadata is missing."""
+    mock_state = MagicMock()
+    main_frame = MainFrame(MagicMock(), mock_state)
+    main_frame.txt_console = MagicMock()
+
+    main_frame._on_pipeline_completed([], None, None)
+
+    # Ensure it wrote the completion message without querying metadata
+    main_frame.txt_console.insert.assert_any_call(
+        "end",
+        "✓ Processing Completed Successfully.\n",
+    )
+
+
+def test_set_controls_state_no_sidebar(
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
+    """Validate control state update does not crash if sidebar is missing."""
+    mock_master = MagicMock(spec=[])  # No sidebar attribute
+    main_frame = MainFrame(mock_master, MagicMock())
+
+    main_frame._set_controls_state("disabled")
+    # Should execute cleanly without raising AttributeError
+
+
+def test_apply_validation_highlights_other_error(
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
+    """Validate validation highlights bypass configuration for unrecognized errors."""
+    main_frame = MainFrame(MagicMock(), MagicMock())
+
+    # Reset button mock configured on initialization
+    typing.cast("MagicMock", main_frame.btn_input.configure).reset_mock()
+
+    main_frame._apply_validation_highlights("Some completely different error")
+
+    # Check that no red borders were configured
+    typing.cast("MagicMock", main_frame.btn_input.configure).assert_not_called()
+
+
+def test_apply_validation_highlights_no_sidebar(
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
+    """Validate validation highlights do not crash if style error but no sidebar."""
+    mock_master = MagicMock(spec=[])  # No sidebar attribute
+    main_frame = MainFrame(mock_master, MagicMock())
+    main_frame.master = mock_master
+
+    main_frame._apply_validation_highlights("Reference Style cannot be empty")
+    # Should execute cleanly without crashing on missing sidebar
+
+
+def test_reset_validation_highlights_no_sidebar(
+    mock_ctk_widgets: dict[str, MagicMock],
+) -> None:
+    """Validate reset validation highlights does not crash if sidebar is missing."""
+    mock_master = MagicMock(spec=[])  # No sidebar attribute
+    main_frame = MainFrame(mock_master, MagicMock())
+    main_frame.master = mock_master
+
+    main_frame._reset_validation_highlights()
+    # Should execute cleanly without raising AttributeError

@@ -17,10 +17,10 @@ import click
 
 from .core import AnomalousJournal, PipelineOptions, run
 from .logging_config import setup_logging
-from .services import ExportResult
+from .logging_infra.progress_bar_context import ProgressBarContext
+from .schemas import BibliographyResult
 from .storage.db import archive_database_cache
 from .ui.app import CiteCraftApp
-from .ui.progress_bar_context import ProgressBarContext
 from .utils import AppConfig
 from .utils.config import get_config
 
@@ -54,7 +54,7 @@ class ProcessedArgs:
 
 def _configure_windows_console() -> None:
     """Force Windows console to replace unencodable characters instead of crashing."""
-    if sys.platform == "win32":  # pragma: no branch
+    if sys.platform == "win32":
         sys.stdout = io.TextIOWrapper(
             sys.stdout.buffer,
             encoding=sys.stdout.encoding,
@@ -112,7 +112,7 @@ def _render_anomalous_journals(anomalous_journals: list[AnomalousJournal]) -> No
     click.echo("", err=True)
 
 
-def _render_export_summary(metadata: ExportResult) -> None:
+def _render_export_summary(metadata: BibliographyResult) -> None:
     """Display structural statistics and KPIs for the generated export."""
     resolved_style = metadata.style or ""
     style_label = f" ({resolved_style})" if resolved_style else ""
@@ -132,7 +132,7 @@ def _render_export_summary(metadata: ExportResult) -> None:
     click.echo(f"  • Ambiguous matches       : {metadata.duplicate_count}")
 
 
-def _render_csv_preview(metadata: ExportResult) -> None:
+def _render_csv_preview(metadata: BibliographyResult) -> None:
     """Construct and print a neatly wrapped ASCII table preview of the CSV."""
     preview_rows: list[dict[str, str]] = []
     if metadata.sample_ok:
@@ -176,12 +176,12 @@ def _render_csv_preview(metadata: ExportResult) -> None:
             click.echo(f"{'':<{COL1_W}} | {'':<{COL2_W}} | {extra_line:<{COL3_W}}")
 
 
-def _render_recommendations(metadata: ExportResult) -> None:
+def _render_recommendations(metadata: BibliographyResult) -> None:
     """Provide contextual next-steps action items based on output composition."""
     click.echo("")
     click.secho("💡 Next Steps & Recommendations:", bold=True, fg="yellow")
 
-    if metadata.missing_count > 0:  # pragma: no branch
+    if metadata.missing_count > 0:
         click.echo(
             "  • For citations marked as 'Missing DOI/Reference': "
             "Please search for their DOIs\n"
@@ -189,7 +189,7 @@ def _render_recommendations(metadata: ExportResult) -> None:
             "(https://search.crossref.org) and update your records.",
         )
 
-    if metadata.duplicate_count > 0:  # pragma: no branch
+    if metadata.duplicate_count > 0:
         click.echo(
             "  • For citations with multiple matches: "
             "Review the generated CSV file and delete\n"
@@ -216,7 +216,7 @@ def _handle_execution_failure(
         exc_info=err,
     )
 
-    if cache_msg:  # pragma: no branch
+    if cache_msg:
         click.echo("")
         click.secho(cache_msg, fg="green", bold=True)
 

@@ -4,6 +4,7 @@
 """Unit tests for the CSL reference schema and validation rules."""
 
 import logging
+from unittest.mock import MagicMock
 
 import pytest
 from pydantic import ValidationError
@@ -142,3 +143,52 @@ def test_validate_csl_type_missing_context_silence() -> None:
 
     validated = CSLReference.model_validate(raw_data, context=None)
     assert validated.type == "unregistered-type"
+
+
+def test_clean_crossref_metadata_non_dict() -> None:
+    """Verify clean_crossref_metadata returns non-dictionary data unmodified."""
+    non_dict_data = "raw string data"
+    decorator = CSLReference.__pydantic_decorators__.model_validators[
+        "clean_crossref_metadata"
+    ]
+    validator_func = getattr(decorator.func, "__func__", decorator.func)
+    result = validator_func(CSLReference, non_dict_data)
+    assert result == non_dict_data
+
+
+def test_clean_crossref_metadata_id_missing_doi_lowercase_present() -> None:
+    """Verify primary ID is assigned from lowercase doi when ID is missing."""
+    raw_data = {
+        "doi": "10.1000/lowercase-doi",
+        "type": "article-journal",
+    }
+    validated = CSLReference.model_validate(raw_data)
+    assert validated.id == "10.1000/lowercase-doi"
+    assert validated.doi == "10.1000/lowercase-doi"
+
+
+def test_validate_type_against_config_non_dict() -> None:
+    """Verify validate_type_against_config returns non-dictionary data unmodified."""
+    mock_info = MagicMock()
+    non_dict_data = [1, 2, 3]
+    decorator = CSLReference.__pydantic_decorators__.model_validators[
+        "validate_type_against_config"
+    ]
+    validator_func = getattr(decorator.func, "__func__", decorator.func)
+    result = validator_func(CSLReference, non_dict_data, mock_info)
+    assert result == non_dict_data
+
+
+def test_validate_type_against_config_non_string_type() -> None:
+    """Check validate_type_against_config bypasses validation when not string type."""
+    mock_info = MagicMock()
+    raw_data = {
+        "id": "some-id",
+        "type": 123,  # non-string type
+    }
+    decorator = CSLReference.__pydantic_decorators__.model_validators[
+        "validate_type_against_config"
+    ]
+    validator_func = getattr(decorator.func, "__func__", decorator.func)
+    result = validator_func(CSLReference, raw_data, mock_info)
+    assert result == raw_data

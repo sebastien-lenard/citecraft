@@ -1,4 +1,4 @@
-# src/citecraft/ui/progress_bar_context.py
+# src/citecraft/logging_infra/progress_bar_context.py
 # SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
 # SPDX-License-Identifier: Apache-2.0
 """Asynchronous CLI progress bar visualization and logging interception hooks."""
@@ -11,7 +11,7 @@ from collections.abc import Callable
 from types import TracebackType
 from typing import Any, Self
 
-from citecraft.core import ProgressStep
+from citecraft.schemas import ProgressStep
 
 
 class LogInterceptor(logging.Handler):

@@ -512,6 +512,33 @@ def test_resolve_parent_unrecognized_namespace_raises_value_error(
         repo.get_style("Dep J")
 
 
+def test_resolve_parent_no_independent_parent_link(test_config: AppConfig) -> None:
+    """Cover L260 in _resolve_independent_parent(): parent_link_node is None."""
+    repo = StyleRepository(config=test_config)
+    mock_index = [{"title": "Dep J", "name": "dep-j", "dependent": True}]
+    mock_res_index = MagicMock()
+    mock_res_index.json.return_value = mock_index
+
+    xml_no_parent_link = (
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<style xmlns="http://citationstyles.org/ns/" version="1.0">\n'
+        "  <info>\n"
+        '    <link rel="template" href="http://example.com"/>\n'
+        "  </info>\n"
+        "</style>"
+    )
+    mock_res_xml = MagicMock()
+    mock_res_xml.content = xml_no_parent_link.encode("utf-8")
+
+    with patch.object(
+        repo.http_client_wrapper,
+        "get",
+        side_effect=[(mock_res_index, 0), (mock_res_xml, 0)],
+    ):
+        result = repo.get_style("Dep J")
+        assert result is None
+
+
 def test_validate_favored_style_empty_content(test_config: AppConfig) -> None:
     """Cover L268 in validate_favored_style(): if not self.csl_content."""
     repo = StyleRepository(favored_style="apa", config=test_config)

@@ -4,7 +4,6 @@
 """Unit tests for the local journal metadata repository persistence workflows."""
 
 import logging
-import time
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 from unittest.mock import MagicMock, patch
@@ -21,26 +20,6 @@ from citecraft.utils import AppConfig
 def repo(test_config: AppConfig) -> JournalRepository:
     """Provide JournalRepository instance utilizing test config."""
     return JournalRepository(config=test_config)
-
-
-def test_log_heartbeat_if_needed(
-    repo: JournalRepository,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Verify heartbeat logger triggers periodically based on config threshold."""
-    repo.config = repo.config.model_copy(
-        update={"default_logging_frequency_for_batch_updates": 0.05},
-    )
-    with caplog.at_level(logging.INFO):
-        t1 = time.time() - 0.1
-        t2 = repo._log_heartbeat_if_needed(3, 10, t1)
-        assert t2 > t1
-        assert "Batch update status: 7 updates remaining" in caplog.text
-
-        caplog.clear()
-        t3 = repo._log_heartbeat_if_needed(4, 10, t2)
-        assert t3 == t2
-        assert "Batch update status" not in caplog.text
 
 
 def test_get_journal_metadata_success(repo: JournalRepository) -> None:

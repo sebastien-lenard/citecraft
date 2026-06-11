@@ -10,6 +10,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from citecraft.adapters import CiteprocAdapter
+from citecraft.logging_infra import LoggingTools
 from citecraft.parsers import HtmlCleaner
 from citecraft.repositories import DoiRepository
 from citecraft.schemas import WorkMetadata
@@ -30,33 +31,6 @@ class ReferenceService:
         config: AppConfig | None = None,
     ) -> None:
         self.config: AppConfig = config or get_config()
-
-    def _log_heartbeat_if_needed(
-        self,
-        processed: int,
-        total: int,
-        last_time: float,
-    ) -> float:
-        """Log batch resolution progress every 10 seconds of processing time."""
-        current_time = time.time()
-        if (
-            current_time - last_time
-            > self.config.default_logging_frequency_for_batch_updates
-        ):
-            remaining = total - processed
-            logger.info(
-                "Batch update status: %d updates remaining out of %d",
-                remaining,
-                total,
-                extra={
-                    "status": "OK",
-                    "event": "reference_update_heartbeat",
-                    "remaining_count": remaining,
-                    "total_count": total,
-                },
-            )
-            return current_time
-        return last_time
 
     def fill_missing_references(
         self,
@@ -114,10 +88,12 @@ class ReferenceService:
             record.raw_reference = raw_reference
             record.style = target_style
             processed_record_count += 1
-            last_display_time = self._log_heartbeat_if_needed(
+            last_display_time = LoggingTools.log_heartbeat_if_needed(
+                "reference_update_batch_heartbeat",
                 processed_record_count,
                 total_targets,
                 last_display_time,
+                self.config,
             )
 
         logger.info(
