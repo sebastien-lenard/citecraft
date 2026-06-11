@@ -28,7 +28,7 @@ class MockThread:
         self,
         target: typing.Callable,
         args: tuple = (),
-        **kwargs: object,
+        **kwargs: object,  # noqa: ARG002
     ) -> None:
         self.target = target
         self.args = args
