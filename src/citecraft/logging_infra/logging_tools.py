@@ -18,6 +18,7 @@ class LoggingTools:
 
     @staticmethod
     def log_heartbeat_if_needed(
+        event_code: str,  # e.g. "journal_update_batch_heartbeat"
         processed: int,
         total: int,
         last_time: float,
@@ -36,7 +37,7 @@ class LoggingTools:
                 total,
                 extra={
                     "status": "OK",
-                    "event": "batch_update_heartbeat",
+                    "event": event_code,
                     "remaining_count": remaining,
                     "total_count": total,
                 },

@@ -387,6 +387,7 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                 )
 
             last_display_time = LoggingTools.log_heartbeat_if_needed(
+                "work_update_batch_heartbeat",
                 len(processed_templates) + failed_count,
                 len(templates_to_process),
                 last_display_time,

@@ -24,6 +24,7 @@ def test_log_heartbeat_if_needed_triggers_log(
 
     with caplog.at_level(logging.INFO):
         new_time = LoggingTools.log_heartbeat_if_needed(
+            event_code="journal_update_batch_heartbeat",
             processed=2,
             total=10,
             last_time=last_time,
@@ -42,7 +43,7 @@ def test_log_heartbeat_if_needed_triggers_log(
 
     # Assert extra properties passed to logger
     assert getattr(record, "status", None) == "OK"
-    assert getattr(record, "event", None) == "batch_update_heartbeat"
+    assert getattr(record, "event", None) == "journal_update_batch_heartbeat"
     assert getattr(record, "remaining_count", None) == 8
     assert getattr(record, "total_count", None) == 10
 
@@ -59,6 +60,7 @@ def test_log_heartbeat_if_needed_skips_log(
 
     with caplog.at_level(logging.INFO):
         new_time = LoggingTools.log_heartbeat_if_needed(
+            event_code="journal_update_batch_heartbeat",
             processed=2,
             total=10,
             last_time=last_time,

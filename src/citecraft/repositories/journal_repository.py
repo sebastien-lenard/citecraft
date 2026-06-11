@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal
 
+from citecraft.logging_infra import LoggingTools
 from citecraft.parsers import JournalParser
 from citecraft.schemas import JournalMetadata
 from citecraft.utils import AppConfig
@@ -44,33 +45,6 @@ class JournalRepository(BaseRepository[JournalMetadata]):
             api=api,
         )
         self.has_pending_updates: bool = False
-
-    def _log_heartbeat_if_needed(
-        self,
-        processed: int,
-        total: int,
-        last_time: float,
-    ) -> float:
-        """Log update batch progress status every 10 seconds of processing time."""
-        current_time = time.time()
-        if (
-            current_time - last_time
-            > self.config.default_logging_frequency_for_batch_updates
-        ):
-            remaining = total - processed
-            logger.info(
-                "Batch update status: %d updates remaining out of %d",
-                remaining,
-                total,
-                extra={
-                    "status": "OK",
-                    "event": "journal_update_heartbeat",
-                    "remaining_count": remaining,
-                    "total_count": total,
-                },
-            )
-            return current_time
-        return last_time
 
     def get_issns_by_input_title(self, input_title: str) -> list[str]:
         """Return unique, non-null ISSNs present in records for a specific title."""
@@ -452,10 +426,12 @@ class JournalRepository(BaseRepository[JournalMetadata]):
                 new_records.append(record)
 
             state.processed += 1
-            state.last_heartbeat = self._log_heartbeat_if_needed(
+            state.last_heartbeat = LoggingTools.log_heartbeat_if_needed(
+                "journal_update_batch_heartbeat",
                 state.processed,
                 state.total,
                 state.last_heartbeat,
+                self.config,
             )
 
     def update_all(self) -> None:

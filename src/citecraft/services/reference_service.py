@@ -89,6 +89,7 @@ class ReferenceService:
             record.style = target_style
             processed_record_count += 1
             last_display_time = LoggingTools.log_heartbeat_if_needed(
+                "reference_update_batch_heartbeat",
                 processed_record_count,
                 total_targets,
                 last_display_time,
