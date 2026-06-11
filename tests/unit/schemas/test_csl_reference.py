@@ -148,7 +148,11 @@ def test_validate_csl_type_missing_context_silence() -> None:
 def test_clean_crossref_metadata_non_dict() -> None:
     """Verify clean_crossref_metadata returns non-dictionary data unmodified."""
     non_dict_data = "raw string data"
-    result = CSLReference.clean_crossref_metadata(non_dict_data)
+    decorator = CSLReference.__pydantic_decorators__.model_validators[
+        "clean_crossref_metadata"
+    ]
+    validator_func = getattr(decorator.func, "__func__", decorator.func)
+    result = validator_func(CSLReference, non_dict_data)
     assert result == non_dict_data
 
 
@@ -167,16 +171,24 @@ def test_validate_type_against_config_non_dict() -> None:
     """Verify validate_type_against_config returns non-dictionary data unmodified."""
     mock_info = MagicMock()
     non_dict_data = [1, 2, 3]
-    result = CSLReference.validate_type_against_config(non_dict_data, mock_info)
+    decorator = CSLReference.__pydantic_decorators__.model_validators[
+        "validate_type_against_config"
+    ]
+    validator_func = getattr(decorator.func, "__func__", decorator.func)
+    result = validator_func(CSLReference, non_dict_data, mock_info)
     assert result == non_dict_data
 
 
 def test_validate_type_against_config_non_string_type() -> None:
-    """Verify validate_type_against_config bypasses validation when type is not a string."""
+    """Check validate_type_against_config bypasses validation when not string type."""
     mock_info = MagicMock()
     raw_data = {
         "id": "some-id",
         "type": 123,  # non-string type
     }
-    result = CSLReference.validate_type_against_config(raw_data, mock_info)
+    decorator = CSLReference.__pydantic_decorators__.model_validators[
+        "validate_type_against_config"
+    ]
+    validator_func = getattr(decorator.func, "__func__", decorator.func)
+    result = validator_func(CSLReference, raw_data, mock_info)
     assert result == raw_data

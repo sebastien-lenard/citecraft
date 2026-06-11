@@ -238,7 +238,7 @@ def test_validate_author(
 
 
 def test_validate_author_unsupported_shape(repo: OpenAlexWorkRepository) -> None:
-    """Verify that _validate_author returns False if api_author has an unsupported shape."""
+    """Check that _validate_author returns False if unsupported shape of api_author."""
     assert repo._validate_author("Lenard", {"unsupported": "structure"}) is False
 
 

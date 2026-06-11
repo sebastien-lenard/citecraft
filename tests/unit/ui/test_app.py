@@ -756,7 +756,7 @@ def test_pipeline_asynchronous_execution_error(test_config: AppConfig) -> None:
 
 
 def test_on_pipeline_completed_no_metadata() -> None:
-    """Validate pipeline completion behaves correctly when export metadata is missing."""
+    """Validate pipeline completion behavior when export metadata is missing."""
     with (
         patch("customtkinter.CTkFrame.__init__") as mock_init,
         patch("customtkinter.CTkFrame.grid"),

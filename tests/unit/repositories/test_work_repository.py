@@ -228,7 +228,7 @@ def test_clean_metadata_skips_author_block(
     author_key: str | None,
     metadata_payload: dict,
 ) -> None:
-    """Verify that the author cleaning block is bypassed if preconditions are not met."""
+    """Check that the author cleaning block is bypassed if preconditions are not met."""
     cleaned = repo._clean_metadata(
         metadata=metadata_payload,
         work_blacklist_fields=[],

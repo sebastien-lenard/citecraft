@@ -452,8 +452,13 @@ def test_handle_execution_failure_non_verbose() -> None:
 
 def test_handle_execution_failure_no_cache_msg() -> None:
     """Verify failure handler behaves correctly without a cache message."""
+
+    def raise_error() -> None:
+        err_msg = "Simulated crash"
+        raise ValueError(err_msg)
+
     try:
-        raise ValueError("Simulated crash")
+        raise_error()
     except ValueError as err:
         with (
             patch("click.echo"),
