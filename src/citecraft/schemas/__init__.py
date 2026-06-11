@@ -10,11 +10,14 @@ from .csl_reference import CSLReference
 from .doi_type import DoiType, check_standalone_doi
 from .issn_type import IssnType, check_standalone_issn
 from .journal_metadata import JournalMetadata
+from .pipeline_types import AnomalousJournal, BibliographyResult, ProgressStep
 from .types import HttpsUrlStr, UrlWithObjectName
 from .work_metadata import WorkMetadata
 
 __all__ = [
+    "AnomalousJournal",
     "BaseSchema",
+    "BibliographyResult",
     "CSLDate",
     "CSLName",
     "CSLReference",
@@ -24,6 +27,7 @@ __all__ = [
     "HttpsUrlStr",
     "IssnType",
     "JournalMetadata",
+    "ProgressStep",
     "UrlWithObjectName",
     "WorkMetadata",
     "check_standalone_doi",

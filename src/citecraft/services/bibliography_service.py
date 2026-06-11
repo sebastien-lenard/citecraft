@@ -6,37 +6,16 @@
 import csv
 import logging
 import re
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from citecraft.schemas import CitationMetadata, WorkMetadata
+from citecraft.schemas import BibliographyResult, CitationMetadata, WorkMetadata
 from citecraft.utils import (
     AppConfig,
     get_config,
 )
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class ExportResult:
-    """Metric aggregations and structural outputs of bibliography exports."""
-
-    total_rows: int
-    output_filepath: Path
-    export_format: str = "CSV"
-    style: str | None = None
-
-    # Metrics
-    ok_count: int = 0
-    missing_count: int = 0
-    duplicate_count: int = 0
-
-    # Row examples
-    sample_ok: dict[str, Any] | None = None
-    sample_missing: dict[str, Any] | None = None
-    samples_duplicate: list[dict[str, Any]] = field(default_factory=list)
 
 
 class BibliographyService:
@@ -53,7 +32,7 @@ class BibliographyService:
         citations: list[CitationMetadata],
         works: list[WorkMetadata],
         output_path: Path,
-    ) -> ExportResult:
+    ) -> BibliographyResult:
         """Construct, validate, sort a bibliography to a CSV file."""
         works_by_citation: dict[tuple[str, str], list[WorkMetadata]] = {}
         for work in works:
@@ -166,7 +145,7 @@ class BibliographyService:
 
         samples_duplicate = [r for r in rows if r["Status"] == status_duplicate][:2]
 
-        return ExportResult(
+        return BibliographyResult(
             total_rows=len(rows),
             output_filepath=output_path,
             export_format="CSV",

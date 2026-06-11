@@ -5,13 +5,11 @@
 
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass, is_dataclass, replace
+from dataclasses import is_dataclass, replace
 from pathlib import Path
-from typing import NamedTuple, Protocol
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
-
-from citecraft.schemas import CitationMetadata
 
 from .network import get_http_client_registry
 from .parsers import CitationParser, JournalParser
@@ -23,48 +21,17 @@ from .repositories import (
     StyleRepository,
     WorkRepository,
 )
-from .services import BibliographyService, ExportResult, ReferenceService
+from .schemas import (
+    AnomalousJournal,
+    BibliographyResult,
+    CitationMetadata,
+    ProgressStep,
+)
+from .services import BibliographyService, ReferenceService
 from .utils import DataLoader
 from .utils.config import AppConfig, get_config
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class AnomalousJournal:
-    """Data carrier representing journals with no ISSN or incomplete metadata."""
-
-    input_title: str
-    status: str
-    issn: str
-    issns_found: str
-
-
-class ProgressStep(NamedTuple):
-    """Immutable data record representing the progress of a pipeline step."""
-
-    step_name: str  # Ex: "parsing", "journals", "works", "references"
-    current: int  # Count of processed elements
-    total: int  # Total count of elements
-    message: str  # Optional UI message
-    status: str = "started"
-
-
-class PipelineOptions(BaseModel):
-    """Encapsulated execution parameters for the linear pipeline run."""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    input_file_path: str | Path | None = None
-    input_text: str | None = None
-    api: str = "OpenAlex"
-    style: str = "apa"
-    journal_title: str | None = None
-    output_filepath: str | Path | None = None
-    config: AppConfig | None = None
-    progress_callback: Callable[[ProgressStep], None] | None = None
-    skip_journal_update: bool = False
-    skip_work_update: bool = False
 
 
 class PipelineContext(BaseModel):
@@ -95,7 +62,24 @@ class PipelineContext(BaseModel):
 
     # Output payloads
     anomalous_journals: list[AnomalousJournal] = Field(default_factory=list)
-    export_result: ExportResult | None = None
+    export_result: BibliographyResult | None = None
+
+
+class PipelineOptions(BaseModel):
+    """Encapsulated execution parameters for the linear pipeline run."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    input_file_path: str | Path | None = None
+    input_text: str | None = None
+    api: str = "OpenAlex"
+    style: str = "apa"
+    journal_title: str | None = None
+    output_filepath: str | Path | None = None
+    config: AppConfig | None = None
+    progress_callback: Callable[[ProgressStep], None] | None = None
+    skip_journal_update: bool = False
+    skip_work_update: bool = False
 
 
 class PipelineStep(Protocol):
@@ -414,7 +398,9 @@ class ExportStep:
 # =============================================================================
 # PIPELINE FUNCTION
 # =============================================================================
-def run(options: PipelineOptions) -> tuple[list[AnomalousJournal], ExportResult | None]:
+def run(
+    options: PipelineOptions,
+) -> tuple[list[AnomalousJournal], BibliographyResult | None]:
     """Orchestrate the linear citation processing pipeline step-by-step."""
     app_config = options.config or get_config()
     out_path = Path(options.output_filepath) if options.output_filepath else None

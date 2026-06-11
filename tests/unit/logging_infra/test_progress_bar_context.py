@@ -1,4 +1,4 @@
-# tests/unit/ui/test_progress_bar_context.py
+# tests/unit/logging_infra/test_progress_bar_context.py
 # SPDX-FileCopyrightText: 2026 Sebastien Lenard <sebastien.lenard@gmail.com> and Contributors
 # SPDX-License-Identifier: Apache-2.0
 """Unit tests validating CLI progress bar layout formatting, lifecycle, and logs."""
@@ -11,8 +11,11 @@ from unittest.mock import patch
 
 import pytest
 
-from citecraft.core import ProgressStep
-from citecraft.ui.progress_bar_context import LogInterceptor, ProgressBarContext
+from citecraft.logging_infra.progress_bar_context import (
+    LogInterceptor,
+    ProgressBarContext,
+)
+from citecraft.schemas import ProgressStep
 
 
 def test_generate_bar_string_initial_state() -> None:

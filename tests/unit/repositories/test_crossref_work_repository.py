@@ -52,6 +52,23 @@ def test_call_work_api_success(repo: CrossrefWorkRepository) -> None:
         assert "from-pub-date:2020" in called_kwargs["params"]["filter"]
 
 
+def test_call_work_api_no_issns(
+    repo: CrossrefWorkRepository,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Verify that calling with empty ISSN list logs warning and returns empty."""
+    caplog.set_level(logging.WARNING)
+
+    items = repo._call_work_api(
+        input_first_authors_txt="Lenard",
+        year_int=2020,
+        input_issns=[],
+    )
+
+    assert items == []
+    assert any("needs at least one ISSN." in r.message for r in caplog.records)
+
+
 def test_call_work_api_multiple_issns_fails(
     repo: CrossrefWorkRepository,
     caplog: pytest.LogCaptureFixture,
@@ -72,6 +89,23 @@ def test_call_work_api_multiple_issns_fails(
             "only accepts one ISSN but several are provided" in r.message
             for r in caplog.records
         )
+
+
+def test_call_work_api_response_is_none(repo: CrossrefWorkRepository) -> None:
+    """Verify that _call_work_api returns empty list when response is None."""
+    with patch.object(
+        repo.http_client_wrapper,
+        "get",
+        return_value=(None, 0),
+    ) as mock_get:
+        items = repo._call_work_api(
+            input_first_authors_txt="Lenard",
+            year_int=2020,
+            input_issns=["1752-0894"],
+        )
+
+        assert items == []
+        mock_get.assert_called_once()
 
 
 def test_get_authors_from_api_item(repo: CrossrefWorkRepository) -> None:

@@ -82,6 +82,23 @@ def test_call_work_api_too_many_issns_fails(
     assert any("maximum of 100 ISSNs" in r.message for r in caplog.records)
 
 
+def test_call_work_api_response_is_none(repo: OpenAlexWorkRepository) -> None:
+    """Verify that _call_work_api returns empty list when response is None."""
+    with patch.object(
+        repo.http_client_wrapper,
+        "get",
+        return_value=(None, 0),
+    ) as mock_get:
+        items = repo._call_work_api(
+            input_first_authors_txt="Lenard",
+            year_int=2020,
+            input_issns=["1752-0894"],
+        )
+
+        assert items == []
+        mock_get.assert_called_once()
+
+
 def test_get_authors_from_api_item(repo: OpenAlexWorkRepository) -> None:
     """Verify author extraction from raw OpenAlex items."""
     item_with_author = {"authorships": [{"raw_author_name": "Lenard"}]}
@@ -115,6 +132,25 @@ def test_get_issns_groups_for_api(repo: OpenAlexWorkRepository) -> None:
     # |3333-3333 would exceed 20 limit.
     groups = repo._get_issns_groups_for_api(issns)
     assert groups == [["1111-1111", "2222-2222"], ["3333-3333"]]
+
+
+def test_get_issns_groups_for_api_empty(repo: OpenAlexWorkRepository) -> None:
+    """Verify that _get_issns_groups_for_api returns empty list when input is empty."""
+    assert repo._get_issns_groups_for_api([]) == []
+
+
+def test_get_issns_groups_for_api_first_item_exceeds_threshold(
+    repo: OpenAlexWorkRepository,
+) -> None:
+    """Verify grouping when the very first ISSN exceeds the character limit."""
+    repo.config = repo.config.model_copy(
+        update={
+            "openalex_api_url_max_character_length_for_issns_filter": 5,
+        },
+    )
+    # "1111-1111" has 9 characters, which is > 5 limit
+    groups = repo._get_issns_groups_for_api(["1111-1111"])
+    assert groups == [["1111-1111"]]
 
 
 @pytest.mark.parametrize(
@@ -201,6 +237,11 @@ def test_validate_author(
         assert any("ambiguous family name" in r.message for r in caplog.records)
 
 
+def test_validate_author_unsupported_shape(repo: OpenAlexWorkRepository) -> None:
+    """Verify that _validate_author returns False if api_author has an unsupported shape."""
+    assert repo._validate_author("Lenard", {"unsupported": "structure"}) is False
+
+
 @pytest.mark.parametrize(
     ("authors_txt", "expected_filter"),
     [
@@ -220,6 +261,11 @@ def test_build_author_api_filter(
 ) -> None:
     """Verify that author filter string is correctly formatted."""
     assert repo._build_author_api_filter(authors_txt) == expected_filter
+
+
+def test_build_author_api_filter_many_authors(repo: OpenAlexWorkRepository) -> None:
+    """Verify that _build_author_api_filter returns None when authors count > 2."""
+    assert repo._build_author_api_filter("Author A and Author B and Author C") is None
 
 
 def test_call_work_api_calls_build_author_api_filter(

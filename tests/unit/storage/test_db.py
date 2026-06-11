@@ -199,6 +199,26 @@ def test_dynamic_schema_and_save_load(tmp_path: Path) -> None:
     assert loaded[1].is_active is False
 
 
+def test_save_records_empty_list(tmp_path: Path) -> None:
+    """Verify save_records executes safely and truncates table when records is empty."""
+    db_path = tmp_path / "empty_save.db"
+
+    # 1. Save initial records
+    initial_records = [
+        SimpleMockModel(id=1, name="A"),
+        SimpleMockModel(id=2, name="B"),
+    ]
+    save_records(db_path, "mock_table", initial_records, SimpleMockModel)
+    assert len(load_records(db_path, "mock_table", SimpleMockModel)) == 2
+
+    # 2. Save an empty list of records
+    save_records(db_path, "mock_table", [], SimpleMockModel)
+
+    # 3. Verify table is truncated (0 records left)
+    loaded = load_records(db_path, "mock_table", SimpleMockModel)
+    assert len(loaded) == 0
+
+
 def test_transaction_rollback_integrity(tmp_path: Path) -> None:
     """Verify that a database-level write failure triggers a clean rollback."""
     db_path = tmp_path / "test_rollback.db"

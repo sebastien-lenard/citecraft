@@ -101,6 +101,29 @@ def test_get_work_metadata_skips_invalid_candidates(repo: WorkRepository) -> Non
     assert len(results) == 0
 
 
+def test_get_work_metadata_skips_item_without_doi(repo: WorkRepository) -> None:
+    """Verify that items without a DOI are skipped in get_work_metadata."""
+    item = {
+        "type": "journal-article",
+        "author": [{"family": "Lenard", "sequence": "first"}],
+    }
+
+    repo._call_work_api = MagicMock(return_value=[item])
+    repo._get_authors_from_api_item = MagicMock(
+        return_value=[{"family": "Lenard", "sequence": "first"}],
+    )
+    repo._get_doi_from_api_item = MagicMock(return_value=None)
+    repo._get_type_from_api_item = MagicMock(return_value="journal-article")
+    repo._validate_first_authors_count = MagicMock(return_value=True)
+    repo._validate_first_authors = MagicMock(return_value=True)
+
+    results = repo.get_work_metadata(
+        CitationMetadata(first_authors_txt="Lenard", year_and_suffix="2020"),
+        input_issns=["1752-0894"],
+    )
+    assert len(results) == 0
+
+
 @pytest.mark.parametrize(
     ("inputs", "apis"),
     [
@@ -168,6 +191,54 @@ def test_clean_metadata(repo: WorkRepository) -> None:
     assert "unwanted_author_field" not in authors[0]
 
     assert authors[1] == "NotADict"
+
+
+@pytest.mark.parametrize(
+    ("author_blacklist_fields", "author_key", "metadata_payload"),
+    [
+        # Case A: author_blacklist_fields is None
+        (
+            None,
+            "authors",
+            {"authors": [{"family": "Lenard", "unwanted": "yes"}]},
+        ),
+        # Case B: author_key is None
+        (
+            ["unwanted"],
+            None,
+            {"authors": [{"family": "Lenard", "unwanted": "yes"}]},
+        ),
+        # Case C: author_key is not in metadata
+        (
+            ["unwanted"],
+            "non_existent",
+            {"authors": [{"family": "Lenard", "unwanted": "yes"}]},
+        ),
+        # Case D: metadata[author_key] is not a list
+        (
+            ["unwanted"],
+            "authors",
+            {"authors": "not-a-list"},
+        ),
+    ],
+)
+def test_clean_metadata_skips_author_block(
+    repo: WorkRepository,
+    author_blacklist_fields: list[str] | None,
+    author_key: str | None,
+    metadata_payload: dict,
+) -> None:
+    """Verify that the author cleaning block is bypassed if preconditions are not met."""
+    cleaned = repo._clean_metadata(
+        metadata=metadata_payload,
+        work_blacklist_fields=[],
+        author_key=author_key,
+        author_blacklist_fields=author_blacklist_fields,
+    )
+    if isinstance(cleaned.get("authors"), list):
+        assert cleaned["authors"][0]["unwanted"] == "yes"
+    elif "authors" in cleaned:
+        assert cleaned["authors"] == "not-a-list"
 
 
 @pytest.mark.parametrize(

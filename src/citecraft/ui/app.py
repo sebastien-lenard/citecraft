@@ -25,7 +25,7 @@ class TextRedirector:
 
     def write(self, text: str) -> None:
         """Thread-safe write scheduler that pushes insertion to Tkinter queue."""
-        if text:  # pragma: no branch
+        if text:
             with contextlib.suppress(_tkinter.TclError, RuntimeError, AttributeError):
                 self.textbox.after(0, self._safe_write, text)
 
@@ -272,7 +272,7 @@ class MainFrame(ctk.CTkFrame):
             title="Select Manuscript Document",
             filetypes=[("Word Documents", "*.docx")],
         )
-        if selected_path:  # pragma: no branch
+        if selected_path:
             self.state.input_file_path.set(selected_path)
             logger.info("Input manuscript filepath registered: %s", selected_path)
 
@@ -283,7 +283,7 @@ class MainFrame(ctk.CTkFrame):
             defaultextension=".csv",
             filetypes=[("CSV Files", "*.csv")],
         )
-        if selected_path:  # pragma: no branch
+        if selected_path:
             self.state.output_file_path.set(selected_path)
             logger.info("Output bibliography path registered: %s", selected_path)
 
@@ -350,14 +350,14 @@ class MainFrame(ctk.CTkFrame):
             return
 
         self.write_console("✓ Processing Completed Successfully.\n")
-        if export_metadata:  # pragma: no branch
+        if export_metadata:
             total = getattr(export_metadata, "total_rows", 0)
             path = getattr(export_metadata, "output_filepath", "")
             self.write_console(
                 f"  • Total references processed: {total}\n"
                 f"  • Output CSV saved to: {path}\n",
             )
-        if anomalous_journals:  # pragma: no branch
+        if anomalous_journals:
             self.write_console(
                 f"  • Warning: {len(anomalous_journals)} journals had ISSN conflicts"
                 " or were missing. Check log files for trace details.\n",
@@ -378,7 +378,7 @@ class MainFrame(ctk.CTkFrame):
 
         master = getattr(self, "master", None)
         sidebar = getattr(master, "sidebar", None) if master else None
-        if sidebar:  # pragma: no branch
+        if sidebar:
             sidebar.cmb_api.configure(state=state)
             sidebar.ent_journal.configure(state=state)
             sidebar.ent_style.configure(state=state)
@@ -391,10 +391,10 @@ class MainFrame(ctk.CTkFrame):
             self.btn_input.configure(border_color="red", border_width=2)
         elif "Output CSV" in error_msg:
             self.btn_output.configure(border_color="red", border_width=2)
-        elif "Reference Style" in error_msg:  # pragma: no branch
+        elif "Reference Style" in error_msg:
             master = getattr(self, "master", None)
             sidebar = getattr(master, "sidebar", None) if master else None
-            if sidebar:  # pragma: no branch
+            if sidebar:
                 sidebar.ent_style.configure(border_color="red")
 
     def _reset_validation_highlights(self) -> None:
@@ -403,7 +403,7 @@ class MainFrame(ctk.CTkFrame):
         self.btn_output.configure(border_width=0)
         master = getattr(self, "master", None)
         sidebar = getattr(master, "sidebar", None) if master else None
-        if sidebar:  # pragma: no branch
+        if sidebar:
             # Revert border_color to standard theme defaults for CTkEntry
             sidebar.ent_style.configure(border_color=["#979da2", "#565b5e"])
 

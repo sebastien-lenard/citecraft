@@ -110,3 +110,35 @@ def test_html_cleaner_uses_injected_config(test_config: AppConfig) -> None:
     expected = "<custom-sup>10</custom-sup> Text Skipped"
 
     assert cleaner.clean_to_plain_text(raw_input) == expected
+
+
+def test_html_cleaner_no_preserved_tags(test_config: AppConfig) -> None:
+    """Verify cleaner behaviour when preserved_html_tags list is empty."""
+    test_config = test_config.model_copy(update={"preserved_html_tags": set()})
+    cleaner = HtmlCleaner(config=test_config)
+
+    raw_input = "CO<sub>2</sub> text."
+    # Tag <sub> boundaries must be discarded but internal text retained
+    assert cleaner.clean_to_plain_text(raw_input) == "CO2 text."
+
+
+def test_handle_entityref_directly() -> None:
+    """Verify handle_entityref resolves HTML entities manually."""
+    cleaner = HtmlCleaner()
+    cleaner._result_parts = []
+    cleaner.handle_entityref("amp")
+    assert "".join(cleaner._result_parts) == "&"
+
+
+def test_clean_to_plain_text_with_missing_tag_regexes(
+    test_config: AppConfig,
+) -> None:
+    """Verify cleanup stability when tag regexes are bypassed/None."""
+    test_config = test_config.model_copy(update={"preserved_html_tags": {"sub"}})
+    cleaner = HtmlCleaner(config=test_config)
+
+    # Force the regex patterns to None to bypass collapsing paths
+    cleaner._start_tag_space_regex = None
+    cleaner._end_tag_space_regex = None
+
+    assert cleaner.clean_to_plain_text("CO <sub> 2 </sub>") == "CO <sub> 2 </sub>"

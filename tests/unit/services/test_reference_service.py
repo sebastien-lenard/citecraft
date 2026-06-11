@@ -135,6 +135,62 @@ def test_fill_missing_references_success(
     assert mock_doi_repo.get_metadata.call_count == 2
 
 
+def test_fill_missing_references_skips_repo_query_if_metadata_present(
+    mock_doi_repo: MagicMock,
+    test_config: AppConfig,
+    sample_csl_style: str,
+) -> None:
+    """Verify fill_missing_references skips repo query when metadata is cached."""
+    pre_existing_metadata = {
+        "doi": "10.1000/cached",
+        "id": "10.1000/cached",
+        "type": "article-journal",
+        "title": "Cached Metadata Title",
+        "author": [{"family": "Doe", "given": "J."}],
+        "issued": {"date-parts": [[2023]]},
+    }
+
+    records = [
+        WorkMetadata(
+            input_first_authors_txt="Cached",
+            input_year_and_suffix="2023",
+            doi="10.1000/cached",
+            reference=None,
+            crossref_metadata=pre_existing_metadata,
+        ),
+    ]
+
+    expected_reference = "J. Doe (2023). Cached Metadata Title."
+
+    with (
+        patch(
+            "citecraft.services.reference_service.CiteprocAdapter.create_json_source",
+        ) as mock_src,
+        patch(
+            "citecraft.services.reference_service.CiteprocAdapter.parse_csl_style",
+        ) as mock_style,
+        patch(
+            "citecraft.services.reference_service.CiteprocAdapter.render_bibliography",
+        ) as mock_render,
+    ):
+        mock_src.return_value = (MagicMock(), None)
+        mock_style.return_value = (MagicMock(), None)
+        mock_render.return_value = (expected_reference, None)
+
+        reference_service = ReferenceService(config=test_config)
+        reference_service.fill_missing_references(
+            records,
+            mock_doi_repo,
+            csl_style_content=sample_csl_style,
+            target_style="apa",
+        )
+
+    assert records[0].reference == expected_reference
+    assert records[0].style == "apa"
+    # Metadata should be resolved from cache; repo query must be bypassed completely
+    mock_doi_repo.get_metadata.assert_not_called()
+
+
 def test_fill_missing_references_raises_on_repository_error(
     mock_doi_repo: MagicMock,
     test_config: AppConfig,

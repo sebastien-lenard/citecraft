@@ -53,3 +53,32 @@ def test_journal_parser_scenarios(
 ) -> None:
     """Verify structural extraction rules and boundary parsing edge cases."""
     assert parser.extract_all(text) == expected
+
+
+@pytest.mark.parametrize(
+    ("title_input", "expected_normalized"),
+    [
+        # Empty boundary states
+        ("", ""),
+        ("   ", ""),
+        # Case conversions and stripping
+        ("  Nature Geoscience  ", "nature geoscience"),
+        # Character cleaning replacements
+        ("Journal-of-Climate", "journal of climate"),
+        ("Nature: Geosciences", "nature geoscience"),
+        ("Earth, Planets and Space", "earth planet and space"),
+        # Suffix plural cuts
+        ("Geosciences", "geoscience"),
+        ("Physical Sciences", "physical science"),
+        ("Computers & Geosciences", "computer & geoscience"),
+        # Singularity checks (ensure standard non-s endings are retained)
+        ("Science", "science"),
+    ],
+)
+def test_normalize_title_scenarios(
+    parser: JournalParser,
+    title_input: str,
+    expected_normalized: str,
+) -> None:
+    """Verify normalize_title handles casing, delimiters, and plural forms."""
+    assert JournalParser.normalize_title(title_input) == expected_normalized

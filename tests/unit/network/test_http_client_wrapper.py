@@ -305,3 +305,19 @@ def test_get_respects_initial_delay() -> None:
         mock_sleep.assert_called_once_with(0.05)
 
     delay_wrapper.close()
+
+
+def test_get_custom_mailto_not_overwritten(wrapper: HTTPClientWrapper) -> None:
+    """Verify that any pre-existing mailto parameter is preserved intact."""
+    mock_response = MagicMock(spec=httpx.Response)
+    mock_response.status_code = 200
+
+    with patch.object(wrapper.client, "send", return_value=mock_response) as mock_send:
+        params = {"mailto": "custom_override@example.com"}
+        wrapper.get("https://api.test.com", params=params)
+
+        mock_send.assert_called_once()
+        called_request = mock_send.call_args[0][0]
+        # Custom mailto should not be replaced with the default wrapper.email
+        assert "mailto=custom_override%40example.com" in str(called_request.url)
+        assert "test%40example.com" not in str(called_request.url)

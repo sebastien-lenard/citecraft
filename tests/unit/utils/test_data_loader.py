@@ -59,6 +59,13 @@ def test_extract_text_matches_input(env: EnvPaths) -> None:
     assert loader.extract_text_from_docx() == "\n".join(env.docx_content)
 
 
+def test_extract_text_missing_file(env: EnvPaths) -> None:
+    """Verify that extract_text_from_docx returns None if the file does not exist."""
+    missing_file = env.dir_path / "nonexistent.docx"
+    loader = DataLoader(missing_file, raise_exception=False)
+    assert loader.extract_text_from_docx() is None
+
+
 def test_extract_text_corrupted_docx(
     env: EnvPaths,
     caplog: pytest.LogCaptureFixture,
@@ -83,6 +90,21 @@ def test_load_json_success(env: EnvPaths) -> None:
     """Verify that validated JSON file load attempts succeed."""
     loader = DataLoader(env.json_path)
     assert loader.load_json() == env.json_data
+
+
+def test_load_json_missing_file(env: EnvPaths) -> None:
+    """Verify that load_json returns None if the file does not exist."""
+    missing_file = env.dir_path / "nonexistent.json"
+    loader = DataLoader(missing_file, raise_exception=False)
+    assert loader.load_json() is None
+
+
+def test_load_json_null_data(env: EnvPaths) -> None:
+    """Verify that load_json returns None if the JSON content is literal null."""
+    null_json = env.dir_path / "null.json"
+    null_json.write_text("null", encoding="utf-8")
+    loader = DataLoader(null_json)
+    assert loader.load_json() is None
 
 
 @pytest.mark.parametrize(

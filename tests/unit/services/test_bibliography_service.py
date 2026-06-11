@@ -263,3 +263,61 @@ def test_export_to_csv_strips_only_preserved_tags(
         "Analysis of CO2 within <unsupported-tag>text</unsupported-tag>."
     )
     assert rows[0]["Reference"] == expected_reference
+
+
+def test_export_to_csv_no_preserved_tags_configured(
+    tmp_path: Path,
+    test_config: AppConfig,
+) -> None:
+    """Verify HTML tags are untouched when preserved_html_tags is empty."""
+    output_csv = tmp_path / "output_no_tags.csv"
+    test_config = test_config.model_copy(update={"preserved_html_tags": set()})
+
+    citations = [
+        CitationMetadata(first_authors_txt="Test", year_and_suffix="2026"),
+    ]
+    works = [
+        WorkMetadata(
+            input_first_authors_txt="Test",
+            input_year_and_suffix="2026",
+            doi="10.1000/tags-test",
+            reference="Analysis of CO<sub>2</sub>.",
+        ),
+    ]
+
+    biblio_service = BibliographyService(config=test_config)
+    biblio_service.export_to_csv(citations, works, output_csv)
+
+    with Path.open(output_csv, encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+
+    assert rows[0]["Reference"] == "Analysis of CO<sub>2</sub>."
+
+
+def test_export_to_csv_where_reference_is_none_with_active_regex(
+    tmp_path: Path,
+    test_config: AppConfig,
+) -> None:
+    """Verify handling when reference is None but tags regex is compiled."""
+    output_csv = tmp_path / "output_none_ref.csv"
+    test_config = test_config.model_copy(update={"preserved_html_tags": {"sub"}})
+
+    citations = [
+        CitationMetadata(first_authors_txt="Test", year_and_suffix="2026"),
+    ]
+    works = [
+        WorkMetadata(
+            input_first_authors_txt="Test",
+            input_year_and_suffix="2026",
+            doi="10.1000/tags-test",
+            reference=None,
+        ),
+    ]
+
+    biblio_service = BibliographyService(config=test_config)
+    biblio_service.export_to_csv(citations, works, output_csv)
+
+    with Path.open(output_csv, encoding="utf-8-sig") as f:
+        rows = list(csv.DictReader(f))
+
+    assert rows[0]["Reference"] == ""

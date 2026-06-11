@@ -30,7 +30,7 @@ from citecraft.cli import (
     cli,
 )
 from citecraft.core import AnomalousJournal
-from citecraft.services.bibliography_service import ExportResult
+from citecraft.schemas import BibliographyResult
 from citecraft.utils import AppConfig
 
 # ==============================================================================
@@ -54,9 +54,9 @@ def mock_core_run() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
-def dummy_export_result(tmp_path: Path) -> ExportResult:
+def dummy_export_result(tmp_path: Path) -> BibliographyResult:
     """Provide a reliable data carrier response representing standard execution."""
-    return ExportResult(
+    return BibliographyResult(
         total_rows=3,
         output_filepath=tmp_path / "output.csv",
         style="apa",
@@ -119,6 +119,13 @@ def test_configure_windows_console_execution() -> None:
         assert mock_wrapper.call_count == 2
 
 
+def test_configure_windows_console_not_win32() -> None:
+    """Verify that _configure_windows_console is a no-op on non-Windows platforms."""
+    with patch("sys.platform", "linux"), patch("io.TextIOWrapper") as mock_wrapper:
+        _configure_windows_console()
+        mock_wrapper.assert_not_called()
+
+
 def test_read_piped_input_empty_when_tty() -> None:
     """Check that stdin returns empty strings when evaluated inside interactive TTYs."""
     with patch("sys.stdin.isatty", return_value=True):
@@ -166,7 +173,7 @@ def test_render_anomalous_journals_displays_table() -> None:
         assert "Nature" in printed_output
 
 
-def test_render_export_summary(dummy_export_result: ExportResult) -> None:
+def test_render_export_summary(dummy_export_result: BibliographyResult) -> None:
     """Verify statistics counters report matching metric values."""
     with patch("click.secho") as mock_secho, patch("click.echo") as mock_echo:
         _render_export_summary(dummy_export_result)
@@ -179,7 +186,7 @@ def test_render_export_summary(dummy_export_result: ExportResult) -> None:
 
 def test_render_csv_preview_empty() -> None:
     """Ensure csv preview yields early when sample blocks are completely vacant."""
-    empty_result = ExportResult(total_rows=0, output_filepath=Path("test.csv"))
+    empty_result = BibliographyResult(total_rows=0, output_filepath=Path("test.csv"))
     with patch("click.secho") as mock_secho:
         _render_csv_preview(empty_result)
         mock_secho.assert_not_called()
@@ -188,7 +195,7 @@ def test_render_csv_preview_empty() -> None:
 def test_render_csv_preview_forces_text_wrapping() -> None:
     """Verify that references exceeding COL3_W trigger the multi-line layout loop."""
     long_ref = "Very long reference string " * 5  # Exceeds 60 characters
-    wrapped_result = ExportResult(
+    wrapped_result = BibliographyResult(
         total_rows=1,
         output_filepath=Path("test.csv"),
         sample_ok={"Citation": "Long2026", "Status": "OK", "Reference": long_ref},
@@ -205,7 +212,7 @@ def test_render_csv_preview_forces_text_wrapping() -> None:
         )
 
 
-def test_render_csv_preview_with_rows(dummy_export_result: ExportResult) -> None:
+def test_render_csv_preview_with_rows(dummy_export_result: BibliographyResult) -> None:
     """Ensure status warnings rewrite descriptions dynamically within tables."""
     with patch("click.echo") as mock_echo, patch("click.secho") as mock_secho:
         _render_csv_preview(dummy_export_result)
@@ -215,13 +222,43 @@ def test_render_csv_preview_with_rows(dummy_export_result: ExportResult) -> None
         assert "Warning: Multiple matches" in printed_output
 
 
-def test_render_recommendations(dummy_export_result: ExportResult) -> None:
+def test_render_recommendations(dummy_export_result: BibliographyResult) -> None:
     """Ensure recommendations populate warnings conditional to data metrics."""
     with patch("click.echo") as mock_echo:
         _render_recommendations(dummy_export_result)
         output = "".join(call[0][0] for call in mock_echo.call_args_list)
         assert "please search for their dois" in output.lower()
         assert "review the generated csv" in output.lower()
+
+
+def test_render_recommendations_no_missing() -> None:
+    """Verify recommendations when there are no missing citations."""
+    metadata = BibliographyResult(
+        total_rows=2,
+        output_filepath=Path("test.csv"),
+        missing_count=0,
+        duplicate_count=1,
+    )
+    with patch("click.echo") as mock_echo:
+        _render_recommendations(metadata)
+        output = "".join(call[0][0] for call in mock_echo.call_args_list if call[0])
+        assert "search for their DOIs" not in output
+        assert "Review the generated CSV" in output
+
+
+def test_render_recommendations_no_duplicates() -> None:
+    """Verify recommendations when there are no duplicate citations."""
+    metadata = BibliographyResult(
+        total_rows=2,
+        output_filepath=Path("test.csv"),
+        missing_count=1,
+        duplicate_count=0,
+    )
+    with patch("click.echo") as mock_echo:
+        _render_recommendations(metadata)
+        output = "".join(call[0][0] for call in mock_echo.call_args_list if call[0])
+        assert "search for their DOIs" in output
+        assert "Review the generated CSV" not in output
 
 
 # ==============================================================================
@@ -287,7 +324,7 @@ def test_execute_pipeline_quits_early_on_no_input_non_interactive(
 def test_execute_pipeline_displays_skips(
     test_config: AppConfig,
     mock_core_run: MagicMock,
-    dummy_export_result: ExportResult,
+    dummy_export_result: BibliographyResult,
     skip_journal: bool,
     skip_work: bool,
 ) -> None:
@@ -410,6 +447,26 @@ def test_handle_execution_failure_non_verbose() -> None:
             assert (
                 "Use the '-v' or '-vv' option to see the full debug traceback."
                 in printed_output
+            )
+
+
+def test_handle_execution_failure_no_cache_msg() -> None:
+    """Verify failure handler behaves correctly without a cache message."""
+    try:
+        raise ValueError("Simulated crash")
+    except ValueError as err:
+        with (
+            patch("click.echo"),
+            patch("click.secho") as mock_secho,
+        ):
+            with pytest.raises(SystemExit) as exit_block:
+                _handle_execution_failure(err, verbose=0, cache_msg=None)
+            assert exit_block.value.code == 1
+            # Ensure no clean cache trace lines are printed
+            assert not any(
+                call[0][0] == "Clean Cache Running"
+                for call in mock_secho.call_args_list
+                if call[0]
             )
 
 

@@ -100,3 +100,19 @@ def test_exclusions(parser: CitationParser, text: str) -> None:
     """Verify standalone years, isolated dates, and bibliography items are skipped."""
     res = parser.extract_all(text)
     assert len(res) == 0
+
+
+def test_is_blacklisted(parser: CitationParser) -> None:
+    """Verify is_blacklisted correctly identifies blacklisted terms with cleanup."""
+    parser.blacklist = ["fig", "table", "see"]
+
+    # Term is directly in blacklist
+    assert parser.is_blacklisted("fig") is True
+
+    # Term contains trailing punctuation before cleanup
+    assert parser.is_blacklisted("fig.") is True
+    assert parser.is_blacklisted("table,") is True
+    assert parser.is_blacklisted("see;") is True
+
+    # Term is not blacklisted
+    assert parser.is_blacklisted("Figueroa") is False

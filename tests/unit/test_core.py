@@ -13,16 +13,14 @@ from unittest.mock import patch
 import pytest
 
 from citecraft.core import (
-    AnomalousJournal,
     ExportStep,
     PipelineContext,
     PipelineOptions,
-    ProgressStep,
     ReferenceFormattingStep,
     WorkUpdateStep,
     run,
 )
-from citecraft.services.bibliography_service import ExportResult
+from citecraft.schemas import AnomalousJournal, BibliographyResult, ProgressStep
 from citecraft.utils import AppConfig
 
 
@@ -54,7 +52,7 @@ def configured_core_config(test_config: AppConfig) -> AppConfig:
 
 @pytest.fixture
 def mock_pipeline_dependencies() -> Generator[dict[str, Any], None, None]:
-    """Insulate pipeline execution from real input/output and repository layers."""
+    """Isolate pipeline execution from real input/output and repository layers."""
     with (
         patch("citecraft.core.DataLoader") as mock_loader,
         patch("citecraft.core.StyleRepository") as mock_style_repo,
@@ -67,7 +65,7 @@ def mock_pipeline_dependencies() -> Generator[dict[str, Any], None, None]:
     ):
         mock_loader.return_value.extract_text_from_docx.return_value = "Sample text"
         mock_style_repo.return_value.favored_style_is_valid = True
-        mock_bib_service.return_value.export_to_csv.return_value = ExportResult(
+        mock_bib_service.return_value.export_to_csv.return_value = BibliographyResult(
             total_rows=0,
             output_filepath=Path("dummy_references.csv"),
             export_format="CSV",
@@ -438,3 +436,64 @@ def test_export_step_initializes_crossref_work_repo_if_none(
 
     assert ctx.work_repo is not None
     mock_pipeline_dependencies["crossref"].assert_called_once()
+
+
+def test_export_step_with_none_export_result(
+    configured_core_config: AppConfig,
+    mock_pipeline_dependencies: dict[str, Any],
+) -> None:
+    """Cover the branch where export_result is None or not a dataclass."""
+    ctx = PipelineContext(
+        config=configured_core_config,
+        output_filepath=Path("dummy_out.csv"),
+    )
+
+    with patch("citecraft.core.BibliographyService") as mock_bib_service:
+        mock_bib_service.return_value.export_to_csv.return_value = None
+
+        step = ExportStep()
+        step.execute(ctx)
+
+        assert ctx.export_result is None
+
+
+def test_export_step_no_journal_records(
+    configured_core_config: AppConfig,
+    mock_pipeline_dependencies: dict[str, Any],
+) -> None:
+    """Cover the branch where journal_repo.records is empty."""
+    ctx = PipelineContext(
+        config=configured_core_config,
+        output_filepath=Path("dummy_out.csv"),
+    )
+    mock_journal_inst = mock_pipeline_dependencies["journal"].return_value
+    mock_journal_inst.records = []
+
+    step = ExportStep()
+    step.execute(ctx)
+
+    assert len(ctx.anomalous_journals) == 0
+
+
+def test_export_step_journal_records_status_ok(
+    configured_core_config: AppConfig,
+    mock_pipeline_dependencies: dict[str, Any],
+) -> None:
+    """Cover the branch where a journal's status is 'OK'."""
+    ctx = PipelineContext(
+        config=configured_core_config,
+        output_filepath=Path("dummy_out.csv"),
+    )
+    mock_journal_inst = mock_pipeline_dependencies["journal"].return_value
+    mock_journal_inst.records = [
+        MockJournalRecord(
+            input_title="Healthy Journal",
+            status="OK",
+            issn="1234-5678",
+        ),
+    ]
+
+    step = ExportStep()
+    step.execute(ctx)
+
+    assert len(ctx.anomalous_journals) == 0

@@ -8,6 +8,7 @@ import time
 
 from unidecode import unidecode
 
+from citecraft.logging_infra import LoggingTools
 from citecraft.schemas import (
     CitationMetadata,
     WorkMetadata,
@@ -169,33 +170,6 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                     work_metadata = self._set_metadata_attribute(work_metadata, item)
                     candidates.append(work_metadata)
         return candidates
-
-    def _log_heartbeat_if_needed(
-        self,
-        processed: int,
-        total: int,
-        last_time: float,
-    ) -> float:
-        """Log progress status every 10 seconds of processing time."""
-        current_time = time.time()
-        if (
-            current_time - last_time
-            > self.config.default_logging_frequency_for_batch_updates
-        ):
-            remaining = total - processed
-            logger.info(
-                "Batch update status: %d updates remaining out of %d",
-                remaining,
-                total,
-                extra={
-                    "status": "OK",
-                    "event": "work_update_heartbeat",
-                    "remaining_count": remaining,
-                    "total_count": total,
-                },
-            )
-            return current_time
-        return last_time
 
     def _normalize_string(self, text: str) -> str:
         """Transliterate Unicode strings to lowercase closest ASCII representation.
@@ -412,10 +386,11 @@ class WorkRepository(BaseRepository[WorkMetadata]):
                     },
                 )
 
-            last_display_time = self._log_heartbeat_if_needed(
+            last_display_time = LoggingTools.log_heartbeat_if_needed(
                 len(processed_templates) + failed_count,
                 len(templates_to_process),
                 last_display_time,
+                self.config,
             )
 
         # 2. Swap templates for rich records
