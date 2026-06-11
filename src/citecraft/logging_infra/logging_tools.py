@@ -24,7 +24,7 @@ class LoggingTools:
         last_time: float,
         config: AppConfig,
     ) -> float:
-        """Log batch resolution progress every 10 seconds of processing time."""
+        """Log batch resolution progress."""
         current_time = time.time()
         if (
             current_time - last_time
